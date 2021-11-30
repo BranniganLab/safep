@@ -152,7 +152,7 @@ def plot_per_window(bar):
 	plt.ylabel('Delta G per window (kT)')
 	plt.save_fig("dG_per_window.svg")
 
-def convergence_plot(u_nk)
+def convergence_plot(u_nk):
 	grouped = u_nk.groupby('fep-lambda')
 	data_list = [grouped.get_group(s) for s in states]
 
@@ -212,31 +212,29 @@ def fb_discrepancy_plots(u_nk):
 
 
 #Light-weight exponential estimator
-def get_dG_fromData(data):
+def get_dG_fromData(data, temperature):
     from scipy.constants import R, calorie
     beta = 1/(R/(1000*calorie) * temperature) #So that the final result is in kcal/mol
     
-    groups = data.groupby(['FromLambda'])
-    dG=pd.DataFrame(columns=["window", "dG", "up"])
+    groups = data.groupby(level=0)
+    dG=[]
     for name, group in groups:
         isUp = group.up
         dE = group.dE
         toAppend = [name, -1*np.log(np.mean(np.exp(-beta*dE[isUp]))), 1]
-        dG.loc[len(dG)]=toAppend
+        dG.append(toAppend)
         toAppend=[name, -1*np.log(np.mean(np.exp(-beta*dE[~isUp]))), 0]
-        dG.loc[len(dG)]=toAppend
+        dG.append(toAppend)
     
+    dG = pd.DataFrame(dG, columns=["window", "dG", "up"])
+    dG = dG.set_index('window')
     
-    l=list(set(dG.window))
-    l.sort()
-    l_mid = np.mean([l[1:],l[:-1]], axis=0)
-    
-    dG_f = dG.loc[dG.up==1].dropna()
-    dG_b = dG.loc[dG.up==0].dropna()
-    
-    dG_f.window = l_mid
-    dG_b.window = l_mid
-    
+    dG_f = dG.loc[dG.up==1] 
+    dG_b = dG.loc[dG.up==0]
+
+    dG_f = dG_f.dG.dropna()
+    dG_b = dG_b.dG.dropna()
+
     return dG_f, dG_b
 
 if __name__ == '__main__':
