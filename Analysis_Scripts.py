@@ -74,10 +74,10 @@ def readFEPOUT(fileName, step=1):
 # In[5]:
 
 
-def readFiles(files):
+def readFiles(files, step=1):
     fileList = []
     for file in tqdm(files):
-        df = readFEPOUT(file, 50)
+        df = readFEPOUT(file, step)
         fileList.append(df)
     data = pd.concat(fileList)
     
@@ -89,10 +89,12 @@ def readFiles(files):
 
 # In[13]:
 
-
-def u_nk_fromDF(data):
+def u_nk_fromDF(data, temperature):
+    from scipy.constants import R, calorie
+    beta = 1/(R/(1000*calorie) * temperature) #So that the final result is in kcal/mol
     u_nk = pd.pivot_table(data, index=["step", "FromLambda"], columns="ToLambda", values="dE")
     u_nk = u_nk.sort_index(level=0).sort_index(axis='columns') #sort the data so it can be interpreted by the BAR estimator
+    u_nk = u_nk*beta
     #u_nk = u_nk.sort_index(level=1).sort_index(axis='columns') #sort the data so it can be interpreted by the BAR estimator
     
     return u_nk
@@ -106,9 +108,7 @@ def get_dG(u_nk):
     #dG will be FROM column TO index
     groups = u_nk.groupby(level=1)
     dG=pd.DataFrame([]) 
-    equil = 50000
     for name, group in groups:
-        group[group.index.get_level_values(0)>equil]
         dG[name] = np.log(np.mean(np.exp(-1*group)))
         dG = dG.copy() # this is actually faster than having a fragmented dataframe
         
@@ -210,6 +210,34 @@ def fb_discrepancy_plots(u_nk):
 	plt.ylabel('Count')
 	plt.save_fig("fb_distribution.svg")
 
+
+#Light-weight exponential estimator
+def get_dG_fromData(data):
+    from scipy.constants import R, calorie
+    beta = 1/(R/(1000*calorie) * temperature) #So that the final result is in kcal/mol
+    
+    groups = data.groupby(['FromLambda'])
+    dG=pd.DataFrame(columns=["window", "dG", "up"])
+    for name, group in groups:
+        isUp = group.up
+        dE = group.dE
+        toAppend = [name, -1*np.log(np.mean(np.exp(-beta*dE[isUp]))), 1]
+        dG.loc[len(dG)]=toAppend
+        toAppend=[name, -1*np.log(np.mean(np.exp(-beta*dE[~isUp]))), 0]
+        dG.loc[len(dG)]=toAppend
+    
+    
+    l=list(set(dG.window))
+    l.sort()
+    l_mid = np.mean([l[1:],l[:-1]], axis=0)
+    
+    dG_f = dG.loc[dG.up==1].dropna()
+    dG_b = dG.loc[dG.up==0].dropna()
+    
+    dG_f.window = l_mid
+    dG_b.window = l_mid
+    
+    return dG_f, dG_b
 
 if __name__ == '__main__':
 	fepoutFiles = glob('*.fep*')
