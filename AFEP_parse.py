@@ -2,13 +2,14 @@
 
 
 from glob import glob #file regexes
-
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-from tqdm import tqdm #for progress bars
+#from tqdm import tqdm #for progress bars
 import re #regex
 from natsort import natsorted #for sorting "naturally" instead of alphabetically
+
+from alchemlyb.visualisation.dF_state import plot_dF_state
 
 from alchemlyb.parsing import namd
 from alchemlyb.estimators import BAR
@@ -113,102 +114,107 @@ def get_dG(u_nk):
         dG = dG.copy() # this is actually faster than having a fragmented dataframe
         
     return dG
+    
+    
+def plot_cumsum(f, errors, l, units):
+    plt.errorbar(l, f, yerr=errors, marker='.')
+    plt.xlabel('lambda')
+    plt.ylabel(f'DeltaG(lambda) ({units})')
+    return plt.gca()
 
 
-def plot_cumsum(bar):
-	# Extract data for plotting
-	states = bar.states_
+def plot_per_window(df, l_mid, units):
+    plt.errorbar(l_mid, df, yerr=ddf, marker='.')
+    plt.xlabel('lambda')
+    plt.ylabel(f'Delta G per window ({units})')
+    return plt.gca()
 
-	f = bar.delta_f_.iloc[0,:] # dataframe
-	l = np.array([float(s) for s in states])
-	# lambda midpoints for each window
-	l_mid = 0.5*(l[1:] + l[:-1])
-	plt.errorbar(l, f, yerr=errors, marker='.')
-	plt.xlabel('lambda')
-	plt.ylabel('DeltaG(lambda) (kT)')
-	plt.save_fig("cumsum.svg")
-	#plt.show()
+def convergence_plot(u_nk, states, tau=1):
+    grouped = u_nk.groupby('fep-lambda')
+    data_list = [grouped.get_group(s) for s in states]
 
-def plot_per_window(bar):
-	# Extract data for plotting
-	states = bar.states_
+    forward = []
+    forward_error = []
+    backward = []
+    backward_error = []
+    num_points = 10
+    for i in range(1, num_points+1):
+        # forward
+        partial = pd.concat([data[:int(len(data)/num_points*i)] for data in data_list])
+        estimate = BAR().fit(partial)
+        forward.append(estimate.delta_f_.iloc[0,-1])
+        # For BAR, the error estimates are off-diagonal
+        ddf = [estimate.d_delta_f_.iloc[i+1,i] * np.sqrt(tau) for i in range(len(states)-1)]
+        error = np.sqrt((np.array(ddf)**2).sum())
+        forward_error.append(error)
 
-	# FE differences are off diagonal
-	df = np.array([bar.delta_f_.iloc[i, i+1] for i in range(len(states)-1)])
-	print(f'The cumulative sum is: {df.cumsum() * RT}')
-	print('Warning: error estimates are too small because we use correlated data')
+        # backward
+        partial = pd.concat([data[-int(len(data)/num_points*i):] for data in data_list])
+        estimate = BAR().fit(partial)
+        backward.append(estimate.delta_f_.iloc[0,-1])
+        ddf = [estimate.d_delta_f_.iloc[i+1,i] * np.sqrt(tau) for i in range(len(states)-1)]
+        error = np.sqrt((np.array(ddf)**2).sum())
+        backward_error.append(error)
 
-	tau = 5e3 # expected correlation length of series
+    ax = plot_convergence(forward, forward_error, backward, backward_error)
 
-	# error estimates are off diagonal
-	ddf = np.array([bar.d_delta_f_.iloc[i, i+1] for i in range(len(states)-1)]) * np.sqrt(tau)
+    return plt.gca()
 
-	# Accumulate errors as sum of squares
-	errors = np.array([np.sqrt((ddf[:i]**2).sum()) for i in range(len(states))])
-	print("Errors:", errors)
+def get_MBAR(bar, tau=1):
+    
+    # Extract data for plotting
+    states = bar.states_
 
-	plt.errorbar(l_mid, df, yerr=ddf, marker='.')
-	plt.xlabel('lambda')
-	plt.ylabel('Delta G per window (kT)')
-	plt.save_fig("dG_per_window.svg")
+    f = bar.delta_f_.iloc[0,:] # dataframe
+    l = np.array([float(s) for s in states])
+    # lambda midpoints for each window
+    l_mid = 0.5*(l[1:] + l[:-1])
 
-def convergence_plot(u_nk):
-	grouped = u_nk.groupby('fep-lambda')
-	data_list = [grouped.get_group(s) for s in states]
+    # FE differences are off diagonal
+    df = np.diag(bar.delta_f_, k=1)
+    
 
-	forward = []
-	forward_error = []
-	backward = []
-	backward_error = []
-	num_points = 10
-	for i in range(1, num_points+1):
-	    # forward
-	    partial = pd.concat([data[:int(len(data)/num_points*i)] for data in data_list])
-	    estimate = BAR().fit(partial)
-	    forward.append(estimate.delta_f_.iloc[0,-1])
-	    # For BAR, the error estimates are off-diagonal
-	    ddf = [estimate.d_delta_f_.iloc[i+1,i] * np.sqrt(tau) for i in range(len(states)-1)]
-	    error = np.sqrt((np.array(ddf)**2).sum())
-	    forward_error.append(error)
+    # error estimates are off diagonal
+    ddf = np.array([bar.d_delta_f_.iloc[i, i+1] for i in range(len(states)-1)]) * np.sqrt(tau)
 
-	    # backward
-	    partial = pd.concat([data[-int(len(data)/num_points*i):] for data in data_list])
-	    estimate = BAR().fit(partial)
-	    backward.append(estimate.delta_f_.iloc[0,-1])
-	    ddf = [estimate.d_delta_f_.iloc[i+1,i] * np.sqrt(tau) for i in range(len(states)-1)]
-	    error = np.sqrt((np.array(ddf)**2).sum())
-	    backward_error.append(error)
+    # Accumulate errors as sum of squares
+    errors = np.array([np.sqrt((ddf[:i]**2).sum()) for i in range(len(states))])
+    
+    
+    return l, l_mid, f, df, ddf, errors
 
-	ax = plot_convergence(forward, forward_error, backward, backward_error)
-	plt.save_fig("Convergence_plot.svg")
+def get_EXP(u_nk):
+    #the data frame is organized from index level 1 (fep-lambda) TO column
+    #dG will be FROM column TO index
+    groups = u_nk.groupby(level=1)
+    dG=pd.DataFrame([])
+    for name, group in groups:
+        dG[name] = np.log(np.mean(np.exp(-1*group)))
 
-def fb_discrepancy_plots(u_nk):
-	#the data frame is organized from index level 1 (fep-lambda) TO column
-	#dG will be FROM column TO index
-	groups = u_nk.groupby(level=1)
-	dG=pd.DataFrame([])
-	for name, group in groups:
-	    dG[name] = np.log(np.mean(np.exp(-1*group)))
-	    
-	dG_f=np.diag(dG, k=1)
-	dG_b=np.diag(dG, k=-1)
+    dG_f=np.diag(dG, k=1)
+    dG_b=np.diag(dG, k=-1)
 
-	l=dG.columns.to_list()
-	l_mid = np.mean([l[1:],l[:-1]], axis=0)
+    l=dG.columns.to_list()
+    l_mid = np.mean([l[1:],l[:-1]], axis=0)
 
-	plt.vlines(l_mid, np.zeros(len(l_mid)), dG_f + np.array(dG_b), label="fwd - bwd", linewidth=3)
+    return l, l_mid, dG_f, dG_b
 
-	plt.legend()
-	plt.title('Fwd-bwd discrepancies by lambda')
-	plt.xlabel('Lambda')
-	plt.ylabel('Diff. in delta-G')
-	plt.save_fig("fb_discrepancies.svg")
+def fb_discrepancy_plot(l_mid, dG_f, dG_b):
+    plt.vlines(l_mid, np.zeros(len(l_mid)), dG_f + np.array(dG_b), label="fwd - bwd", linewidth=3)
+    plt.legend()
+    plt.title('Fwd-bwd discrepancies by lambda')
+    plt.xlabel('Lambda')
+    plt.ylabel('Diff. in delta-G')
+    #Return the figure
+    return plt.gca() 
 
-	plt.hist(dG_f + np.array(dG_b));
-	plt.title('Distribution of fwd-bwd discrepancies')
-	plt.xlabel('Difference in delta-G')
-	plt.ylabel('Count')
-	plt.save_fig("fb_distribution.svg")
+def fb_discrepancy_hist(dG_f, dG_b):
+    plt.hist(dG_f + np.array(dG_b));
+    plt.title('Distribution of fwd-bwd discrepancies')
+    plt.xlabel('Difference in delta-G')
+    plt.ylabel('Count')
+    #return the figure
+    return plt.gca()
 
 
 #Light-weight exponential estimator
@@ -238,20 +244,20 @@ def get_dG_fromData(data, temperature):
     return dG_f, dG_b
 
 if __name__ == '__main__':
-	fepoutFiles = glob('*.fep*')
-	temperature = 300
-	RT = 0.00198720650096 * temperature
+    fepoutFiles = glob('*.fep*')
+    temperature = 300
+    RT = 0.00198720650096 * temperature
 
-	plt.rcParams['figure.dpi'] = 150
+    plt.rcParams['figure.dpi'] = 150
 
-	# up and down both start at L=0.5
-	u_nk = namd.extract_u_nk(fepoutFiles, temperature);
-	u_nk = u_nk.sort_index(level=1).sort_index(axis='columns') #sort the data so it can be interpreted by the BAR estimator
+    # up and down both start at L=0.5
+    u_nk = namd.extract_u_nk(fepoutFiles, temperature);
+    u_nk = u_nk.sort_index(level=1).sort_index(axis='columns') #sort the data so it can be interpreted by the BAR estimator
 
-	bar = BAR()
-	bar.fit(u_nk)
+    bar = BAR()
+    bar.fit(u_nk)
 
-	plot_cumsum(bar)
-	plot_per_window(bar)
-	convergence_plot(u_nk)
-	fb_discrepancy_plots(u_nk)
+    plot_cumsum(bar)
+    plot_per_window(bar)
+    convergence_plot(u_nk)
+    fb_discrepancy_plots(u_nk)
