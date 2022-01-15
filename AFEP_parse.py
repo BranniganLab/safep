@@ -250,10 +250,24 @@ if __name__ == '__main__':
 
     plt.rcParams['figure.dpi'] = 150
 
-    # up and down both start at L=0.5
     u_nk = namd.extract_u_nk(fepoutFiles, temperature);
     u_nk = u_nk.sort_index(level=1).sort_index(axis='columns') #sort the data so it can be interpreted by the BAR estimator
 
+    from alchemlyb.preprocessing import subsampling
+
+    method = 'dhdl_all' #'dE' also works, 'dhdl' (the default) fails
+    affix = f'decorrelated_{method}'
+    #affix = 'unprocessed'
+
+    groups = u_nk.groupby('fep-lambda')
+    decorr = pd.DataFrame([])
+    # Decorrelate each lambda individually
+    for key, group in groups:
+        test = subsampling.decorrelate_u_nk(group, method)
+        decorr = decorr.append(test)
+
+    u_nk = decorr.copy()
+    
     bar = BAR()
     bar.fit(u_nk)
 
