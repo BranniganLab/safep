@@ -5,7 +5,7 @@ from glob import glob #file regexes
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-#from tqdm import tqdm #for progress bars
+from tqdm import tqdm #for progress bars
 import re #regex
 from natsort import natsorted #for sorting "naturally" instead of alphabetically
 
@@ -77,7 +77,7 @@ def readFEPOUT(fileName, step=1):
 
 def readFiles(files, step=1):
     fileList = []
-    for file in tqdm(files):
+    for file in files:
         df = readFEPOUT(file, step)
         fileList.append(df)
     data = pd.concat(fileList)
@@ -90,14 +90,43 @@ def readFiles(files, step=1):
 
 # In[13]:
 
-def u_nk_fromDF(data, temperature):
+def u_nk_fromDF(data, temperature, eqTime, warnings=True):
     from scipy.constants import R, calorie
     beta = 1/(R/(1000*calorie) * temperature) #So that the final result is in kcal/mol
     u_nk = pd.pivot_table(data, index=["step", "FromLambda"], columns="ToLambda", values="dE")
-    u_nk = u_nk.sort_index(level=0).sort_index(axis='columns') #sort the data so it can be interpreted by the BAR estimator
+    #u_nk = u_nk.sort_index(level=0).sort_index(axis='columns') #sort the data so it can be interpreted by the BAR estimator
     u_nk = u_nk*beta
-    #u_nk = u_nk.sort_index(level=1).sort_index(axis='columns') #sort the data so it can be interpreted by the BAR estimator
+    u_nk.index.names=['time', 'fep-lambda']
+    u_nk.columns.names = ['']
+    u_nk = u_nk.loc[u_nk.index.get_level_values('time')>=eqTime]
+
     
+    #Shift and align values to be consistent with alchemlyb standards
+    lambdas = list(set(u_nk.index.get_level_values(1)).union(set(u_nk.columns)))
+    lambdas.sort()
+    warns = set([])
+            
+    for L in lambdas:
+        try:
+            u_nk.loc[(slice(None), L), L] = 0
+        except:
+            if warnings:
+                warns.add(L)
+    
+    prev = lambdas[0]
+    for L in lambdas[1:]:
+        try:
+            u_nk.loc[(slice(None), L), prev] = u_nk.loc[(slice(None), L), prev].shift(1)
+        except:
+            if warnings:
+                warns.add(L)
+            
+        prev = L
+    
+    if len(warns)>0:
+        print(f"Warning: lambdas={warns} not found in indices/columns")
+    u_nk = u_nk.dropna(thresh=2)
+    u_nk = u_nk.sort_index(level=1).sort_index(axis='columns') #sort the data so it can be interpreted by the BAR estimator
     return u_nk
 
 
@@ -160,7 +189,7 @@ def convergence_plot(u_nk, states, tau=1):
 
     return plt.gca()
 
-def get_MBAR(bar, tau=1):
+def get_MBAR(bar):
     
     # Extract data for plotting
     states = bar.states_
@@ -175,7 +204,7 @@ def get_MBAR(bar, tau=1):
     
 
     # error estimates are off diagonal
-    ddf = np.array([bar.d_delta_f_.iloc[i, i+1] for i in range(len(states)-1)]) * np.sqrt(tau)
+    ddf = np.array([bar.d_delta_f_.iloc[i, i+1] for i in range(len(states)-1)])
 
     # Accumulate errors as sum of squares
     errors = np.array([np.sqrt((ddf[:i]**2).sum()) for i in range(len(states))])
@@ -189,7 +218,7 @@ def get_EXP(u_nk):
     groups = u_nk.groupby(level=1)
     dG=pd.DataFrame([])
     for name, group in groups:
-        dG[name] = np.log(np.mean(np.exp(-1*group)))
+        dG[name] = -np.log(np.mean(np.exp(-1*group)))
 
     dG_f=np.diag(dG, k=1)
     dG_b=np.diag(dG, k=-1)
