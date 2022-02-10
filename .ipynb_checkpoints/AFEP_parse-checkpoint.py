@@ -1,5 +1,10 @@
 #Large datasets can be difficult to parse on a workstation due to inefficiencies in the way data is represented for pymbar. When possible, reduce the size of your dataset.
+import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
+from numpy.lib.stride_tricks import sliding_window_view
+from scipy.stats import linregress as lr
+from scipy.stats import norm
 
 from glob import glob #file regexes
 import pandas as pd
@@ -289,6 +294,30 @@ def get_dG_fromData(data, temperature):
 
     return dG_f, dG_b
 
+
+# Additional utility functions:
+# Estimate the probability density distribution from the moving slope of a CDF. i.e. using the values X and their cumulative density FX
+def getMovingAveSlope(X,FX,window):
+    slopes = []
+    Xwindowed = sliding_window_view(X, window)
+    FXwindowed = sliding_window_view(FX, window)
+   
+    for i in np.arange(len(Xwindowed)):
+        Xwindow = Xwindowed[i]
+        FXwindow = FXwindowed[i]
+        result = lr(Xwindow, FXwindow)
+        m = result.slope
+        slopes.append(m)
+    return slopes
+
+# Calculate the coefficient of determination:
+def GetRsq(X, Y, Yexpected):
+    residuals = Y-Yexpected
+    SSres = np.sum(residuals**2)
+    SStot = np.sum((X-np.mean(X))**2)
+    R = 1-SSres/SStot
+    R
+
 if __name__ == '__main__':
     fepoutFiles = glob('*.fep*')
     temperature = 300
@@ -321,3 +350,5 @@ if __name__ == '__main__':
     plot_per_window(bar)
     convergence_plot(u_nk)
     fb_discrepancy_plots(u_nk)
+
+
