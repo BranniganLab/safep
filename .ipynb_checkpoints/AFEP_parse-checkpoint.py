@@ -139,7 +139,7 @@ def get_dG(u_nk):
     groups = u_nk.groupby(level=1)
     dG=pd.DataFrame([]) 
     for name, group in groups:
-        dG[name] = np.log(np.mean(np.exp(-1*group)))
+        dG[name] = -np.log(np.mean(np.exp(-1*group)))
         dG = dG.copy() # this is actually faster than having a fragmented dataframe
         
     return dG
