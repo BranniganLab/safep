@@ -1,0 +1,11 @@
+# Procedure for patching and generating a new replica:
+- Open the system in vmd
+- Using colvars, measure the distance between the C1 carbons of the lipid to be patched and a lipid on the opposite leaflet.
+- Identify the mean and width of that distribution
+- Create a harmonic walls restraint that keeps the C1 carbon in the appropriate range.
+- Set the upper and lower walls to include ~95% to 99% of the distribution (typically mean +/- 6A)
+- Save these as zrestraint.PO[XY].colvars
+- Update the prefixes in the do_run script, the relentlessFEP config file (config*.yaml), and the namd  config file. 
+- Use mutateResidue and doAlch found in CHARMMformatics/VMD_scripts/patch_script.tcl to generate the input files
+- MAKE SURE ALL "prefix" variables match exactly
+- [optional] run a five minute test run by altering the slurm submit script inside do_run*.sh

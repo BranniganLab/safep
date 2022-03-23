@@ -1,0 +1,32 @@
+units real
+forceNoPBC yes
+
+colvar {
+    name zrestraint
+
+    # Insert one or several components below (see templates/components)
+
+    distanceZ {
+        forceNoPBC yes
+        main {
+            # "auto-updating" keyword updates atom IDs when applying cfg or changing molecule
+            # auto-updating selection: "segname MEMB and resid 1 and name C1"
+            atomNumbers 25
+
+        }
+        ref {
+            # "auto-updating" keyword updates atom IDs when applying cfg or changing molecule
+            # auto-updating selection: "segname MEMB and resid 70 and name C1"
+            atomNumbers 9271
+        }
+    }
+}
+
+harmonicwalls {
+    colvars        zrestraint
+    lowerWalls     29
+    upperWalls     41
+    forceConstant  4.0
+}
+
+
