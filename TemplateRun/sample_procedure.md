@@ -8,4 +8,4 @@
 - Update the prefixes in the do_run script, the relentlessFEP config file (config*.yaml), and the namd  config file. 
 - Use mutateResidue and doAlch found in CHARMMformatics/VMD_scripts/patch_script.tcl to generate the input files
 - MAKE SURE ALL "prefix" variables match exactly
-- [optional] run a five minute test run by altering the slurm submit script inside do_run*.sh
+- Generate initial conditions by minimizing and relaxing the initial conditions for a few thousand steps. A long equilibration should not be necessary for sufficiently small alchemical transformations and reasonable internal coordinates.
