@@ -211,7 +211,7 @@ def convergence_plot(u_nk, states, tau=1):
 
     return plt.gca()
 
-def get_MBAR(bar):
+def get_BAR(bar):
     
     # Extract data for plotting
     states = bar.states_
