@@ -296,6 +296,89 @@ def get_dG_fromData(data, temperature):
 
 
 # Additional utility functions:
+
+#Functions for bootstrapping estimates and generating confidence intervals
+def bootStrapEstimate(u_nk, estimator='BAR', iterations=100, schedule=[10,20,30,40,50,60,70,80,90,100]):
+    groups = u_nk.groupby('fep-lambda')
+
+    if estimator == 'EXP':
+        dGfs = {}
+        dGbs = {}
+    elif estimator == 'BAR':
+        dGs = {}
+        errs = {}
+    else:
+        raise ValueError(f"unknown estimator: {estimator}")
+
+    for p in schedule:
+        Fs = []
+        Bs = []
+        fs = []
+        #rs = []
+        for i in np.arange(iterations):
+            sampled = pd.DataFrame([])
+            for key, group in groups:
+                N = int(p*len(group)/100)
+                if N < 1:
+                    N=1
+                rows = np.random.choice(len(group), size=N)
+                test = group.iloc[rows,:]
+                sampled = sampled.append(test)
+            if estimator == 'EXP':
+                l, l_mid, dG_f, dG_b = get_EXP(pd.DataFrame(sampled))
+                Fs.append(np.sum(dG_f))
+                Bs.append(np.sum(-dG_b))
+            elif estimator == 'BAR':
+                tmpBar = BAR()
+                tmpBar.fit(sampled)
+                l, l_mid, f, df, ddf, errors = get_BAR(tmpBar)
+                fs.append(f.values[-1])
+                #rs.append(errors[-1])
+
+        if estimator == 'EXP':
+            dGfs[p] = Fs
+            dGbs[p] = Bs
+        else:
+            dGs[p] = fs
+            #errs[p] = rs
+
+    if estimator == 'EXP':
+        fwd = pd.DataFrame(dGfs).melt().copy()
+        bwd = pd.DataFrame(dGbs).melt().copy()
+        alldGs = fwd.append(bwd)
+        return (alldGs, fwd, bwd)
+    else:
+        alldGs = pd.DataFrame(dGs).melt().copy()
+        #allErrors = pd.DataFrame(errs).melt().copy()
+        return alldGs
+    
+def getLimits(allSamples):
+    groups = allSamples.groupby('variable')
+    means = []
+    errors = []
+    for key, group in groups:
+        means.append(np.mean(group.value))
+        errors.append(np.std(group.value))
+
+    upper = np.sum([[x*1 for x in errors],means], axis=0)
+    lower = np.sum([[x*(-1) for x in errors],means], axis=0)
+    
+    return (upper, lower, means)
+
+def getEmpiricalCI(allSamples, CI=0.95):
+    groups = allSamples.groupby('variable')
+
+    uppers=[]
+    lowers=[]
+    means=[]
+    for key, group in groups:
+        uppers.append(np.sort(group.value)[round(len(group)*CI)])
+        lowers.append(np.sort(group.value)[round(len(group)*(1-CI))])
+        means.append(np.mean(group.value))
+
+    return (uppers, lowers, means)
+
+
 # Estimate the probability density distribution from the moving slope of a CDF. i.e. using the values X and their cumulative density FX
 def getMovingAveSlope(X,FX,window):
     slopes = []
