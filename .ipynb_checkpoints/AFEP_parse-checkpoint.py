@@ -304,6 +304,7 @@ def bootStrapEstimate(u_nk, estimator='BAR', iterations=100, schedule=[10,20,30,
     if estimator == 'EXP':
         dGfs = {}
         dGbs = {}
+        alldGs = {}
     elif estimator == 'BAR':
         dGs = {}
         errs = {}
@@ -314,6 +315,7 @@ def bootStrapEstimate(u_nk, estimator='BAR', iterations=100, schedule=[10,20,30,
         Fs = []
         Bs = []
         fs = []
+        Gs = []
         #rs = []
         for i in np.arange(iterations):
             sampled = pd.DataFrame([])
@@ -326,8 +328,11 @@ def bootStrapEstimate(u_nk, estimator='BAR', iterations=100, schedule=[10,20,30,
                 sampled = sampled.append(test)
             if estimator == 'EXP':
                 l, l_mid, dG_f, dG_b = get_EXP(pd.DataFrame(sampled))
-                Fs.append(np.sum(dG_f))
-                Bs.append(np.sum(-dG_b))
+                F = np.sum(dG_f)
+                B = np.sum(-dG_b)
+                Fs.append(F)
+                Bs.append(B)
+                Gs.append(np.mean([F,B]))
             elif estimator == 'BAR':
                 tmpBar = BAR()
                 tmpBar.fit(sampled)
@@ -338,6 +343,7 @@ def bootStrapEstimate(u_nk, estimator='BAR', iterations=100, schedule=[10,20,30,
         if estimator == 'EXP':
             dGfs[p] = Fs
             dGbs[p] = Bs
+            alldGs[p] = Gs
         else:
             dGs[p] = fs
             #errs[p] = rs
@@ -345,7 +351,7 @@ def bootStrapEstimate(u_nk, estimator='BAR', iterations=100, schedule=[10,20,30,
     if estimator == 'EXP':
         fwd = pd.DataFrame(dGfs).melt().copy()
         bwd = pd.DataFrame(dGbs).melt().copy()
-        alldGs = fwd.append(bwd)
+        alldGs = pd.DataFrame(alldGs).melt().copy()
         return (alldGs, fwd, bwd)
     else:
         alldGs = pd.DataFrame(dGs).melt().copy()

@@ -154,6 +154,41 @@ def u_nk_fromDF(data, temperature, eqTime, warnings=True):
 
 # In[7]:
 
+def readAndProcess(fepoutFiles, temperature, decorrelate, detectEQ):
+    from alchemlyb.preprocessing import subsampling
+
+    u_nk = namd.extract_u_nk(fepoutFiles, temperature)
+    
+    affix=""
+    
+    if decorrelate:
+        print(f"Decorrelating samples. Flag='{decorrelate}'")
+        method = 'dE'
+        affix = f'{affix}_decorrelated_{method}'
+        groups = u_nk.groupby('fep-lambda')
+        decorr = pd.DataFrame([])
+        for key, group in groups:
+            test = subsampling.decorrelate_u_nk(group, method)
+            decorr = decorr.append(test)
+        u_nk = decorr
+    else:
+        affix = f'{affix}_unprocessed'
+    
+    if detectEQ:
+        print("Detecting Equilibrium")
+        affix = f"{affix}_AutoEquilibrium"
+        groups = u_nk.groupby('fep-lambda')
+        EQ = pd.DataFrame([])
+        for key, group in groups:
+            group = group[~group.index.duplicated(keep='first')]
+            test = subsampling.equilibrium_detection(group, group.dropna(axis=1).iloc[:,-1])
+            EQ = EQ.append(test)
+        u_nk = EQ
+    else:
+        affix=f"{affix}_HardEquilibrium"
+
+    return u_nk, affix
+
 
 def get_dG(u_nk):
     #the data frame is organized from index level 1 (fep-lambda) TO column
@@ -304,6 +339,7 @@ def bootStrapEstimate(u_nk, estimator='BAR', iterations=100, schedule=[10,20,30,
     if estimator == 'EXP':
         dGfs = {}
         dGbs = {}
+        alldGs = {}
     elif estimator == 'BAR':
         dGs = {}
         errs = {}
@@ -314,6 +350,7 @@ def bootStrapEstimate(u_nk, estimator='BAR', iterations=100, schedule=[10,20,30,
         Fs = []
         Bs = []
         fs = []
+        Gs = []
         #rs = []
         for i in np.arange(iterations):
             sampled = pd.DataFrame([])
@@ -326,8 +363,11 @@ def bootStrapEstimate(u_nk, estimator='BAR', iterations=100, schedule=[10,20,30,
                 sampled = sampled.append(test)
             if estimator == 'EXP':
                 l, l_mid, dG_f, dG_b = get_EXP(pd.DataFrame(sampled))
-                Fs.append(np.sum(dG_f))
-                Bs.append(np.sum(-dG_b))
+                F = np.sum(dG_f)
+                B = np.sum(-dG_b)
+                Fs.append(F)
+                Bs.append(B)
+                Gs.append(np.mean([F,B]))
             elif estimator == 'BAR':
                 tmpBar = BAR()
                 tmpBar.fit(sampled)
@@ -338,6 +378,7 @@ def bootStrapEstimate(u_nk, estimator='BAR', iterations=100, schedule=[10,20,30,
         if estimator == 'EXP':
             dGfs[p] = Fs
             dGbs[p] = Bs
+            alldGs[p] = Gs
         else:
             dGs[p] = fs
             #errs[p] = rs
@@ -345,7 +386,7 @@ def bootStrapEstimate(u_nk, estimator='BAR', iterations=100, schedule=[10,20,30,
     if estimator == 'EXP':
         fwd = pd.DataFrame(dGfs).melt().copy()
         bwd = pd.DataFrame(dGbs).melt().copy()
-        alldGs = fwd.append(bwd)
+        alldGs = pd.DataFrame(alldGs).melt().copy()
         return (alldGs, fwd, bwd)
     else:
         alldGs = pd.DataFrame(dGs).melt().copy()
@@ -401,37 +442,170 @@ def GetRsq(X, Y, Yexpected):
     R = 1-SSres/SStot
     R
 
+
+from scipy.special import erfc
+from scipy.optimize import curve_fit as scipyFit
+from scipy.stats import skew
+#Wrapper for fitting the normal CDF
+def cumFn(x, m, s):
+    r = norm.cdf(x, m, s)
+    return r
+
+def pdfFn(x,m,s):
+    r = norm.pdf(x,m,s)
+    return r
+
+#Calculate the PDF of the discrepancies
+def getPDF(dG_f, dG_b, DiscrepancyFitting='LS', dx=0.01, binNum=20):
+    diff = dG_f + np.array(dG_b)
+    diff.sort()
+    X = diff
+    Y = np.arange(len(X))/len(X)
+
+    #fit a normal distribution to the existing data
+    if DiscrepancyFitting == 'LS':
+        fitted = scipyFit(cumFn, X, Y)[0] #Fit norm.cdf to (X,Y)
+    elif DiscrepancyFitting == 'ML':
+        fitted = norm.fit(X) # fit a normal distribution to X
+    else:
+        raise("Error: Discrepancy fitting code not known. Acceptable values: ML (maximum likelihood) or LS (least squares)")
+    discrepancies = dG_f + np.array(dG_b)
+
+    pdfY, pdfX = np.histogram(discrepancies, bins=binNum, density=True)
+    pdfX = (pdfX[1:]+pdfX[:-1])/2
+
+    pdfXnorm  = np.arange(np.min(X), np.max(X), dx)
+    pdfYnorm = norm.pdf(pdfXnorm, fitted[0], fitted[1])
+
+    pdfYexpected = norm.pdf(pdfX, fitted[0], fitted[1])
+           
+    return X, Y, pdfX, pdfY, fitted, pdfXnorm, pdfYnorm, pdfYexpected
+
+
 if __name__ == '__main__':
-    fepoutFiles = glob('*.fep*')
-    temperature = 300
-    RT = 0.00198720650096 * temperature
 
-    plt.rcParams['figure.dpi'] = 150
+    import argparse
+    import os
+  
+    parser = argparse.ArgumentParser(description='')
 
-    u_nk = namd.extract_u_nk(fepoutFiles, temperature);
-    u_nk = u_nk.sort_index(level=1).sort_index(axis='columns') #sort the data so it can be interpreted by the BAR estimator
+    parser.add_argument('--path', type=str, help='The absolute path to the directory containing the fepout files', default='.')
+    parser.add_argument('--fepoutre', type=str, help='A regular expression that matches the fepout files of interest.', default='*.fep*')
+    parser.add_argument('--temperature', type=float, help='The temperature at which the FEP was run.')
+    parser.add_argument('--decorrelate', type=bool, help='Flag to determine whether or not to decorrelate the data. (1=decorrelate, 0=use all data)', default=0)
+    parser.add_argument('--detectEQ', type=bool, help='Flag for automated equilibrium detection.', default=0)
+    parser.add_argument('--fittingMethod', type=str, help='Method for fitting the forward-backward discrepancies (hysteresis). LS=least squares, ML=maximum likelihood Default: LS', default='LS')
+    parser.add_argument('--maxSize', type=float, help='Maximum total file size in GB. This is MUCH less than the required RAM. Default: 1', default=1)
+    parser.add_argument('--makeFigures', type=bool, help='Run additional diagnostics and save figures to the directory. default: true', default=0)
 
-    from alchemlyb.preprocessing import subsampling
+    args = parser.parse_args()
 
-    method = 'dhdl_all' #'dE' also works, 'dhdl' (the default) fails
-    affix = f'decorrelated_{method}'
-    #affix = 'unprocessed'
-
-    groups = u_nk.groupby('fep-lambda')
-    decorr = pd.DataFrame([])
-    # Decorrelate each lambda individually
-    for key, group in groups:
-        test = subsampling.decorrelate_u_nk(group, method)
-        decorr = decorr.append(test)
-
-    u_nk = decorr.copy()
+    path = args.path
+    filename = args.fepoutre
+    maxSize = args.maxSize
+    temperature = args.temperature
+    decorrelate = (args.decorrelate==1)
+    detectEQ = (args.detectEQ==1)
+    DiscrepancyFitting = args.fittingMethod
     
+    RT = 0.00198720650096 * temperature # ca. 0.59kcal/mol
+
+
+    fepoutFiles = glob(path+filename)
+    print(f"Processing: {path+filename}")
+
+    totalSize = 0
+    for file in fepoutFiles:
+        totalSize += os.path.getsize(file)
+    print(f"Fepout Files: {len(fepoutFiles)}\n")
+
+    if (totalSize/10**9)>maxSize:
+        print(f"Error: desired targets (Total size:{np.round(totalSize/10**9, 2)}GB) exceed your max size. Either increase your maximum acceptable file size, or use the 'Extended' notebook")
+        raise
+
+
+    print(f'DetectEQ: {detectEQ}')
+    print(f'Decorr: {decorrelate}')
+    u_nk, affix = readAndProcess(fepoutFiles, temperature, decorrelate, detectEQ)
+
+
+    u_nk = u_nk.sort_index(level=1)
     bar = BAR()
     bar.fit(u_nk)
+    l, l_mid, f, df, ddf, errors = get_BAR(bar)
+    changeAndError = f'\u0394G = {np.round(f.iloc[-1]*RT, 1)}\u00B1{np.round(errors[-1], 3)} kcal/mol'
+    print(changeAndError)
 
-    plot_cumsum(bar)
-    plot_per_window(bar)
-    convergence_plot(u_nk)
-    fb_discrepancy_plots(u_nk)
+    if args.makeFigures == 1:
+        # Cumulative change in kT
+        plt.errorbar(l, f, yerr=errors, marker='.')
+        plt.xlabel('lambda')
+        plt.ylabel('DeltaG(lambda) (kT)')
+        plt.title(f'Cumulative dG with accumulated errors {affix}\n{changeAndError}')
+        plt.savefig(f'{path}dG_cumulative_kT_{affix}.png', dpi=600)
+        plt.clf()
 
+        # Per-window change in kT
+        plt.errorbar(l_mid, df, yerr=ddf, marker='.')
+        plt.xlabel('lambda')
+        plt.ylabel('Delta G per window (kT)')
+        plt.title(f'Per-Window dG with individual errors {affix}')
+        plt.savefig(f'{path}dG_{affix}.png', dpi=600)
+        plt.clf()
+
+        # Per-window change in kT
+        plt.errorbar(l[1:-1], np.diff(df), marker='.')
+        plt.xlabel('lambda (L)')
+        plt.ylabel("dG'(L)")
+        plt.title(f'derivative of dG {affix}')
+        plt.savefig(f'{path}dG_prime_{affix}.png', dpi=600)
+        plt.clf()
+
+        ####
+        try:
+            convergence_plot(u_nk, l)
+            plt.title(f'Convergence {affix}')
+            plt.savefig(f'{path}convergence_{affix}.png', dpi=600)
+            plt.clf()
+        except:
+            print("Failed to generate convergence plot. Probably due to too few samples after decorrelation.")
+
+        ####
+        l, l_mid, dG_f, dG_b = get_EXP(u_nk)
+        plt.vlines(l_mid, np.zeros(len(l_mid)), dG_f + np.array(dG_b), label="fwd - bwd", linewidth=2)
+
+        plt.legend()
+        plt.title(f'Fwd-bwd discrepancies by lambda {affix}')
+        plt.xlabel('Lambda')
+        plt.ylabel('Diff. in delta-G')
+        plt.savefig(f'{path}discrepancies_{affix}.png', dpi=600)
+        plt.clf()
+
+
+        ###
+        #Do residual fitting
+        ###
+        X, Y, pdfX, pdfY, fitted, pdfXnorm, pdfYnorm, pdfYexpected = getPDF(dG_f, dG_b)
+        
+        #plot the data
+        fig, (pdfAx, pdfResid) = plt.subplots(2, 1, sharex=True)
+        plt.xlabel('Difference in delta-G')
+        
+        pdfAx.plot(pdfX, pdfY,  label="Estimated Distribution")
+        pdfAx.set_ylabel("PDF")
+        pdfAx.plot(pdfXnorm, pdfYnorm, label="Fitted Normal Distribution", color="orange")
+
+        #pdf residuals
+        pdfResiduals = pdfY-pdfYexpected
+        pdfResid.plot(pdfX, pdfResiduals)
+        pdfResid.set_ylabel("PDF residuals") 
+
+        fig.set_figheight(10)
+        if DiscrepancyFitting == 'LS':
+            pdfAx.title.set_text(f"Least squares fitting of cdf(fwd-bkwd)\nSkewness: {np.round(skew(X),2)}\nFitted parameters: Mean={np.round(fitted[0],3)}, Stdv={np.round(fitted[1],3)}\nPopulation parameters: Mean={np.round(np.average(X),3)}, Stdv={np.round(np.std(X),3)}")
+            plt.savefig(f"{path}LeastSquares_pdf_{affix}.png", dpi=600)
+        elif DiscrepancyFitting == 'ML':
+            pdfAx.title.set_text(f"Maximum likelihood fitting of fwd-bkwd\nFitted parameters: Mean={np.round(fitted[0],3)}, Stdv={np.round(fitted[1],3)}\nPopulation parameters: Mean={np.round(np.average(X),3)}, Stdv={np.round(np.std(X),3)}")
+            plt.savefig(f"{path}MaximumLikelihood_pdf_{affix}.png", dpi=600)
+        plt.clf()
 
