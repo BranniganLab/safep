@@ -169,7 +169,7 @@ def readAndProcess(fepoutFiles, temperature, decorrelate, detectEQ):
         decorr = pd.DataFrame([])
         for key, group in groups:
             test = subsampling.decorrelate_u_nk(group, method)
-            decorr = decorr.append(test)
+            decorr = pd.concat([decorr, test])
         u_nk = decorr
     else:
         affix = f'{affix}_unprocessed'
@@ -182,7 +182,7 @@ def readAndProcess(fepoutFiles, temperature, decorrelate, detectEQ):
         for key, group in groups:
             group = group[~group.index.duplicated(keep='first')]
             test = subsampling.equilibrium_detection(group, group.dropna(axis=1).iloc[:,-1])
-            EQ = EQ.append(test)
+            EQ = pd.concat([EQ, test])
         u_nk = EQ
     else:
         affix=f"{affix}_HardEquilibrium"
@@ -360,7 +360,7 @@ def bootStrapEstimate(u_nk, estimator='BAR', iterations=100, schedule=[10,20,30,
                     N=1
                 rows = np.random.choice(len(group), size=N)
                 test = group.iloc[rows,:]
-                sampled = sampled.append(test)
+                sampled = pd.concat([sampled, test])
             if estimator == 'EXP':
                 l, l_mid, dG_f, dG_b = get_EXP(pd.DataFrame(sampled))
                 F = np.sum(dG_f)
