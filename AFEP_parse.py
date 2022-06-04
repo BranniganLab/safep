@@ -23,6 +23,8 @@ from alchemlyb.visualisation import plot_convergence
 
 import re
 
+
+
 #Guess lambda based on file name (last number in the filename divided by 100)
 def guessLambda(fname):
     L = int(re.findall(r'\d+', fname)[-1])/100
@@ -215,6 +217,115 @@ def plot_per_window(df, l_mid, units):
     plt.ylabel(f'Delta G per window ({units})')
     return plt.gca()
 
+
+def batchProcess(paths, RT, decorrelate, pattern, temperature, detectEQ):
+    u_nks = {}
+    affixes = {}
+
+    #Read all
+    for path in paths:
+        print(f"Reading {path}")
+        key = path.split('/')[-2]
+        fepoutFiles = glob(path+'/'+pattern)
+        u_nks[key], affix = readAndProcess(fepoutFiles, temperature, decorrelate, detectEQ)
+
+
+    ls = {}
+    l_mids = {}
+    fs = {}
+    dfs = {}
+    ddfs = {}
+    errorses = {}
+    dG_fs = {}
+    dG_bs = {}
+
+    #do BAR fitting
+    for key in u_nks:
+        u_nk = u_nks[key]
+        u_nk = u_nk.sort_index(level=1)
+        bar = BAR()
+        bar.fit(u_nk)
+        ls[key], l_mids[key], fs[key], dfs[key], ddfs[key], errorses[key] = get_BAR(bar)
+        
+        expl, expmid, dG_fs[key], dG_bs[key] = get_EXP(u_nk)
+
+    #Collect into dataframes - could be more pythonic but it works
+    cumulative = pd.DataFrame()
+    for key in ls:
+        #cumulative[(key, 'l')] = ls[key]
+        cumulative[(key, 'f')] = fs[key]
+        cumulative[(key, 'errors')] = errorses[key]
+    cumulative.columns = pd.MultiIndex.from_tuples(cumulative.columns)
+
+    perWindow = pd.DataFrame()
+    for key in ls:
+        #perWindow[(key, 'l_mid')] = l_mids[key]
+        perWindow[(key, 'df')] = dfs[key]
+        perWindow[(key, 'ddf')] = ddfs[key]
+        perWindow[(key, 'dG_f')] = dG_fs[key]
+        perWindow[(key, 'dG_b')] = dG_bs[key]
+    perWindow.columns = pd.MultiIndex.from_tuples(perWindow.columns)
+    perWindow.index = l_mids[key]
+    
+    return u_nks, cumulative, perWindow, affix
+
+#Do the convergence calculations (like in alchemlyb's canonical convergence plot) but return the result for custom plotting
+def doConvergence(u_nk, states, tau=1):
+    grouped = u_nk.groupby('fep-lambda')
+    data_list = [grouped.get_group(s) for s in states]
+
+    #return data_list
+    
+    forward = []
+    forward_error = []
+    backward = []
+    backward_error = []
+    num_points = 10
+    for i in range(1, num_points+1):
+        # forward
+        #partial = pd.concat([data[:np.floor(len(data)/num_points*i)] for data in data_list])
+        partial = []
+        for data in data_list:
+            last = data[0].index.get_level_values(0)[-1]
+            first = data[0].index.get_level_values(0)[0]
+            nsteps = last-first
+            step = first + i*nsteps/num_points
+            mask = data[0].index.get_level_values(0)<=step
+            partial.append(data.loc[mask])
+            
+        partial = pd.concat(partial)
+        estimate = BAR().fit(partial)
+        
+        forward.append(estimate.delta_f_.iloc[0,-1])
+        # For BAR, the error estimates are off-diagonal
+        ddf = [estimate.d_delta_f_.iloc[i+1,i] * np.sqrt(tau) for i in range(len(states)-1)]
+        error = np.sqrt((np.array(ddf)**2).sum())
+        forward_error.append(error)
+
+        # backward
+        #partial = pd.concat([data[-np.ceil(len(data)/num_points*i):] for data in data_list])
+        
+        
+        partial = []
+        for data in data_list:
+            last = data[0].index.get_level_values(0)[-1]
+            first = data[0].index.get_level_values(0)[0]
+            nsteps = last-first
+            step = last - i*nsteps/num_points
+            mask = data[0].index.get_level_values(0)>=step
+            partial.append(data.loc[mask])
+        partial = pd.concat(partial)
+        
+        estimate = BAR().fit(partial)
+
+        backward.append(estimate.delta_f_.iloc[0,-1])
+        ddf = [estimate.d_delta_f_.iloc[i+1,i] * np.sqrt(tau) for i in range(len(states)-1)]
+        error = np.sqrt((np.array(ddf)**2).sum())
+        backward_error.append(error)
+
+    return forward, forward_error, backward, backward_error
+
+#Cannonical convergence plot
 def convergence_plot(u_nk, states, tau=1):
     grouped = u_nk.groupby('fep-lambda')
     data_list = [grouped.get_group(s) for s in states]
@@ -496,7 +607,7 @@ if __name__ == '__main__':
     parser.add_argument('--detectEQ', type=bool, help='Flag for automated equilibrium detection.', default=0)
     parser.add_argument('--fittingMethod', type=str, help='Method for fitting the forward-backward discrepancies (hysteresis). LS=least squares, ML=maximum likelihood Default: LS', default='LS')
     parser.add_argument('--maxSize', type=float, help='Maximum total file size in GB. This is MUCH less than the required RAM. Default: 1', default=1)
-    parser.add_argument('--makeFigures', type=bool, help='Run additional diagnostics and save figures to the directory. default: true', default=0)
+    parser.add_argument('--makeFigures', type=bool, help='Run additional diagnostics and save figures to the directory. default: False', default=0)
 
     args = parser.parse_args()
 
