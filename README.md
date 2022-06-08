@@ -3,7 +3,15 @@ SAFEP-related scripts and miscellaneous tools
 
 These scripts and notebooks are broadly applicable to FEP analysis.
 
+AFEP_parse.py contains all the functions and library calls necessary to run the notebook
 
+# Required modules:
+- numpy
+- pandas
+- matplotlib
+- alchemlyb (`pip install git+https://github.com/alchemistry/alchemlyb`)
+- natsort (for sorting file names)
+- glob (for unix-like file paths)
 
 # Contents:
 ## AlternativeParser_noBAR:
