@@ -323,7 +323,7 @@ def doConvergence(u_nk, tau=1, num_points=10):
         backward.append(f.iloc[-1])
         backward_error.append(errors[-1])
 
-    return forward, forward_error, backward, backward_error
+    return np.array(forward), np.array(forward_error), np.array(backward), np.array(backward_error)
 
 def convergencePlot(theax, fs, ferr, bs, berr, fwdColor='#0072B2', bwdColor='#D55E00', lgndF=None, lgndB=None):
     if not lgndF:
@@ -347,10 +347,19 @@ def doConvPlot(ax, X, fs, ferr, fwdColor, label=None):
     return ax
 
 #Cannonical convergence plot
-def convergence_plot(u_nk, tau=1):
+def convergence_plot(u_nk, tau=1, units='kT', RT=0.59):
     forward, forward_error, backward, backward_error = doConvergence(u_nk, num_points=10)
 
+    if units=='kcal/mol':
+        forward = forward*RT
+        forward_error = forward_error*RT
+        backward = backward*RT
+        backward_error = backward_error*RT
+    
     ax = plot_convergence(forward, forward_error, backward, backward_error)
+    
+    if units=='kcal/mol':
+        ax.set(ylabel=r'$\rm\Delta G$'+'\n(kcal/mol)')
 
     return plt.gca()
 
