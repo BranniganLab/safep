@@ -325,14 +325,28 @@ def doConvergence(u_nk, tau=1, num_points=10):
 
     return np.array(forward), np.array(forward_error), np.array(backward), np.array(backward_error)
 
+
+
+def doConvPlot(ax, X, fs, ferr, fwdColor, label=None):
+    ax.errorbar(X, fs, yerr=ferr, marker=None, linewidth=1, color=fwdColor, markerfacecolor='white', markeredgewidth=1, markeredgecolor=fwdColor, ms=5, label=label)
+    return ax
+
+
+
 def convergencePlot(theax, fs, ferr, bs, berr, fwdColor='#0072B2', bwdColor='#D55E00', lgndF=None, lgndB=None):
     if not lgndF:
         lgndF=fwdColor
         lgndB=bwdColor
         
+        
+    lower = fs[-1]-ferr[-1]
+    upper = fs[-1]+ferr[-1]
+    theax.fill_between([0,1],[lower, lower], [upper, upper], color=bwdColor, alpha=0.25)
     theax.errorbar(np.arange(len(fs))/len(fs)+0.1, fs, yerr=ferr, marker='o', linewidth=1, color=fwdColor, markerfacecolor='white', markeredgewidth=1, markeredgecolor=fwdColor, ms=5)
     theax.errorbar(np.arange(len(bs))/len(fs)+0.1, bs, yerr=berr, marker='o', linewidth=1, color=bwdColor, markerfacecolor='white', markeredgewidth=1, markeredgecolor=bwdColor, ms=5, linestyle='--')
 
+
+    
     theax.xaxis.set_ticks([0, 0.2, 0.4, 0.6, 0.8, 1])
     
     finalMean = fs[-1]
@@ -342,9 +356,19 @@ def convergencePlot(theax, fs, ferr, bs, berr, fwdColor='#0072B2', bwdColor='#D5
     
     return theax
 
-def doConvPlot(ax, X, fs, ferr, fwdColor, label=None):
-    ax.errorbar(X, fs, yerr=ferr, marker=None, linewidth=1, color=fwdColor, markerfacecolor='white', markeredgewidth=1, markeredgecolor=fwdColor, ms=5, label=label)
-    return ax
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #Cannonical convergence plot
 def convergence_plot(u_nk, tau=1, units='kT', RT=0.59):
