@@ -23,6 +23,58 @@ from alchemlyb.visualisation import plot_convergence
 
 import re
 
+
+def batchProcess(paths, RT, decorrelate, pattern, temperature, detectEQ):
+    u_nks = {}
+    affixes = {}
+
+    #Read all
+    for path in paths:
+        print(f"Reading {path}")
+        key = path.split('/')[-2]
+        fepoutFiles = glob(path+'/'+pattern)
+        u_nks[key], affix = readAndProcess(fepoutFiles, temperature, decorrelate, detectEQ)
+
+
+    ls = {}
+    l_mids = {}
+    fs = {}
+    dfs = {}
+    ddfs = {}
+    errorses = {}
+    dG_fs = {}
+    dG_bs = {}
+
+    #do BAR fitting
+    for key in u_nks:
+        u_nk = u_nks[key]
+        u_nk = u_nk.sort_index(level=1)
+        bar = BAR()
+        bar.fit(u_nk)
+        ls[key], l_mids[key], fs[key], dfs[key], ddfs[key], errorses[key] = get_BAR(bar)
+        
+        expl, expmid, dG_fs[key], dG_bs[key] = get_EXP(u_nk)
+
+    #Collect into dataframes - could be more pythonic but it works
+    cumulative = pd.DataFrame()
+    for key in ls:
+        #cumulative[(key, 'l')] = ls[key]
+        cumulative[(key, 'f')] = fs[key]
+        cumulative[(key, 'errors')] = errorses[key]
+    cumulative.columns = pd.MultiIndex.from_tuples(cumulative.columns)
+
+    perWindow = pd.DataFrame()
+    for key in ls:
+        #perWindow[(key, 'l_mid')] = l_mids[key]
+        perWindow[(key, 'df')] = dfs[key]
+        perWindow[(key, 'ddf')] = ddfs[key]
+        perWindow[(key, 'dG_f')] = dG_fs[key]
+        perWindow[(key, 'dG_b')] = dG_bs[key]
+    perWindow.columns = pd.MultiIndex.from_tuples(perWindow.columns)
+    perWindow.index = l_mids[key]
+    
+    return u_nks, cumulative, perWindow, affix
+
 def saveUNK(u_nk, filepath):
     u_nk.to_csv(filepath)
     
