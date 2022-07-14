@@ -444,7 +444,7 @@ def get_EXP(u_nk):
     groups = u_nk.groupby(level=1)
     dG=pd.DataFrame([])
     for name, group in groups:
-        dG[name] = np.log(np.mean(np.exp(-1*group)))
+        dG[name] = np.log(np.mean(np.exp(-1*group), axis=0))
 
     dG_f=np.diag(dG, k=1)
     dG_b=np.diag(dG, k=-1)
