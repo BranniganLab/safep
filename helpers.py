@@ -3,13 +3,6 @@ import logging
 import copy
 from AFEP_parse import *
 import matplotlib as mpl
-plt.rcParams['figure.dpi'] = 150
-
-logging.captureWarnings(True)
-warnings.simplefilter(action='ignore', category=FutureWarning)
-logger = logging.getLogger("alchemlyb.parsers.NAMD")
-logging.disable(level='CRITICAL')
-
 
 def checkPaths(paths, nDone):
     goodpaths = []
@@ -52,7 +45,7 @@ def processLeg(paths, RT, decorrelate, pattern, temperature, detectEQ, lambdas):
     
     #do hysteresis
 
-    for key in reps:
+    for key in set(perWindow.columns.get_level_values(0)):
         perWindow[(key, 'diff')] = perWindow[(key, 'dG_f')]+perWindow[(key, 'dG_b')]
 
     #keys = set(cumulative.columns.get_level_values(0))
