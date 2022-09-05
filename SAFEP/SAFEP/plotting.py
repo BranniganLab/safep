@@ -24,7 +24,7 @@ from tqdm import tqdm #for progress bars
 from natsort import natsorted #for sorting "naturally" instead of alphabetically
 from glob import glob #file regexes
 
-from helpers import *
+from .helpers import *
 
 
 def convergencePlot(theax, fs, ferr, bs, berr, fwdColor='#0072B2', bwdColor='#D55E00', lgndF=None, lgndB=None):

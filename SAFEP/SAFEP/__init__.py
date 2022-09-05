@@ -9,11 +9,8 @@ __author__ = 'Jérôme Hénin, Ezry Santiago, Tom Joseph, Grace Brannigan'
 __credits__ = 'Rutgers University - Camden'
 __all__=['processing', 'plotting', 'fileIO', 'estimators', 'helpers']
 
-import os
-os.getcwd()
-
-from processing import *
-from plotting import *
-from fileIO import *
-from estimators import *
+from .processing import *
+from .plotting import *
+from .fileIO import *
+from .estimators import *
 

@@ -24,7 +24,7 @@ from tqdm import tqdm #for progress bars
 from natsort import natsorted #for sorting "naturally" instead of alphabetically
 from glob import glob #file regexes
 
-from helpers import *
+from .helpers import *
 
 
 def get_EXP(u_nk):
