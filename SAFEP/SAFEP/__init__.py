@@ -1,5 +1,5 @@
 """
-SAFEP
+safep
 
 Tools for Analyzing and Debugging (SA)FEP calculations
 """
