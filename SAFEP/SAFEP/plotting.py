@@ -1,7 +1,3 @@
-
-
-
-
 def convergencePlot(theax, fs, ferr, bs, berr, fwdColor='#0072B2', bwdColor='#D55E00', lgndF=None, lgndB=None):
     if not lgndF:
         lgndF=fwdColor
@@ -19,12 +15,9 @@ def convergencePlot(theax, fs, ferr, bs, berr, fwdColor='#0072B2', bwdColor='#D5
     
     return theax
 
-
 def doConvPlot(ax, X, fs, ferr, fwdColor, label=None):
     ax.errorbar(X, fs, yerr=ferr, marker=None, linewidth=1, color=fwdColor, markerfacecolor='white', markeredgewidth=1, markeredgecolor=fwdColor, ms=5, label=label)
     return ax
-
-
 
 #Cannonical convergence plot
 def convergence_plot(u_nk, tau=1, units='kT', RT=0.59):
@@ -51,7 +44,6 @@ def convergence_plot(u_nk, tau=1, units='kT', RT=0.59):
     plt.ylabel('Diff. in delta-G')
     #Return the figure
     return plt.gca()    
-
 
 def fb_discrepancy_hist(dG_f, dG_b):
     plt.hist(dG_f + np.array(dG_b));

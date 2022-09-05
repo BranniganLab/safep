@@ -1,15 +1,18 @@
 
+#Guess lambda based on file name (last number in the filename divided by 100)
+def guessLambda(fname):
+    L = int(re.findall(r'\d+', fname)[-1])/100
+    return L
+    
 def saveUNK(u_nk, filepath):
     u_nk.to_csv(filepath)
-    
-        
+     
 def readUNK(filepath):
     u_nk = pd.read_csv(filepath)
     u_nk['fep-lambda'] = u_nk['fep-lambda'].astype(str)
     u_nk = u_nk.set_index(['time', 'fep-lambda'])
     
     return u_nk.copy()
-    
     
 #redFEPOUT reads each file in a single pass: keeping track of lambda values and appending each line to an array. 
 #The array is cast to a dataframe at the end to avoid appending to a dataframe
@@ -75,8 +78,6 @@ def readFEPOUT(fileName, step=1):
 
     df = df.sort_index()
     return df
-    
-    
     
  def readFiles(files, step=1):
     fileList = []

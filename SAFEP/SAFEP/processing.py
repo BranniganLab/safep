@@ -49,53 +49,6 @@ def batchProcess(paths, RT, decorrelate, pattern, temperature, detectEQ):
     
     return u_nks, cumulative, perWindow, affix
     
-    
-    #Guess lambda based on file name (last number in the filename divided by 100)
-def guessLambda(fname):
-    L = int(re.findall(r'\d+', fname)[-1])/100
-    return L
-    
-    
-def u_nk_fromDF(data, temperature, eqTime, warnings=True):
-    from scipy.constants import R, calorie
-    beta = 1/(R/(1000*calorie) * temperature) #So that the final result is in kcal/mol
-    u_nk = pd.pivot_table(data, index=["step", "FromLambda"], columns="ToLambda", values="dE")
-    #u_nk = u_nk.sort_index(level=0).sort_index(axis='columns') #sort the data so it can be interpreted by the BAR estimator
-    u_nk = u_nk*beta
-    u_nk.index.names=['time', 'fep-lambda']
-    u_nk.columns.names = ['']
-    u_nk = u_nk.loc[u_nk.index.get_level_values('time')>=eqTime]
-
-    
-    #Shift and align values to be consistent with alchemlyb standards
-    lambdas = list(set(u_nk.index.get_level_values(1)).union(set(u_nk.columns)))
-    lambdas.sort()
-    warns = set([])
-            
-    for L in lambdas:
-        try:
-            u_nk.loc[(slice(None), L), L] = 0
-        except:
-            if warnings:
-                warns.add(L)
-    
-    prev = lambdas[0]
-    for L in lambdas[1:]:
-        try:
-            u_nk.loc[(slice(None), L), prev] = u_nk.loc[(slice(None), L), prev].shift(1)
-        except:
-            if warnings:
-                warns.add(L)
-            
-        prev = L
-    
-    if len(warns)>0:
-        print(f"Warning: lambdas={warns} not found in indices/columns")
-    u_nk = u_nk.dropna(thresh=2)
-    u_nk = u_nk.sort_index(level=1).sort_index(axis='columns') #sort the data so it can be interpreted by the BAR estimator
-    return u_nk
-    
-    
 def readAndProcess(fepoutFiles, temperature, decorrelate, detectEQ):
     from alchemlyb.preprocessing import subsampling
 
@@ -130,59 +83,7 @@ def readAndProcess(fepoutFiles, temperature, decorrelate, detectEQ):
         affix=f"{affix}_HardEquilibrium"
 
     return u_nk, affix
-    
-    
-def get_dG(u_nk):
-    #the data frame is organized from index level 1 (fep-lambda) TO column
-    #dG will be FROM column TO index
-    groups = u_nk.groupby(level=1)
-    dG=pd.DataFrame([]) 
-    for name, group in groups:
-        dG[name] = np.log(np.mean(np.exp(-1*group)))
-        dG = dG.copy() # this is actually faster than having a fragmented dataframe
-        
-    return dG
-    
-
-def doEstimation(u_nk, method='both'):
-    u_nk = u_nk.sort_index(level=1)
-    cumulative = pd.DataFrame()
-    perWindow = pd.DataFrame()
-    if method=='both' or method=='BAR':
-        bar = BAR()
-        bar.fit(u_nk)
-        ls, l_mids, fs, dfs, ddfs, errors = get_BAR(bar)
-        
-        cumulative[('BAR', 'f')] = fs
-        cumulative[('BAR', 'errors')] = errors
-        cumulative.index = ls
-
-        perWindow[('BAR','df')] = dfs
-        perWindow[('BAR', 'ddf')] = ddfs
-        perWindow.index = l_mids
-        
-    if method=='both' or method=='EXP':
-        expl, expmid, dG_fs, dG_bs = get_EXP(u_nk)
-
-        cumulative[('EXP', 'ff')] = np.insert(np.cumsum(dG_fs),0,0)
-        cumulative[('EXP', 'fb')] = np.insert(-np.cumsum(dG_bs),0,0)
-        cumulative.index = expl 
-        
-        perWindow[('EXP','dG_f')] = dG_fs
-        perWindow[('EXP','dG_b')] = dG_bs
-        perWindow[('EXP', 'difference')] = np.array(dG_fs)+np.array(dG_bs)        
-        perWindow.index = expmid
-        
-    
-    perWindow.columns = pd.MultiIndex.from_tuples(perWindow.columns)
-    cumulative.columns = pd.MultiIndex.from_tuples(cumulative.columns)
-    
-    return perWindow.copy(), cumulative.copy()    
-    
-
-    
-
-
+  
 def moving_average(x, w):
     return np.convolve(x, np.ones(w), 'same') / w
     
@@ -256,78 +157,6 @@ def doConvergence(u_nk, tau=1, num_points=10):
 
     return np.array(forward), np.array(forward_error), np.array(backward), np.array(backward_error)
 
-
-
-
-
-def get_BAR(bar):
-    
-    # Extract data for plotting
-    states = bar.states_
-
-    f = bar.delta_f_.iloc[0,:] # dataframe
-    l = np.array([float(s) for s in states])
-    # lambda midpoints for each window
-    l_mid = 0.5*(l[1:] + l[:-1])
-
-    # FE differences are off diagonal
-    df = np.diag(bar.delta_f_, k=1)
-    
-
-    # error estimates are off diagonal
-    ddf = np.array([bar.d_delta_f_.iloc[i, i+1] for i in range(len(states)-1)])
-
-    # Accumulate errors as sum of squares
-    errors = np.array([np.sqrt((ddf[:i]**2).sum()) for i in range(len(states))])
-    
-    
-    return l, l_mid, f, df, ddf, errors
-
-
-def get_EXP(u_nk):
-    #the data frame is organized from index level 1 (fep-lambda) TO column
-    #dG will be FROM column TO index
-    groups = u_nk.groupby(level=1)
-    dG=pd.DataFrame([])
-    for name, group in groups:
-        dG[name] = np.log(np.mean(np.exp(-1*group), axis=0))
-
-    dG_f=np.diag(dG, k=1)
-    dG_b=np.diag(dG, k=-1)
-
-    l=dG.columns.to_list()
-    l_mid = np.mean([l[1:],l[:-1]], axis=0)
-
-    return l, l_mid, dG_f, dG_b
-
-#Light-weight exponential estimator
-def get_dG_fromData(data, temperature):
-    from scipy.constants import R, calorie
-    beta = 1/(R/(1000*calorie) * temperature) #So that the final result is in kcal/mol
-    
-    groups = data.groupby(level=0)
-    dG=[]
-    for name, group in groups:
-        isUp = group.up
-        dE = group.dE
-        toAppend = [name, -1*np.log(np.mean(np.exp(-beta*dE[isUp]))), 1]
-        dG.append(toAppend)
-        toAppend=[name, -1*np.log(np.mean(np.exp(-beta*dE[~isUp]))), 0]
-        dG.append(toAppend)
-    
-    dG = pd.DataFrame(dG, columns=["window", "dG", "up"])
-    dG = dG.set_index('window')
-    
-    dG_f = dG.loc[dG.up==1] 
-    dG_b = dG.loc[dG.up==0]
-
-    dG_f = dG_f.dG.dropna()
-    dG_b = dG_b.dG.dropna()
-
-    return dG_f, dG_b
-
-
-
 #Functions for bootstrapping estimates and generating confidence intervals
 def bootStrapEstimate(u_nk, estimator='BAR', iterations=100, schedule=[10,20,30,40,50,60,70,80,90,100]):
     groups = u_nk.groupby('fep-lambda')
@@ -389,9 +218,6 @@ def bootStrapEstimate(u_nk, estimator='BAR', iterations=100, schedule=[10,20,30,
         #allErrors = pd.DataFrame(errs).melt().copy()
         return alldGs
 
-
-
-
 def getLimits(allSamples):
     groups = allSamples.groupby('variable')
     means = []
@@ -418,7 +244,6 @@ def getEmpiricalCI(allSamples, CI=0.95):
 
     return (uppers, lowers, means)
 
-
 # Estimate the probability density distribution from the moving slope of a CDF. i.e. using the values X and their cumulative density FX
 def getMovingAveSlope(X,FX,window):
     slopes = []
@@ -432,27 +257,6 @@ def getMovingAveSlope(X,FX,window):
         m = result.slope
         slopes.append(m)
     return slopes
-
-# Calculate the coefficient of determination:
-def GetRsq(X, Y, Yexpected):
-    residuals = Y-Yexpected
-    SSres = np.sum(residuals**2)
-    SStot = np.sum((X-np.mean(X))**2)
-    R = 1-SSres/SStot
-    R
-
-
-from scipy.special import erfc
-from scipy.optimize import curve_fit as scipyFit
-from scipy.stats import skew
-#Wrapper for fitting the normal CDF
-def cumFn(x, m, s):
-    r = norm.cdf(x, m, s)
-    return r
-
-def pdfFn(x,m,s):
-    r = norm.pdf(x,m,s)
-    return r
 
 #Calculate the PDF of the discrepancies
 def getPDF(dG_f, dG_b, DiscrepancyFitting='LS', dx=0.01, binNum=20):
@@ -480,19 +284,71 @@ def getPDF(dG_f, dG_b, DiscrepancyFitting='LS', dx=0.01, binNum=20):
            
     return X, Y, pdfX, pdfY, fitted, pdfXnorm, pdfYnorm, pdfYexpected
 
+#Light-weight exponential estimator
+def get_dG_fromData(data, temperature):
+    from scipy.constants import R, calorie
+    beta = 1/(R/(1000*calorie) * temperature) #So that the final result is in kcal/mol
+    
+    groups = data.groupby(level=0)
+    dG=[]
+    for name, group in groups:
+        isUp = group.up
+        dE = group.dE
+        toAppend = [name, -1*np.log(np.mean(np.exp(-beta*dE[isUp]))), 1]
+        dG.append(toAppend)
+        toAppend=[name, -1*np.log(np.mean(np.exp(-beta*dE[~isUp]))), 0]
+        dG.append(toAppend)
+    
+    dG = pd.DataFrame(dG, columns=["window", "dG", "up"])
+    dG = dG.set_index('window')
+    
+    dG_f = dG.loc[dG.up==1] 
+    dG_b = dG.loc[dG.up==0]
 
+    dG_f = dG_f.dG.dropna()
+    dG_b = dG_b.dG.dropna()
 
+    return dG_f, dG_b
+    
+def u_nk_fromDF(data, temperature, eqTime, warnings=True):
+    from scipy.constants import R, calorie
+    beta = 1/(R/(1000*calorie) * temperature) #So that the final result is in kcal/mol
+    u_nk = pd.pivot_table(data, index=["step", "FromLambda"], columns="ToLambda", values="dE")
+    #u_nk = u_nk.sort_index(level=0).sort_index(axis='columns') #sort the data so it can be interpreted by the BAR estimator
+    u_nk = u_nk*beta
+    u_nk.index.names=['time', 'fep-lambda']
+    u_nk.columns.names = ['']
+    u_nk = u_nk.loc[u_nk.index.get_level_values('time')>=eqTime]
 
-
-
-
-
-
-
-
-
-
-
+    
+    #Shift and align values to be consistent with alchemlyb standards
+    lambdas = list(set(u_nk.index.get_level_values(1)).union(set(u_nk.columns)))
+    lambdas.sort()
+    warns = set([])
+            
+    for L in lambdas:
+        try:
+            u_nk.loc[(slice(None), L), L] = 0
+        except:
+            if warnings:
+                warns.add(L)
+    
+    prev = lambdas[0]
+    for L in lambdas[1:]:
+        try:
+            u_nk.loc[(slice(None), L), prev] = u_nk.loc[(slice(None), L), prev].shift(1)
+        except:
+            if warnings:
+                warns.add(L)
+            
+        prev = L
+    
+    if len(warns)>0:
+        print(f"Warning: lambdas={warns} not found in indices/columns")
+    u_nk = u_nk.dropna(thresh=2)
+    u_nk = u_nk.sort_index(level=1).sort_index(axis='columns') #sort the data so it can be interpreted by the BAR estimator
+    return u_nk
+    
 
 
 
