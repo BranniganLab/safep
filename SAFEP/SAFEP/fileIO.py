@@ -108,7 +108,7 @@ def readFEPOUT(fileName, step=1):
     df = df.sort_index()
     return df
     
- def readFiles(files, step=1):
+def readFiles(files, step=1):
     fileList = []
     for file in files:
         df = readFEPOUT(file, step)

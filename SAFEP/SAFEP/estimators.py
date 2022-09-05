@@ -101,7 +101,7 @@ def do_estimation(u_nk, method='both'):
     
     return perWindow.copy(), cumulative.copy()    
     
- def get_dG(u_nk):
+def get_dG(u_nk):
     #the data frame is organized from index level 1 (fep-lambda) TO column
     #dG will be FROM column TO index
     groups = u_nk.groupby(level=1)

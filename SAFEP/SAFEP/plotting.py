@@ -57,15 +57,16 @@ def convergence_plot(u_nk, tau=1, units='kT', RT=0.59):
         forward_error = forward_error*RT
         backward = backward*RT
         backward_error = backward_error*RT
-    
+
     ax = plot_convergence(forward, forward_error, backward, backward_error)
-    
+
     if units=='kcal/mol':
         ax.set(ylabel=r'$\rm\Delta G$'+'\n(kcal/mol)')
 
     return plt.gca()
     
- def fb_discrepancy_plot(l_mid, dG_f, dG_b):
+    
+def fb_discrepancy_plot(l_mid, dG_f, dG_b):
     plt.vlines(l_mid, np.zeros(len(l_mid)), dG_f + np.array(dG_b), label="fwd - bwd", linewidth=3)
     plt.legend()
     plt.title('Fwd-bwd discrepancies by lambda')
