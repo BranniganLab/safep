@@ -18,6 +18,7 @@ from alchemlyb.parsing import namd
 from alchemlyb.estimators import BAR
 from alchemlyb.visualisation.dF_state import plot_dF_state
 from alchemlyb.visualisation import plot_convergence
+from alchemlyb.preprocessing import subsampling
 
 import re
 from tqdm import tqdm #for progress bars
@@ -30,6 +31,11 @@ from .estimators import *
 
 
 def batchProcess(paths, RT, decorrelate, pattern, temperature, detectEQ):
+    '''
+    Read and process all NAMD FEPout files that match a given pattern
+    Arguments: paths (list of strings), RT (float), decorrelate (boolean, whether or not to use alchemlyb's decorrelation functions), pattern (to match), temperature, detectEQ (boolean, whether or not to use alchemlyb's equilibrium detection)
+    Returns: lists of: u_nks, cumulative estimates, perWindow estimates, an affix (that describes the data generation protocol) 
+    '''
     u_nks = {}
     affixes = {}
 
@@ -81,8 +87,11 @@ def batchProcess(paths, RT, decorrelate, pattern, temperature, detectEQ):
     return u_nks, cumulative, perWindow, affix
     
 def readAndProcess(fepoutFiles, temperature, decorrelate, detectEQ):
-    from alchemlyb.preprocessing import subsampling
-    
+    '''
+    Read NAMD fepout files for a single calculation and carry out any decorrelation or equilibrium detection
+    Arguments: files to parse, temperature, decorrelate (boolean, whether or not to use alchemlyb's decorrelation functions), detectEQ (boolean, whether or not to use alchemlyb's equilibrium detection)
+    Returns: u_nk, affix (a string that describes the data processing)
+    '''    
     fepoutFiles = natsorted(fepoutFiles)
     u_nk = namd.extract_u_nk(fepoutFiles, temperature)
     
@@ -115,12 +124,15 @@ def readAndProcess(fepoutFiles, temperature, decorrelate, detectEQ):
         affix=f"{affix}_HardEquilibrium"
 
     return u_nk, affix
-  
-def moving_average(x, w):
-    return np.convolve(x, np.ones(w), 'same') / w
+
     
-# Subsamples a u_nk dataframe using percentiles [0-100] of data instead of absolute percents
+# 
 def subSample(unkGrps, lowPct, hiPct):
+    '''
+    Subsamples a u_nk dataframe using percentiles [0-100] of data instead of absolute percents.
+    Arguments: unkGrps (u_nk grouped by fep-lambda), lowPct (lower percentile bound), hiPct (upper percentile bound)
+    Returns: partial (a u_nk in which each window is subsampled between the lower and upper percentile bounds)
+    '''
     partial = []
     for key, group in unkGrps:
         idcs = group.index.get_level_values(0)
@@ -142,9 +154,12 @@ def subSample(unkGrps, lowPct, hiPct):
 
 # altConvergence splits the data into percentile blocks. Inspired by block averaging
 def altConvergence(u_nk, nbins):
+    '''
+    An alternative convergence calculation that uses percentile blocks instead of cumulative samples. Inspired by block averages. Uses the BAR estimator.
+    Arguments: u_nk, nbins (number of blocks)
+    Returns: forward estimates, forward errors
+    '''
     groups = u_nk.groupby('fep-lambda')
-
-    #return data_list
     
     forward = []
     forward_error = []
@@ -163,9 +178,12 @@ def altConvergence(u_nk, nbins):
     return np.array(forward), np.array(forward_error)
 
 def doConvergence(u_nk, tau=1, num_points=10):
+    '''
+    Convergence calculation. Incrementally adds data from either the start or the end of each windows simulation and calculates the resulting change in free energy.
+    Arguments: u_nk, tau (an error scaling factor), num_points (number of chunks)
+    Returns: forward-sampled estimate (starting from t=start), forward-sampled error, backward-sampled estimate (from t=end), backward-sampled error
+    '''
     groups = u_nk.groupby('fep-lambda')
-
-    #return data_list
     
     forward = []
     forward_error = []
@@ -191,6 +209,11 @@ def doConvergence(u_nk, tau=1, num_points=10):
 
 #Functions for bootstrapping estimates and generating confidence intervals
 def bootStrapEstimate(u_nk, estimator='BAR', iterations=100, schedule=[10,20,30,40,50,60,70,80,90,100]):
+    '''
+    Bootstrapped free energy estimates with variable sample sizes. E.g. if schedule=[10], each bootstrapped sample will only be 10% the size of the original 
+    Arguments: u_nk, estimator (BAR or EXP[onential]), iterations (number of bootstrapped datasets to generate for each sample size), schedule (percent data to sample)
+    Returns: if estimator=='BAR', N estimates for each schedule value. if estimator=='EXP', N estimates of forward, backward, and the mean of the two for each schedule value
+    '''
     groups = u_nk.groupby('fep-lambda')
 
     if estimator == 'EXP':
@@ -251,6 +274,11 @@ def bootStrapEstimate(u_nk, estimator='BAR', iterations=100, schedule=[10,20,30,
         return alldGs
 
 def getLimits(allSamples):
+    '''
+    Get the mean and +/- 1 standard deviation for each group in a matrix
+    Arguments: allSamples (the dataframe)
+    Returns: (upper bounds, lower bounds, means)
+    '''
     groups = allSamples.groupby('variable')
     means = []
     errors = []
@@ -264,6 +292,11 @@ def getLimits(allSamples):
     return (upper, lower, means)
 
 def getEmpiricalCI(allSamples, CI=0.95):
+    '''
+    Get empirical confidence intervals from a dataframe
+    Arguments: allSamples (the dataframe), CI (the interval to determine)[0.95]
+    Returns: (upper bounds, lower bounds, means)
+    '''
     groups = allSamples.groupby('variable')
 
     uppers=[]
@@ -276,8 +309,12 @@ def getEmpiricalCI(allSamples, CI=0.95):
 
     return (uppers, lowers, means)
 
-# Estimate the probability density distribution from the moving slope of a CDF. i.e. using the values X and their cumulative density FX
 def getMovingAveSlope(X,FX,window):
+    '''
+    Estimates the PDF from a moving window average of a CDF
+    Arguments: X (inputs), FX (the CDF), window (width)
+    Returns: slopes
+    '''
     slopes = []
     Xwindowed = sliding_window_view(X, window)
     FXwindowed = sliding_window_view(FX, window)
@@ -292,6 +329,10 @@ def getMovingAveSlope(X,FX,window):
 
 #Calculate the PDF of the discrepancies
 def getPDF(dG_f, dG_b, DiscrepancyFitting='LS', dx=0.01, binNum=20):
+    '''
+    Estimate the PDF of the discrepancy data by fitting to a gaussian
+    
+    '''
     diff = dG_f + np.array(dG_b)
     diff.sort()
     X = diff
