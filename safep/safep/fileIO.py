@@ -27,25 +27,43 @@ from glob import glob #file regexes
 from .helpers import *
 
 
-
-#Guess lambda based on file name (last number in the filename divided by 100)
 def guessLambda(fname):
+    '''
+    Guess lambda based on file name (last number in the filename divided by 100). Not very good.
+    Arguments: file name
+    Returns: estimated lambda value
+    '''
     L = int(re.findall(r'\d+', fname)[-1])/100
     return L
     
 def saveUNK(u_nk, filepath):
+    '''
+    Write u_nk to a file
+    Arguments: u_nk in the format of alchemlyb, filepath
+    '''
     u_nk.to_csv(filepath)
      
 def readUNK(filepath):
+    '''
+    Read a u_nk that was written by saveUNK.
+    Arguments: filepath
+    Returns: u_nk
+    '''
     u_nk = pd.read_csv(filepath)
     u_nk['fep-lambda'] = u_nk['fep-lambda'].astype(str)
     u_nk = u_nk.set_index(['time', 'fep-lambda'])
     
     return u_nk.copy()
     
-#redFEPOUT reads each file in a single pass: keeping track of lambda values and appending each line to an array. 
-#The array is cast to a dataframe at the end to avoid appending to a dataframe
+
 def readFEPOUT(fileName, step=1):
+    '''
+    Reads all data from a NAMD fepout file unlike alchemlyb's parser.
+    readFEPOUT reads each file in a single pass: keeping track of lambda values and appending each line to an array. 
+    The array is cast to a dataframe at the end to avoid appending to a dataframe.
+    Arguments: fileName, step (stride)
+    Returns: a dataframe containing all the data in a fepout file.
+    '''
     colNames = ["type",'step', 'Elec_l', 'Elec_ldl', 'vdW_l', 'vdW_ldl', 'dE', 'dE_avg', 'Temp', 'dG', 'FromLambda', "ToLambda"]
 
     data = []
@@ -109,6 +127,11 @@ def readFEPOUT(fileName, step=1):
     return df
     
 def readFiles(files, step=1):
+    '''
+    Batch readFEPOUT
+    Arguments: file (paths), step (stride)
+    Returns: a list of dataframes, one dataframe per file
+    '''
     fileList = []
     for file in files:
         df = readFEPOUT(file, step)
