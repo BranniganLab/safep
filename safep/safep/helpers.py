@@ -26,6 +26,10 @@ from glob import glob #file regexes
 
 # Calculate the coefficient of determination:
 def GetRsq(X, Y, Yexpected):
+    '''
+    Calculate the coefficient of determination for arbitrary fits.
+    Arguments: X (inputs), Y (experimental data), Yexpected (fitted or predicted data)
+    '''
     residuals = Y-Yexpected
     SSres = np.sum(residuals**2)
     SStot = np.sum((X-np.mean(X))**2)
@@ -34,9 +38,15 @@ def GetRsq(X, Y, Yexpected):
  
 #Wrappers
 def cumFn(x, m, s):
+    '''
+    Wrapper for the normal cumulative density function
+    '''
     r = norm.cdf(x, m, s)
     return r
 
 def pdfFn(x,m,s):
+    '''
+    Wrapper for the normal probability density function
+    '''
     r = norm.pdf(x,m,s)
     return r
