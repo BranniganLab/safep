@@ -82,7 +82,8 @@ def batchProcess(paths, RT, decorrelate, pattern, temperature, detectEQ):
     
 def readAndProcess(fepoutFiles, temperature, decorrelate, detectEQ):
     from alchemlyb.preprocessing import subsampling
-
+    
+    fepoutFiles = natsorted(fepoutFiles)
     u_nk = namd.extract_u_nk(fepoutFiles, temperature)
     
     affix=""
