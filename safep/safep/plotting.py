@@ -28,6 +28,11 @@ from .helpers import *
 
 
 def convergencePlot(theax, fs, ferr, bs, berr, fwdColor='#0072B2', bwdColor='#D55E00', lgndF=None, lgndB=None):
+    '''
+    A revised convergence plot. Plays nicely with other plotting functions and is more customizable.
+    Arguments: theax[is] on which to plot, fs (forward estimates), ferr (forward errors), bs (backward-sampled estimates), berr (backward-sampled errors), fwdColor, bwdColor, lgndF legend forward color, lgndB legend backward color
+    Returns: theax[is]
+    '''
     if not lgndF:
         lgndF=fwdColor
         lgndB=bwdColor
@@ -45,11 +50,21 @@ def convergencePlot(theax, fs, ferr, bs, berr, fwdColor='#0072B2', bwdColor='#D5
     return theax
 
 def doConvPlot(ax, X, fs, ferr, fwdColor, label=None):
+    '''
+    A minimalist convergence plot
+    Arguments: ax[is], X (the X values), fs (forward estimates), ferr (forward errors), fwdColor (the forward color), label text
+    Returns: ax[is]
+    '''
     ax.errorbar(X, fs, yerr=ferr, marker=None, linewidth=1, color=fwdColor, markerfacecolor='white', markeredgewidth=1, markeredgecolor=fwdColor, ms=5, label=label)
     return ax
 
 #Cannonical convergence plot
 def convergence_plot(u_nk, tau=1, units='kT', RT=0.59):
+    '''
+    Older convergence plot. Does the convergence calculation and plotting. Deprecated.
+    Arguments: u_nk, tau (an error tuning factor), units (kT or kcal/mol), RT
+    Returns: a pyplot
+    '''
     forward, forward_error, backward, backward_error = doConvergence(u_nk, num_points=10)
 
     if units=='kcal/mol':
@@ -67,6 +82,11 @@ def convergence_plot(u_nk, tau=1, units='kT', RT=0.59):
     
     
 def fb_discrepancy_plot(l_mid, dG_f, dG_b):
+    '''
+    Plot the forward-backward discrepancy ("hysteresis")
+    Arguments: l_mid (lambda window midpoints), dG_f (forward estimates), dG_b (backward estimates)
+    Returns: a pyplot
+    '''
     plt.vlines(l_mid, np.zeros(len(l_mid)), dG_f + np.array(dG_b), label="fwd - bwd", linewidth=3)
     plt.legend()
     plt.title('Fwd-bwd discrepancies by lambda')
@@ -76,6 +96,11 @@ def fb_discrepancy_plot(l_mid, dG_f, dG_b):
     return plt.gca()    
 
 def fb_discrepancy_hist(dG_f, dG_b):
+    '''
+    Plot the distribution of the hystersis
+    Arguments: dG_f, dG_b
+    Returns: a pyplot
+    '''
     plt.hist(dG_f + np.array(dG_b));
     plt.title('Distribution of fwd-bwd discrepancies')
     plt.xlabel('Difference in delta-G')
