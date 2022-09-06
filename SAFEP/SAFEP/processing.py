@@ -25,7 +25,7 @@ from natsort import natsorted #for sorting "naturally" instead of alphabetically
 from glob import glob #file regexes
 
 from .helpers import *
-
+from .estimators import *
 
 
 
