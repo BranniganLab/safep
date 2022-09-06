@@ -50,3 +50,11 @@ def pdfFn(x,m,s):
     '''
     r = norm.pdf(x,m,s)
     return r
+
+def moving_average(x, w):
+    '''
+    Generate a moving average over x with window width w
+    Arguments: x (data), w (window width)
+    Returns: a moving window average
+    '''
+    return np.convolve(x, np.ones(w), 'same') / w
