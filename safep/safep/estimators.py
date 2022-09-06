@@ -28,8 +28,12 @@ from .helpers import *
 
 
 def get_EXP(u_nk):
-    #the data frame is organized from index level 1 (fep-lambda) TO column
-    #dG will be FROM column TO index
+    '''
+    Get exponential estimation of the change in free energy.
+    Arguments: u_nk in alchemlyb format
+    Returns: l[ambdas], l_mid [lambda window midpoints], dG_f [forward estimates], dG_b [backward estimates]
+    ''' 
+
     groups = u_nk.groupby(level=1)
     dG=pd.DataFrame([])
     for name, group in groups:
@@ -44,8 +48,12 @@ def get_EXP(u_nk):
     return l, l_mid, dG_f, dG_b
     
 def get_BAR(bar):
+    '''
+    Extract key information from an alchemlyb.BAR object. Useful for plotting.
+    Arguments: a fitted BAR object
+    Returns: l[ambdas], l_mid [lambda window midpoints], f [the cumulative free energy], df [the per-window free energy], ddf [the per-window errors], errors [the cumulative error]
+    '''
     
-    # Extract data for plotting
     states = bar.states_
 
     f = bar.delta_f_.iloc[0,:] # dataframe
@@ -55,7 +63,6 @@ def get_BAR(bar):
 
     # FE differences are off diagonal
     df = np.diag(bar.delta_f_, k=1)
-    
 
     # error estimates are off diagonal
     ddf = np.array([bar.d_delta_f_.iloc[i, i+1] for i in range(len(states)-1)])
@@ -67,6 +74,11 @@ def get_BAR(bar):
     return l, l_mid, f, df, ddf, errors
     
 def do_estimation(u_nk, method='both'):
+    '''
+    Run both exponential and BAR estimators and return the results in tidy dataframes.
+    Arguments: u_nk in the alchemlyb format, method of fitting (String: BAR, EXP, or both)
+    Returns: perWindow estimates (including errors), cumulative estimates (including errors)
+    '''
     u_nk = u_nk.sort_index(level=1)
     cumulative = pd.DataFrame()
     perWindow = pd.DataFrame()
@@ -101,13 +113,3 @@ def do_estimation(u_nk, method='both'):
     
     return perWindow.copy(), cumulative.copy()    
     
-def get_dG(u_nk):
-    #the data frame is organized from index level 1 (fep-lambda) TO column
-    #dG will be FROM column TO index
-    groups = u_nk.groupby(level=1)
-    dG=pd.DataFrame([]) 
-    for name, group in groups:
-        dG[name] = np.log(np.mean(np.exp(-1*group)))
-        dG = dG.copy() # this is actually faster than having a fragmented dataframe
-        
-    return dG
