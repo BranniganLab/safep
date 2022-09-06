@@ -49,7 +49,7 @@ def processLeg(paths, RT, decorrelate, pattern, temperature, detectEQ, lambdas):
         perWindow[(key, 'diff')] = perWindow[(key, 'dG_f')]+perWindow[(key, 'dG_b')]
 
     #keys = set(cumulative.columns.get_level_values(0))
-    colors = ['#0072B2', '#D55E00', '#CC79A7', '#009E73', '#E69F00', '#56B4E9']
+    colors = ['#0072B2', '#D55E00', '#CC79A7', '#009E73', '#E69F00', '#56B4E9', '#004455', '#ABCDFE', '#331155', '#654321']
     keyColors = {}
     i = 0
     for key in reps:
