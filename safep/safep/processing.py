@@ -97,18 +97,7 @@ def readAndProcess(fepoutFiles, temperature, decorrelate, detectEQ):
     
     affix=""
     
-    if decorrelate:
-        print(f"Decorrelating samples. Flag='{decorrelate}'")
-        method = 'dE'
-        affix = f'{affix}_decorrelated_{method}'
-        groups = u_nk.groupby('fep-lambda')
-        decorr = pd.DataFrame([])
-        for key, group in groups:
-            test = subsampling.decorrelate_u_nk(group, method)
-            decorr = pd.concat([decorr, test])
-        u_nk = decorr
-    else:
-        affix = f'{affix}_unprocessed'
+
     
     if detectEQ:
         print("Detecting Equilibrium")
@@ -122,6 +111,20 @@ def readAndProcess(fepoutFiles, temperature, decorrelate, detectEQ):
         u_nk = EQ
     else:
         affix=f"{affix}_HardEquilibrium"
+        
+        
+    if decorrelate:
+        print(f"Decorrelating samples. Flag='{decorrelate}'")
+        method = 'dE'
+        affix = f'{affix}_decorrelated_{method}'
+        groups = u_nk.groupby('fep-lambda')
+        decorr = pd.DataFrame([])
+        for key, group in groups:
+            test = subsampling.decorrelate_u_nk(group, method)
+            decorr = pd.concat([decorr, test])
+        u_nk = decorr
+    else:
+        affix = f'{affix}_unprocessed'
 
     return u_nk, affix
 
