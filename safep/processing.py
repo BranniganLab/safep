@@ -97,8 +97,6 @@ def readAndProcess(fepoutFiles, temperature, decorrelate, detectEQ):
     
     affix=""
     
-
-    
     if detectEQ:
         print("Detecting Equilibrium")
         affix = f"{affix}_AutoEquilibrium"
