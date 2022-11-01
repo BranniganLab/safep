@@ -13,4 +13,4 @@ These scripts and notebooks are broadly applicable to FEP analysis.
 ## Installation:
 0. Clone this repository
 1. Navigate to safep
-2. '''console pip install ./safep'''
+2. Run ''' pip install ./safep '''
