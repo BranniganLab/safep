@@ -9,8 +9,8 @@ These scripts and notebooks are broadly applicable to FEP analysis.
 - BAR_Estimator_Expanded: Extendend functionality including bootstrapped error estimates, kernel estimation of dL distributions, and more.
 - Batch_Basic: Like BAR_Estimator_Basic but designed for multiple replicas of the same calculation.
 
-## Safep Package
-# Installation:
+
+## Installation:
 0. Clone this repository
 1. Navigate to safep
 2. '''console pip install ./safep'''
