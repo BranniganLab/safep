@@ -10,6 +10,7 @@ from scipy.stats import norm
 from scipy.special import erfc
 from scipy.optimize import curve_fit as scipyFit
 from scipy.stats import skew
+import scipy as sp
 
 import pandas as pd
 
@@ -27,7 +28,7 @@ from glob import glob #file regexes
 from .helpers import *
 
 
-def convergencePlot(theax, fs, ferr, bs, berr, fwdColor='#0072B2', bwdColor='#D55E00', lgndF=None, lgndB=None):
+def convergence_plot(theax, fs, ferr, bs, berr, fwdColor='#0072B2', bwdColor='#D55E00', lgndF=None, lgndB=None):
     '''
     A revised convergence plot. Plays nicely with other plotting functions and is more customizable.
     Arguments: theax[is] on which to plot, fs (forward estimates), ferr (forward errors), bs (backward-sampled estimates), berr (backward-sampled errors), fwdColor, bwdColor, lgndF legend forward color, lgndB legend backward color
@@ -49,7 +50,7 @@ def convergencePlot(theax, fs, ferr, bs, berr, fwdColor='#0072B2', bwdColor='#D5
     
     return theax
 
-def doConvPlot(ax, X, fs, ferr, fwdColor, label=None):
+def do_conv_plot(ax, X, fs, ferr, fwdColor, label=None):
     '''
     A minimalist convergence plot
     Arguments: ax[is], X (the X values), fs (forward estimates), ferr (forward errors), fwdColor (the forward color), label text
@@ -58,29 +59,8 @@ def doConvPlot(ax, X, fs, ferr, fwdColor, label=None):
     ax.errorbar(X, fs, yerr=ferr, marker=None, linewidth=1, color=fwdColor, markerfacecolor='white', markeredgewidth=1, markeredgecolor=fwdColor, ms=5, label=label)
     return ax
 
-#Cannonical convergence plot
-def convergence_plot(u_nk, tau=1, units='kT', RT=0.59):
-    '''
-    Older convergence plot. Does the convergence calculation and plotting. Deprecated.
-    Arguments: u_nk, tau (an error tuning factor), units (kT or kcal/mol), RT
-    Returns: a pyplot
-    '''
-    forward, forward_error, backward, backward_error = doConvergence(u_nk, num_points=10)
 
-    if units=='kcal/mol':
-        forward = forward*RT
-        forward_error = forward_error*RT
-        backward = backward*RT
-        backward_error = backward_error*RT
-
-    ax = plot_convergence(forward, forward_error, backward, backward_error)
-
-    if units=='kcal/mol':
-        ax.set(ylabel=r'$\rm\Delta G$'+'\n(kcal/mol)')
-
-    return plt.gca()
-
-def convergencePlot(theax, fs, ferr, bs, berr, fwdColor='#0072B2', bwdColor='#D55E00', lgndF=None, lgndB=None):
+def convergence_plot(theax, fs, ferr, bs, berr, fwdColor='#0072B2', bwdColor='#D55E00', lgndF=None, lgndB=None):
     '''
     Convergence plot. Does the convergence calculation and plotting.
     Arguments: u_nk, tau (an error tuning factor), units (kT or kcal/mol), RT
@@ -138,7 +118,7 @@ def fb_discrepancy_hist(dG_f, dG_b):
     return plt.gca()
 
 
-def plotGeneral(cumulative, cumulativeYlim, perWindow, perWindowYlim, RT, width=8, height=4, PDFtype='KDE'):
+def plot_general(cumulative, cumulativeYlim, perWindow, perWindowYlim, RT, width=8, height=4, PDFtype='KDE'):
     fig, ((cumAx, del1),( eachAx, del2), (ddGAx, del3), (hystAx, pdfAx)) = plt.subplots(4,2, sharex='col', sharey='row', gridspec_kw={'width_ratios': [2, 1]})
 
     fig.delaxes(del1)

@@ -30,7 +30,7 @@ from .estimators import *
 
 
 
-def batchProcess(paths, RT, decorrelate, pattern, temperature, detectEQ):
+def batch_process(paths, RT, decorrelate, pattern, temperature, detectEQ):
     '''
     Read and process all NAMD FEPout files that match a given pattern
     Arguments: paths (list of strings), RT (float), decorrelate (boolean, whether or not to use alchemlyb's decorrelation functions), pattern (to match), temperature, detectEQ (boolean, whether or not to use alchemlyb's equilibrium detection)
@@ -44,7 +44,7 @@ def batchProcess(paths, RT, decorrelate, pattern, temperature, detectEQ):
         print(f"Reading {path}")
         key = path.split('/')[-2]
         fepoutFiles = glob(path+'/'+pattern)
-        u_nks[key], affix = readAndProcess(fepoutFiles, temperature, decorrelate, detectEQ)
+        u_nks[key], affix = read_and_process(fepoutFiles, temperature, decorrelate, detectEQ)
 
 
     ls = {}
@@ -64,7 +64,7 @@ def batchProcess(paths, RT, decorrelate, pattern, temperature, detectEQ):
         bar.fit(u_nk)
         ls[key], l_mids[key], fs[key], dfs[key], ddfs[key], errorses[key] = get_BAR(bar)
         
-        expl, expmid, dG_fs[key], dG_bs[key] = get_EXP(u_nk)
+        expl, expmid, dG_fs[key], dG_bs[key] = get_exponential(u_nk)
 
     #Collect into dataframes - could be more pythonic but it works
     cumulative = pd.DataFrame()
@@ -86,7 +86,7 @@ def batchProcess(paths, RT, decorrelate, pattern, temperature, detectEQ):
     
     return u_nks, cumulative, perWindow, affix
     
-def readAndProcess(fepoutFiles, temperature, decorrelate, detectEQ):
+def read_and_process(fepoutFiles, temperature, decorrelate, detectEQ):
     '''
     Read NAMD fepout files for a single calculation and carry out any decorrelation or equilibrium detection
     Arguments: files to parse, temperature, decorrelate (boolean, whether or not to use alchemlyb's decorrelation functions), detectEQ (boolean, whether or not to use alchemlyb's equilibrium detection)
@@ -104,7 +104,7 @@ def readAndProcess(fepoutFiles, temperature, decorrelate, detectEQ):
         EQ = pd.DataFrame([])
         for key, group in groups:
             group = group[~group.index.duplicated(keep='first')]
-            test = subsampling.equilibrium_detection(group, group.dropna(axis=1).iloc[:,-1])
+            test = subsampling.equilibrium_detection(group.sort_index(level='time'), group.dropna(axis=1).iloc[:,-1])
             EQ = pd.concat([EQ, test])
         u_nk = EQ
     else:
@@ -128,7 +128,7 @@ def readAndProcess(fepoutFiles, temperature, decorrelate, detectEQ):
 
     
 # 
-def subSample(unkGrps, lowPct, hiPct):
+def subsample(unkGrps, lowPct, hiPct):
     '''
     Subsamples a u_nk dataframe using percentiles [0-100] of data instead of absolute percents.
     Arguments: unkGrps (u_nk grouped by fep-lambda), lowPct (lower percentile bound), hiPct (upper percentile bound)
@@ -154,7 +154,7 @@ def subSample(unkGrps, lowPct, hiPct):
     return partial
 
 # altConvergence splits the data into percentile blocks. Inspired by block averaging
-def altConvergence(u_nk, nbins):
+def alt_convergence(u_nk, nbins):
     '''
     An alternative convergence calculation that uses percentile blocks instead of cumulative samples. Inspired by block averages. Uses the BAR estimator.
     Arguments: u_nk, nbins (number of blocks)
@@ -169,7 +169,7 @@ def altConvergence(u_nk, nbins):
     num_points = nbins
     for i in range(1, num_points+1):
         # forward
-        partial = subSample(groups, 100*(i-1)/num_points, 100*i/num_points)
+        partial = subsample(groups, 100*(i-1)/num_points, 100*i/num_points)
         estimate = BAR().fit(partial)
         l, l_mid, f, df, ddf, errors = get_BAR(estimate)
         
@@ -178,7 +178,7 @@ def altConvergence(u_nk, nbins):
 
     return np.array(forward), np.array(forward_error)
 
-def doConvergence(u_nk, tau=1, num_points=10):
+def do_convergence(u_nk, tau=1, num_points=10):
     '''
     Convergence calculation. Incrementally adds data from either the start or the end of each windows simulation and calculates the resulting change in free energy.
     Arguments: u_nk, tau (an error scaling factor), num_points (number of chunks)
@@ -192,14 +192,14 @@ def doConvergence(u_nk, tau=1, num_points=10):
     backward_error = []
     for i in range(1, num_points+1):
         # forward
-        partial = subSample(groups, 0, 100*i/num_points)
+        partial = subsample(groups, 0, 100*i/num_points)
         estimate = BAR().fit(partial)
         l, l_mid, f, df, ddf, errors = get_BAR(estimate)
         
         forward.append(f.iloc[-1])
         forward_error.append(errors[-1])
         
-        partial = subSample(groups, 100*(1-i/num_points), 100)
+        partial = subsample(groups, 100*(1-i/num_points), 100)
         estimate = BAR().fit(partial)
         l, l_mid, f, df, ddf, errors = get_BAR(estimate)
         
@@ -209,7 +209,7 @@ def doConvergence(u_nk, tau=1, num_points=10):
     return np.array(forward), np.array(forward_error), np.array(backward), np.array(backward_error)
 
 #Functions for bootstrapping estimates and generating confidence intervals
-def bootStrapEstimate(u_nk, estimator='BAR', iterations=100, schedule=[10,20,30,40,50,60,70,80,90,100]):
+def bootstrap_estimate(u_nk, estimator='BAR', iterations=100, schedule=[10,20,30,40,50,60,70,80,90,100]):
     '''
     Bootstrapped free energy estimates with variable sample sizes. E.g. if schedule=[10], each bootstrapped sample will only be 10% the size of the original 
     Arguments: u_nk, estimator (BAR or EXP[onential]), iterations (number of bootstrapped datasets to generate for each sample size), schedule (percent data to sample)
@@ -243,7 +243,7 @@ def bootStrapEstimate(u_nk, estimator='BAR', iterations=100, schedule=[10,20,30,
                 test = group.iloc[rows,:]
                 sampled = pd.concat([sampled, test])
             if estimator == 'EXP':
-                l, l_mid, dG_f, dG_b = get_EXP(pd.DataFrame(sampled))
+                l, l_mid, dG_f, dG_b = get_exponential(pd.DataFrame(sampled))
                 F = np.sum(dG_f)
                 B = np.sum(-dG_b)
                 Fs.append(F)
@@ -274,7 +274,7 @@ def bootStrapEstimate(u_nk, estimator='BAR', iterations=100, schedule=[10,20,30,
         #allErrors = pd.DataFrame(errs).melt().copy()
         return alldGs
 
-def getLimits(allSamples):
+def get_limits(allSamples):
     '''
     Get the mean and +/- 1 standard deviation for each group in a matrix
     Arguments: allSamples (the dataframe)
@@ -292,7 +292,7 @@ def getLimits(allSamples):
     
     return (upper, lower, means)
 
-def getEmpiricalCI(allSamples, CI=0.95):
+def get_empirical_CI(allSamples, CI=0.95):
     '''
     Get empirical confidence intervals from a dataframe
     Arguments: allSamples (the dataframe), CI (the interval to determine)[0.95]
@@ -310,7 +310,7 @@ def getEmpiricalCI(allSamples, CI=0.95):
 
     return (uppers, lowers, means)
 
-def getMovingAveSlope(X,FX,window):
+def get_moving_ave_slope(X,FX,window):
     '''
     Estimates the PDF from a moving window average of a CDF
     Arguments: X (inputs), FX (the CDF), window (width)
@@ -329,7 +329,7 @@ def getMovingAveSlope(X,FX,window):
     return slopes
 
 #Calculate the PDF of the discrepancies
-def getPDF(dG_f, dG_b, DiscrepancyFitting='LS', dx=0.01, binNum=20):
+def get_PDF(dG_f, dG_b, DiscrepancyFitting='LS', dx=0.01, binNum=20):
     '''
     Estimate the PDF of the discrepancy data by fitting to a gaussian
     Arguments: Forward estimates, backward estimates, DiscrepancyFitting ('LS' least squares of 'ML' maximum likelihood), dx (sample width for fitted gaussian), binNum (number of bins for histogramming)
@@ -359,38 +359,8 @@ def getPDF(dG_f, dG_b, DiscrepancyFitting='LS', dx=0.01, binNum=20):
            
     return X, Y, pdfX, pdfY, fitted, pdfXnorm, pdfYnorm, pdfYexpected
 
-#Light-weight exponential estimator
-def get_dG_fromData(data, temperature):
-    '''
-    A light-weight exponential estimator
-    Arguments: data in the format generated by readFEPOUT (a dense dataframe), temperature
-    Returns: forward estimates, backward estimates
-    '''
-    from scipy.constants import R, calorie
-    beta = 1/(R/(1000*calorie) * temperature) #So that the final result is in kcal/mol
     
-    groups = data.groupby(level=0)
-    dG=[]
-    for name, group in groups:
-        isUp = group.up
-        dE = group.dE
-        toAppend = [name, -1*np.log(np.mean(np.exp(-beta*dE[isUp]))), 1]
-        dG.append(toAppend)
-        toAppend=[name, -1*np.log(np.mean(np.exp(-beta*dE[~isUp]))), 0]
-        dG.append(toAppend)
-    
-    dG = pd.DataFrame(dG, columns=["window", "dG", "up"])
-    dG = dG.set_index('window')
-    
-    dG_f = dG.loc[dG.up==1] 
-    dG_b = dG.loc[dG.up==0]
-
-    dG_f = dG_f.dG.dropna()
-    dG_b = dG_b.dG.dropna()
-
-    return dG_f, dG_b
-    
-def u_nk_fromDF(data, temperature, eqTime, warnings=True):
+def u_nk_from_DF(data, temperature, eqTime, warnings=True):
     '''
     Experimental. caveat emptor. Generate an alchemlyb-type u_nk dataframe from a dense dataframe generated by readFEPOUT
     Arguments: data[frame from readFEPOUT], temperature, eqTime (time to equilibrium), warnings (boolean, whether or not to print warnings)

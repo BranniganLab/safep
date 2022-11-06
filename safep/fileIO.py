@@ -27,7 +27,7 @@ from glob import glob #file regexes
 from .helpers import *
 
 
-def guessLambda(fname):
+def guess_lambda(fname):
     '''
     Guess lambda based on file name (last number in the filename divided by 100). Not very good.
     Arguments: file name
@@ -36,14 +36,14 @@ def guessLambda(fname):
     L = int(re.findall(r'\d+', fname)[-1])/100
     return L
     
-def saveUNK(u_nk, filepath):
+def save_UNK(u_nk, filepath):
     '''
     Write u_nk to a file
     Arguments: u_nk in the format of alchemlyb, filepath
     '''
     u_nk.to_csv(filepath)
      
-def readUNK(filepath):
+def read_UNK(filepath):
     '''
     Read a u_nk that was written by saveUNK.
     Arguments: filepath
@@ -56,7 +56,7 @@ def readUNK(filepath):
     return u_nk.copy()
     
 
-def readFEPOUT(fileName, step=1):
+def read_FEPOUT(fileName, step=1):
     '''
     Reads all data from a NAMD fepout file unlike alchemlyb's parser.
     readFEPOUT reads each file in a single pass: keeping track of lambda values and appending each line to an array. 
@@ -93,7 +93,7 @@ def readFEPOUT(fileName, step=1):
             elif frame % step <= 1:
                 if np.isnan(L):
                     print("WARNING: lambda is not defined!")
-                    L = guessLambda(fileName)
+                    L = guess_lambda(fileName)
                     print("Guessing lambda to be {L} based on file name.")
 
 
@@ -126,7 +126,7 @@ def readFEPOUT(fileName, step=1):
     df = df.sort_index()
     return df
     
-def readFiles(files, step=1):
+def read_Files(files, step=1):
     '''
     Batch readFEPOUT
     Arguments: file (paths), step (stride)
@@ -134,7 +134,7 @@ def readFiles(files, step=1):
     '''
     fileList = []
     for file in files:
-        df = readFEPOUT(file, step)
+        df = read_FEPOUT(file, step)
         fileList.append(df)
     data = pd.concat(fileList)
     
