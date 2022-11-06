@@ -79,6 +79,35 @@ def convergence_plot(u_nk, tau=1, units='kT', RT=0.59):
         ax.set(ylabel=r'$\rm\Delta G$'+'\n(kcal/mol)')
 
     return plt.gca()
+
+def convergencePlot(theax, fs, ferr, bs, berr, fwdColor='#0072B2', bwdColor='#D55E00', lgndF=None, lgndB=None):
+    '''
+    Convergence plot. Does the convergence calculation and plotting.
+    Arguments: u_nk, tau (an error tuning factor), units (kT or kcal/mol), RT
+    Returns: a pyplot
+    '''
+    if not lgndF:
+        lgndF=fwdColor
+        lgndB=bwdColor
+        
+        
+    lower = fs[-1]-ferr[-1]
+    upper = fs[-1]+ferr[-1]
+    theax.fill_between([0,1],[lower, lower], [upper, upper], color=bwdColor, alpha=0.25)
+    theax.errorbar(np.arange(len(fs))/len(fs)+0.1, fs, yerr=ferr, marker='o', linewidth=1, color=fwdColor, markerfacecolor='white', markeredgewidth=1, markeredgecolor=fwdColor, ms=5)
+    theax.errorbar(np.arange(len(bs))/len(fs)+0.1, bs, yerr=berr, marker='o', linewidth=1, color=bwdColor, markerfacecolor='white', markeredgewidth=1, markeredgecolor=bwdColor, ms=5, linestyle='--')
+
+    theax.xaxis.set_ticks([0, 0.2, 0.4, 0.6, 0.8, 1])
+    
+    finalMean = fs[-1]
+    theax.axhline(y= finalMean, linestyle='-.', color='gray')
+    theax.set_ylim((finalMean-0.75, finalMean+0.75))
+    
+    theax.plot(0, finalMean, linewidth=1, color=lgndF, label='Forward Time Sampling')
+    theax.plot(0, finalMean, linewidth=1, color=lgndB, linestyle='--', label='Backward Time Sampling')
+    theax.set(xlabel='Fraction of Simulation Time', ylabel=r'Total $\rm\Delta G_{\lambda}$ (kcal/mol)')
+    theax.legend()
+    return theax
     
     
 def fb_discrepancy_plot(l_mid, dG_f, dG_b):
@@ -93,7 +122,7 @@ def fb_discrepancy_plot(l_mid, dG_f, dG_b):
     plt.xlabel('Lambda')
     plt.ylabel('Diff. in delta-G')
     #Return the figure
-    return plt.gca()    
+    return plt.gca() 
 
 def fb_discrepancy_hist(dG_f, dG_b):
     '''
@@ -109,7 +138,67 @@ def fb_discrepancy_hist(dG_f, dG_b):
     return plt.gca()
 
 
+def plotGeneral(cumulative, cumulativeYlim, perWindow, perWindowYlim, RT, width=8, height=4, PDFtype='KDE'):
+    fig, ((cumAx, del1),( eachAx, del2), (ddGAx, del3), (hystAx, pdfAx)) = plt.subplots(4,2, sharex='col', sharey='row', gridspec_kw={'width_ratios': [2, 1]})
 
+    fig.delaxes(del1)
+    fig.delaxes(del2)
+    fig.delaxes(del3)
+
+    # Cumulative change in kcal/mol
+    cumAx.errorbar(cumulative.index, cumulative.BAR.f*RT, yerr=cumulative.BAR.errors, marker=None, linewidth=1)
+    cumAx.set(ylabel=r'Cumulative $\rm\Delta G_{\lambda}$'+'\n(kcal/mol)', ylim=cumulativeYlim)
+
+    # Per-window change in kcal/mol
+    eachAx.errorbar(perWindow.index, perWindow.BAR.df*RT, yerr=perWindow.BAR.ddf, marker=None, linewidth=1)
+    eachAx.plot(perWindow.index, perWindow.EXP.dG_f*RT, marker=None, linewidth=1, alpha=0.5)
+    eachAx.errorbar(perWindow.index, -perWindow.EXP.dG_b*RT, marker=None, linewidth=1, alpha=0.5)
+    eachAx.set(ylabel=r'$\rm\Delta G_{\lambda}$'+'\n'+r'$\left(\frac{kcal/mol}{\lambda}\right)$', ylim=perWindowYlim)
+
+    # Second derivative plot
+    ddG = np.diff(perWindow.BAR.df*RT)
+    ddGAx.errorbar(cumulative.index[1:-1], ddG, marker='.')
+    ddGAx.set_xlabel(r'$\lambda$')
+    ddGAx.set_ylabel(r"$\Delta G'_\lambda$ \left($\frac{kcal/mol}{\lambda^2}$\right)")
+    ddGAx.set(ylim=(-1, 1))
+
+    
+    #Hysteresis Plots
+    diff = perWindow.EXP['difference']
+    hystAx.vlines(perWindow.index, np.zeros(len(perWindow)), diff, label="fwd - bwd", linewidth=2)
+    hystAx.set(xlabel=r'$\lambda$', ylabel=r'$\delta_\lambda$ (kcal/mol)', ylim=(-1,1))
+
+    
+    
+    if PDFtype=='KDE':
+        kernel = sp.stats.gaussian_kde(diff)
+        pdfX = np.linspace(-1, 1, 1000)
+        pdfY = kernel(pdfX)
+        pdfAx.plot(pdfY, pdfX, label='KDE')
+    elif PDFtype=='Histogram':
+        pdfY, pdfX = np.histogram(diff, density=True)
+        pdfX = pdfX[:-1]+(pdfX[1]-pdfX[0])/2
+        pdfAx.plot(pdfY, pdfX,  label="Estimated Distribution")
+    else:
+        raise(f"Error: PDFtype {PDFtype} not recognized")
+    
+    pdfAx.set(xlabel=PDFtype)
+
+    std = np.std(diff)
+    mean = np.average(diff)
+    temp = pd.Series(pdfY, index=pdfX)
+    mode = temp.idxmax()
+    
+    textstr = r"$\rm mode=$"+f"{np.round(mode,2)}"+"\n"+fr"$\mu$={np.round(mean,2)}"+"\n"+fr"$\sigma$={np.round(std,2)}"
+    props = dict(boxstyle='square', facecolor='white', alpha=0.5)
+    pdfAx.text(0.15, 0.95, textstr, transform=pdfAx.transAxes, fontsize=14,
+            verticalalignment='top', bbox=props)
+
+    fig.set_figwidth(width)
+    fig.set_figheight(height*3)
+    fig.tight_layout()
+    
+    return fig, [cumAx,eachAx,hystAx,pdfAx] 
 
 
 

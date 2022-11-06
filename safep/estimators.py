@@ -109,7 +109,35 @@ def do_estimation(u_nk, method='both'):
         
     
     perWindow.columns = pd.MultiIndex.from_tuples(perWindow.columns)
+    perWindow = perWindow.fillna(0)
     cumulative.columns = pd.MultiIndex.from_tuples(cumulative.columns)
+    cumulative = cumulative.fillna(0)
     
-    return perWindow.copy(), cumulative.copy()    
+    return perWindow.copy(), cumulative.copy()
+   
     
+#Light-weight exponential estimator. Requires alternative parser.
+def get_dG_fromData(data, temperature):
+    from scipy.constants import R, calorie
+    beta = 1/(R/(1000*calorie) * temperature) #So that the final result is in kcal/mol
+    
+    groups = data.groupby(level=0)
+    dG=[]
+    for name, group in groups:
+        isUp = group.up
+        dE = group.dE
+        toAppend = [name, -1*np.log(np.mean(np.exp(-beta*dE[isUp]))), 1]
+        dG.append(toAppend)
+        toAppend=[name, -1*np.log(np.mean(np.exp(-beta*dE[~isUp]))), 0]
+        dG.append(toAppend)
+    
+    dG = pd.DataFrame(dG, columns=["window", "dG", "up"])
+    dG = dG.set_index('window')
+    
+    dG_f = dG.loc[dG.up==1] 
+    dG_b = dG.loc[dG.up==0]
+
+    dG_f = dG_f.dG.dropna()
+    dG_b = dG_b.dG.dropna()
+
+    return dG_f, dG_b

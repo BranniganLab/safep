@@ -34,7 +34,7 @@ def GetRsq(X, Y, Yexpected):
     SSres = np.sum(residuals**2)
     SStot = np.sum((X-np.mean(X))**2)
     R = 1-SSres/SStot
-    R
+    return R
  
 #Wrappers
 def cumFn(x, m, s):
