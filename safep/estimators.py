@@ -27,7 +27,7 @@ from glob import glob #file regexes
 from .helpers import *
 
 
-def get_EXP(u_nk):
+def get_exponential(u_nk):
     '''
     Get exponential estimation of the change in free energy.
     Arguments: u_nk in alchemlyb format
@@ -96,7 +96,7 @@ def do_estimation(u_nk, method='both'):
         perWindow.index = l_mids
         
     if method=='both' or method=='EXP':
-        expl, expmid, dG_fs, dG_bs = get_EXP(u_nk)
+        expl, expmid, dG_fs, dG_bs = get_exponential(u_nk)
 
         cumulative[('EXP', 'ff')] = np.insert(np.cumsum(dG_fs),0,0)
         cumulative[('EXP', 'fb')] = np.insert(-np.cumsum(dG_bs),0,0)
@@ -117,7 +117,7 @@ def do_estimation(u_nk, method='both'):
    
     
 #Light-weight exponential estimator. Requires alternative parser.
-def get_dG_fromData(data, temperature):
+def get_dG_from_data(data, temperature):
     from scipy.constants import R, calorie
     beta = 1/(R/(1000*calorie) * temperature) #So that the final result is in kcal/mol
     

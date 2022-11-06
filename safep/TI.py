@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 
 
-def processTI(dataTI, restraint, Lsched):
+def process_TI(dataTI, restraint, Lsched):
     '''
     Arguments: the TI data, restraint, and lambda schedule
     Function: Calculate the free energy for each lambda value, aggregate the result, and estimate the error
@@ -12,7 +12,7 @@ def processTI(dataTI, restraint, Lsched):
     '''
     dUs = {}
     for key, group in dataTI.groupby('L'):
-        dUs[key] = [HW_dUdL(restraint, coord, key) for coord in group.DBC]
+        dUs[key] = [harmonicWall_dUdL(restraint, coord, key) for coord in group.DBC]
 
     Lsched = np.sort(list(dUs.keys()))
     dL = Lsched[1] - Lsched[0]
@@ -27,7 +27,7 @@ def processTI(dataTI, restraint, Lsched):
     return TIperWindow, TIcumulative
 
 
-def plotTI(cumulative, perWindow, width=8, height=4, PDFtype='KDE', hystLim=(-1,1), color='#0072B2'):
+def plot_TI(cumulative, perWindow, width=8, height=4, PDFtype='KDE', hystLim=(-1,1), color='#0072B2'):
     fig, (cumAx,eachAx) = plt.subplots(2,1, sharex='col')
 
     # Cumulative change in kcal/mol
@@ -47,11 +47,11 @@ def plotTI(cumulative, perWindow, width=8, height=4, PDFtype='KDE', hystLim=(-1,
     
     return fig, [cumAx,eachAx] 
 
-def makeHarmonicWall(FC=10, targetFC=0, targetFE=1, upperWalls=1, schedule=None, numSteps=1000, targetEQ=500, name='HW', lowerWalls=None):
+def make_harmonicWall(FC=10, targetFC=0, targetFE=1, upperWalls=1, schedule=None, numSteps=1000, targetEQ=500, name='HW', lowerWalls=None):
     HW = {'name':name, 'targetFC':targetFC, 'targetFE':targetFE, 'FC':FC, 'upperWalls':upperWalls, 'schedule':schedule, 'numSteps':numSteps, 'targetEQ':targetEQ, 'lowerWalls':lowerWalls}
     return HW
 
-def HW_U(HW, coord, L):
+def harmonicWall_U(HW, coord, L):
     d=0
     if HW['upperWalls'] and coord>HW['upperWalls']:
         d = coord-HW['upperWalls']
@@ -67,7 +67,7 @@ def HW_U(HW, coord, L):
         U=0
     return U
 
-def HW_dUdL(HW, coord, L):
+def harmonicWall_dUdL(HW, coord, L):
     d=0
     if HW['upperWalls'] and coord>HW['upperWalls']:
         d = coord-HW['upperWalls']
