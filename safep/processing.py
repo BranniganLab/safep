@@ -104,7 +104,9 @@ def read_and_process(fepoutFiles, temperature, decorrelate, detectEQ):
         EQ = pd.DataFrame([])
         for key, group in groups:
             group = group[~group.index.duplicated(keep='first')]
-            test = subsampling.equilibrium_detection(group.sort_index(level='time'))
+            grp_sorted = group.sort_index(level='time')
+            series = group.dropna(axis=1).iloc[:,-1]    
+            test = subsampling.equilibrium_detection(grp_sorted, series)
             EQ = pd.concat([EQ, test])
         u_nk = EQ
     else:
