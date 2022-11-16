@@ -86,48 +86,47 @@ def batch_process(paths, RT, decorrelate, pattern, temperature, detectEQ):
     
     return u_nks, cumulative, perWindow, affix
     
-def read_and_process(fepoutFiles, temperature, decorrelate, detectEQ):
+def read_NAMD_out(fepoutFiles, temperature):
     '''
-    Read NAMD fepout files for a single calculation and carry out any decorrelation or equilibrium detection
-    Arguments: files to parse, temperature, decorrelate (boolean, whether or not to use alchemlyb's decorrelation functions), detectEQ (boolean, whether or not to use alchemlyb's equilibrium detection)
-    Returns: u_nk, affix (a string that describes the data processing)
+    Read NAMD fepout files for a single calculation 
+    Arguments: files to parse, temperature
+    Returns: u_nk
     '''    
     fepoutFiles = natsorted(fepoutFiles)
     u_nk = namd.extract_u_nk(fepoutFiles, temperature)
-    
-    affix=""
-    
-    if detectEQ:
-        print("Detecting Equilibrium")
-        affix = f"{affix}_AutoEquilibrium"
-        groups = u_nk.groupby('fep-lambda')
-        EQ = pd.DataFrame([])
-        for key, group in groups:
-            group = group[~group.index.duplicated(keep='first')]
-            grp_sorted = group.sort_index(level='time') 
-            grp_series = group.dropna(axis=1).iloc[:,-1]   
-            test = subsampling.equilibrium_detection(grp_sorted, grp_series)
-            EQ = pd.concat([EQ, test])
-        u_nk = EQ
-    else:
-        affix=f"{affix}_HardEquilibrium"
-        
-        
-    if decorrelate:
-        print(f"Decorrelating samples. Flag='{decorrelate}'")
-        method = 'dE'
-        affix = f'{affix}_decorrelated_{method}'
-        groups = u_nk.groupby('fep-lambda')
-        decorr = pd.DataFrame([])
-        for key, group in groups:
-            test = subsampling.decorrelate_u_nk(group, method)
-            decorr = pd.concat([decorr, test])
-        u_nk = decorr
-    else:
-        affix = f'{affix}_unprocessed'
 
     return u_nk
 
+def detect_equilibrium(u_nk):
+    '''
+    Detect equilibrium for each lambda value.
+    Arguments: a u_nk dataframe
+    Returns: a u_nk in which equilibration time has been truncated
+    '''
+    groups = u_nk.groupby('fep-lambda')
+    EQ = pd.DataFrame([])
+    for key, group in groups:
+        group = group[~group.index.duplicated(keep='first')]
+        grp_sorted = group.sort_index(level='time') 
+        grp_series = group.dropna(axis=1).iloc[:,-1]   
+        test = subsampling.equilibrium_detection(grp_sorted, grp_series)
+        EQ = pd.concat([EQ, test])
+
+    return EQ
+
+def decorrelate(u_nk, method = 'dE'):
+    '''
+    Decorrelate samples
+    Arguments: a u_nk with only equilibrium samples
+    Returns: a u_nk in which each lambda has been subsampled based on 'statistical inefficiency' (as implemented in PyMBAR)
+    '''
+    groups = u_nk.groupby('fep-lambda')
+    decorr = pd.DataFrame([])
+    for key, group in groups:
+        test = subsampling.decorrelate_u_nk(group, method)
+        decorr = pd.concat([decorr, test])
+
+    return decorr
     
 # 
 def subsample(unkGrps, lowPct, hiPct):
