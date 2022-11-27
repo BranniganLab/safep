@@ -139,7 +139,7 @@ def plot_general(cumulative, cumulativeYlim, perWindow, perWindowYlim, RT, width
     ddG = np.diff(perWindow.BAR.df*RT)
     ddGAx.errorbar(cumulative.index[1:-1], ddG, marker='.')
     ddGAx.set_xlabel(r'$\lambda$')
-    ddGAx.set_ylabel(r"$\Delta G'_\lambda$ \left($\frac{kcal/mol}{\lambda^2}$\right)")
+    ddGAx.set_ylabel(r"$\Delta G'_\lambda \left(\frac{kcal/mol}{\lambda^2}\right)$")
     ddGAx.set(ylim=(-1, 1))
 
     
