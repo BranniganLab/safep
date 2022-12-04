@@ -27,19 +27,21 @@ def process_TI(dataTI, restraint, Lsched):
     return TIperWindow, TIcumulative
 
 
-def plot_TI(cumulative, perWindow, width=8, height=4, PDFtype='KDE', hystLim=(-1,1), color='#0072B2'):
+def plot_TI(cumulative, perWindow, width=8, height=4, PDFtype='KDE', hystLim=(-1,1), color='#0072B2', fontsize=12):
     fig, (cumAx,eachAx) = plt.subplots(2,1, sharex='col')
 
     # Cumulative change in kcal/mol
     cumAx.errorbar(cumulative.index, cumulative.dG, yerr=cumulative.error,marker=None, linewidth=1, color=color, label='Cumulative Change')
     finalEstimate = cumulative.dG[1]
     cumAx.axhline(finalEstimate, linestyle='-', color='gray', label=f'Final Value:\n{np.round(finalEstimate,1)}kcal/mol')
-    cumAx.legend()                  
-    cumAx.set(ylabel=r'Cumulative $\rm\Delta G_{\lambda}$'+'\n(kcal/mol)')
+    cumAx.legend(fontsize=fontsize*0.75)                  
+    cumAx.set_ylabel(r'Cumulative $\rm\Delta G_{\lambda}$'+'\n(kcal/mol)', fontsize=fontsize)
 
     # Per-window change in kcal/mol
     eachAx.errorbar(perWindow.index, perWindow.dGdL, marker=None, linewidth=1, yerr=perWindow.error, color=color)
-    eachAx.set(ylabel=r'$\rm\Delta G_{\lambda}$'+'\n(kcal/mol)')
+    eachAx.set_ylabel(r'$\rm\Delta G_{\lambda}$'+'\n(kcal/mol)', fontsize=fontsize)
+
+    eachAx.set_xlabel(r'$\lambda$', fontsize=fontsize)
 
     fig.set_figwidth(width)
     fig.set_figheight(height*3)

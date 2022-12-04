@@ -60,7 +60,7 @@ def do_conv_plot(ax, X, fs, ferr, fwdColor, label=None):
     return ax
 
 
-def convergence_plot(theax, fs, ferr, bs, berr, fwdColor='#0072B2', bwdColor='#D55E00', lgndF=None, lgndB=None):
+def convergence_plot(theax, fs, ferr, bs, berr, fwdColor='#0072B2', bwdColor='#D55E00', lgndF=None, lgndB=None, fontsize=12):
     '''
     Convergence plot. Does the convergence calculation and plotting.
     Arguments: u_nk, tau (an error tuning factor), units (kT or kcal/mol), RT
@@ -85,7 +85,8 @@ def convergence_plot(theax, fs, ferr, bs, berr, fwdColor='#0072B2', bwdColor='#D
     
     theax.plot(0, finalMean, linewidth=1, color=lgndF, label='Forward Time Sampling')
     theax.plot(0, finalMean, linewidth=1, color=lgndB, linestyle='--', label='Backward Time Sampling')
-    theax.set(xlabel='Fraction of Simulation Time', ylabel=r'Total $\rm\Delta G_{\lambda}$ (kcal/mol)')
+    theax.set_xlabel('Fraction of Simulation Time', fontsize=fontsize)
+    theax.set_ylabel(r'Total $\rm\Delta G_{\lambda}$ (kcal/mol)', fontsize=fontsize)
     theax.legend()
     return theax
     
@@ -118,8 +119,9 @@ def fb_discrepancy_hist(dG_f, dG_b):
     return plt.gca()
 
 
-def plot_general(cumulative, cumulativeYlim, perWindow, perWindowYlim, RT, width=8, height=4, PDFtype='KDE'):
-    fig, ((cumAx, del1),( eachAx, del2), (ddGAx, del3), (hystAx, pdfAx)) = plt.subplots(4,2, sharex='col', sharey='row', gridspec_kw={'width_ratios': [2, 1]})
+def plot_general(cumulative, cumulativeYlim, perWindow, perWindowYlim, RT, width=8, height=4, PDFtype='KDE', fontsize=12):
+    fig, axes = plt.subplots(4,2, sharex='col', sharey='row', gridspec_kw={'width_ratios': [2, 1]})
+    ((cumAx, del1),( eachAx, del2), (ddGAx, del3), (hystAx, pdfAx)) = axes
 
     fig.delaxes(del1)
     fig.delaxes(del2)
@@ -138,17 +140,15 @@ def plot_general(cumulative, cumulativeYlim, perWindow, perWindowYlim, RT, width
     # Second derivative plot
     ddG = np.diff(perWindow.BAR.df*RT)
     ddGAx.errorbar(cumulative.index[1:-1], ddG, marker='.')
-    ddGAx.set_xlabel(r'$\lambda$')
+    #ddGAx.set_xlabel(r'$\lambda$')
     ddGAx.set_ylabel(r"$\Delta G'_\lambda \left(\frac{kcal/mol}{\lambda^2}\right)$")
     ddGAx.set(ylim=(-1, 1))
 
-    
     #Hysteresis Plots
     diff = perWindow.EXP['difference']
     hystAx.vlines(perWindow.index, np.zeros(len(perWindow)), diff, label="fwd - bwd", linewidth=2)
-    hystAx.set(xlabel=r'$\lambda$', ylabel=r'$\delta_\lambda$ (kcal/mol)', ylim=(-1,1))
-
-    
+    hystAx.set(ylabel=r'$\delta_\lambda$ (kcal/mol)', ylim=(-1,1))
+    hystAx.set_xlabel(xlabel=r'$\lambda$', fontsize=fontsize)
     
     if PDFtype=='KDE':
         kernel = sp.stats.gaussian_kde(diff)
@@ -162,7 +162,7 @@ def plot_general(cumulative, cumulativeYlim, perWindow, perWindowYlim, RT, width
     else:
         raise(f"Error: PDFtype {PDFtype} not recognized")
     
-    pdfAx.set(xlabel=PDFtype)
+    pdfAx.set_xlabel(PDFtype, fontsize=fontsize)
 
     std = np.std(diff)
     mean = np.average(diff)
@@ -178,7 +178,10 @@ def plot_general(cumulative, cumulativeYlim, perWindow, perWindowYlim, RT, width
     fig.set_figheight(height*3)
     fig.tight_layout()
     
-    return fig, [cumAx,eachAx,hystAx,pdfAx] 
+    for ax in [cumAx,eachAx,hystAx,pdfAx, ddGAx]:
+        ax.set_ylabel(ax.get_ylabel(), fontsize=fontsize)
+
+    return fig, [cumAx,eachAx,hystAx,pdfAx, ddGAx] 
 
 
 
