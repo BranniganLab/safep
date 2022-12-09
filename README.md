@@ -12,5 +12,9 @@ These scripts and notebooks are broadly applicable to FEP analysis.
 
 ## Installation:
 0. Clone this repository
-1. Navigate to safep
-2. Run ''' pip install .'''
+1. Enter the repository directory
+2. Run ``` pip install . ```
+
+OR
+
+0. Run ``` pip install git+https://github.com/BranniganLab/safep.git ```
