@@ -86,7 +86,7 @@ def convergence_plot(theax, fs, ferr, bs, berr, fwdColor='#0072B2', bwdColor='#D
     theax.plot(0, finalMean, linewidth=1, color=lgndF, label='Forward Time Sampling')
     theax.plot(0, finalMean, linewidth=1, color=lgndB, linestyle='--', label='Backward Time Sampling')
     theax.set_xlabel('Fraction of Simulation Time', fontsize=fontsize)
-    theax.set_ylabel(r'Total $\rm\Delta G_{\lambda}$ (kcal/mol)', fontsize=fontsize)
+    theax.set_ylabel(r'Total $\rm\Delta G$ (kcal/mol)', fontsize=fontsize)
     theax.legend()
     return theax
     
