@@ -35,13 +35,21 @@ def guess_lambda(fname):
     '''
     L = int(re.findall(r'\d+', fname)[-1])/100
     return L
-    
-def save_UNK(u_nk, filepath):
+
+from pathlib import Path
+def save_UNK(u_nk, filepath, safety=True):
     '''
     Write u_nk to a file
     Arguments: u_nk in the format of alchemlyb, filepath
     '''
-    u_nk.to_csv(filepath)
+    fpath = Path(filepath)
+    if safety and fpath.is_file():
+        print(f'File {filepath} already exists and safety is on. Doing nothing.')
+    else:
+        print(f'Writing to {filepath}')
+        u_nk.to_csv(filepath)
+
+    return
      
 def read_UNK(filepath):
     '''
@@ -49,9 +57,8 @@ def read_UNK(filepath):
     Arguments: filepath
     Returns: u_nk
     '''
-    u_nk = pd.read_csv(filepath)
-    u_nk['fep-lambda'] = u_nk['fep-lambda'].astype(str)
-    u_nk = u_nk.set_index(['time', 'fep-lambda'])
+    u_nk = pd.read_csv(filepath, index_col=[0,1], dtype=float)
+    u_nk.columns = [float(x) for x in u_nk.columns]
     
     return u_nk.copy()
     
