@@ -28,6 +28,16 @@ from glob import glob #file regexes
 from .helpers import *
 
 
+def plot_samples(theax, u_nk, color='blue', label='Raw Data'):
+    samples = get_n_samples(u_nk)
+    ax.plot(samples, color=color, label=label)
+    plt.yscale('log') 
+    ax.set_ylabel('Number of Samples')
+    ax.set_xlabel(r'$\lambda$')
+    ax.legend()
+    return theax
+
+
 def convergence_plot(theax, fs, ferr, bs, berr, fwdColor='#0072B2', bwdColor='#D55E00', lgndF=None, lgndB=None):
     '''
     A revised convergence plot. Plays nicely with other plotting functions and is more customizable.
