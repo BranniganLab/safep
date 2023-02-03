@@ -86,7 +86,7 @@ def convergence_plot(theax, fs, ferr, bs, berr, fwdColor='#0072B2', bwdColor='#D
     theax.plot(0, finalMean, linewidth=1, color=lgndF, label='Forward Time Sampling')
     theax.plot(0, finalMean, linewidth=1, color=lgndB, linestyle='--', label='Backward Time Sampling')
     theax.set_xlabel('Fraction of Simulation Time', fontsize=fontsize)
-    theax.set_ylabel(r'Total $\rm\Delta G_{\lambda}$ (kcal/mol)', fontsize=fontsize)
+    theax.set_ylabel(r'Total $\rm\Delta G$ (kcal/mol)', fontsize=fontsize)
     theax.legend()
     return theax
     
@@ -135,13 +135,13 @@ def plot_general(cumulative, cumulativeYlim, perWindow, perWindowYlim, RT, width
     eachAx.errorbar(perWindow.index, perWindow.BAR.df*RT, yerr=perWindow.BAR.ddf, marker=None, linewidth=1)
     eachAx.plot(perWindow.index, perWindow.EXP.dG_f*RT, marker=None, linewidth=1, alpha=0.5)
     eachAx.errorbar(perWindow.index, -perWindow.EXP.dG_b*RT, marker=None, linewidth=1, alpha=0.5)
-    eachAx.set(ylabel=r'$\rm\Delta G_{\lambda}$'+'\n'+r'$\left(\frac{kcal/mol}{\lambda}\right)$', ylim=perWindowYlim)
+    eachAx.set(ylabel=r'$\rm\Delta G_{\lambda}$'+'\n'+r'$\left(kcal/mol\right)$', ylim=perWindowYlim)
 
     # Second derivative plot
     ddG = np.diff(perWindow.BAR.df*RT)
     ddGAx.errorbar(cumulative.index[1:-1], ddG, marker='.')
     #ddGAx.set_xlabel(r'$\lambda$')
-    ddGAx.set_ylabel(r"$\Delta G'_\lambda \left(\frac{kcal/mol}{\lambda^2}\right)$")
+    ddGAx.set_ylabel(r"$\Delta\Delta G_\lambda \left(kcal/mol\right)$")
     ddGAx.set(ylim=(-1, 1))
 
     #Hysteresis Plots
