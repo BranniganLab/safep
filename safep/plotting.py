@@ -26,15 +26,16 @@ from natsort import natsorted #for sorting "naturally" instead of alphabetically
 from glob import glob #file regexes
 
 from .helpers import *
+from .processing import get_n_samples
 
 
 def plot_samples(theax, u_nk, color='blue', label='Raw Data'):
     samples = get_n_samples(u_nk)
-    ax.plot(samples, color=color, label=label)
+    theax.plot(samples, color=color, label=label)
     plt.yscale('log') 
-    ax.set_ylabel('Number of Samples')
-    ax.set_xlabel(r'$\lambda$')
-    ax.legend()
+    theax.set_ylabel('Number of Samples')
+    theax.set_xlabel(r'$\lambda$')
+    theax.legend()
     return theax
 
 
