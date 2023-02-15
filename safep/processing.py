@@ -240,6 +240,28 @@ def do_convergence(u_nk, tau=1, num_points=10):
         np.array(backward_error),
     )
 
+def do_per_lambda_convergence(u_nk):
+    """
+    Convergence calculation. Incrementally adds data from either the start or the end of each windows simulation and calculates the resulting change in free energy.
+    Arguments: u_nk, tau (an error scaling factor), num_points (number of chunks)
+    Returns: forward-sampled estimate (starting from t=start), forward-sampled error, backward-sampled estimate (from t=end), backward-sampled error
+    """
+    groups = u_nk.groupby("fep-lambda")
+
+    start = 0
+    midpoint = 50
+    end = 100
+
+    partial = subsample(groups, start, midpoint)
+    first_half, _ = do_estimation(partial, method='BAR')
+
+    partial = subsample(groups, midpoint, end)
+    last_half, _ = do_estimation(partial, method='BAR')
+
+    convergence = last_half-first_half
+    convergence.loc[:,('BAR','ddf')] = [np.sqrt(fe**2+be**2) for fe, be in zip(first_half.BAR.ddf, last_half.BAR.ddf)]
+    return convergence
+
 
 # Functions for bootstrapping estimates and generating confidence intervals
 def bootstrap_estimate(
