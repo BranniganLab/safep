@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='safep',
-    version='0.1.2.1',    
+    version='0.1.2.2',    
     description='Tools for Analyzing and Debugging (SA)FEP calculations',
     url='https://github.com/BranniganLab/safep',
     author='Brannigan Lab',

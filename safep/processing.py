@@ -102,7 +102,11 @@ def detect_equilibrium_u_nk(u_nk: pd.DataFrame):
     for key, group in groups:
         group = group[~group.index.duplicated(keep="first")]
         grp_sorted = group.sort_index(level="time")
-        grp_series = group.dropna(axis=1).iloc[:, -1]
+        if key < 1:
+            use_col = -1
+        else:
+            use_col = 0
+        grp_series = group.dropna(axis=1).iloc[:, use_col]
         test = subsampling.equilibrium_detection(grp_sorted, grp_series)
         EQ = pd.concat([EQ, test])
     return EQ
@@ -121,7 +125,7 @@ def get_n_samples(u_nk: pd.DataFrame) -> pd.Series:
     samples = pd.Series()
     grps = u_nk.groupby("fep-lambda")
     for l, g in grps:
-        samples[l] = len(trimzeros.dropna(how="all"))
+        samples[l] = len(g.dropna(how="all"))
     return samples
 
 
