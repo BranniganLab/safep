@@ -121,7 +121,7 @@ def get_n_samples(u_nk: pd.DataFrame) -> pd.Series:
     samples = pd.Series()
     grps = u_nk.groupby("fep-lambda")
     for l, g in grps:
-        samples[l] = len(g.dropna(how="all"))
+        samples[l] = len(trimzeros.dropna(how="all"))
     return samples
 
 
@@ -142,13 +142,6 @@ def read_and_process(fepoutFiles, temperature, decorrelate, detectEQ):
         u_nk = detect_equilibrium_u_nk(u_nk)
     else:
         affix = f"{affix}_HardEquilibrium"
-
-    if decorrelate:
-        print(f"Decorrelating samples. Flag='{decorrelate}'")
-        affix = f"{affix}_decorrelated"
-        u_nk = decorrelate_u_nk(u_nk)
-    else:
-        affix = f"{affix}_unprocessed"
 
     return u_nk
 
