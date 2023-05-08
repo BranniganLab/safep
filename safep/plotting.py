@@ -140,19 +140,19 @@ def plot_general(cumulative, cumulativeYlim, perWindow, perWindowYlim, RT, width
 
     # Cumulative change in kcal/mol
     cumAx.errorbar(cumulative.index, cumulative.BAR.f*RT, yerr=cumulative.BAR.errors, marker=None, linewidth=1)
-    cumAx.set(ylabel=r'Cumulative $\rm\Delta G_{\lambda}$'+'\n(kcal/mol)', ylim=cumulativeYlim)
+    cumAx.set(ylabel=r'Cumulative $\mathrm{\Delta} G_{\lambda}$'+'\n(kcal/mol)', ylim=cumulativeYlim)
 
     # Per-window change in kcal/mol
     eachAx.errorbar(perWindow.index, perWindow.BAR.df*RT, yerr=perWindow.BAR.ddf, marker=None, linewidth=1)
     eachAx.plot(perWindow.index, perWindow.EXP.dG_f*RT, marker=None, linewidth=1, alpha=0.5)
     eachAx.errorbar(perWindow.index, -perWindow.EXP.dG_b*RT, marker=None, linewidth=1, alpha=0.5)
-    eachAx.set(ylabel=r'$\rm\Delta G_{\lambda}$'+'\n'+r'$\left(kcal/mol\right)$', ylim=perWindowYlim)
+    eachAx.set(ylabel=r'$\mathrm{\Delta} G_\lambda$'+'\n'+r'$\left(kcal/mol\right)$', ylim=perWindowYlim)
 
     # Second derivative plot
     ddG = np.diff(perWindow.BAR.df*RT)
     ddGAx.errorbar(cumulative.index[1:-1], ddG, marker='.')
     #ddGAx.set_xlabel(r'$\lambda$')
-    ddGAx.set_ylabel(r"$\Delta\Delta G_\lambda \left(kcal/mol\right)$")
+    ddGAx.set_ylabel(r"$\mathrm{\Delta\Delta} G_\lambda \left(kcal/mol\right)$")
     ddGAx.set(ylim=(-1, 1))
 
     #Hysteresis Plots
