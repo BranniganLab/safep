@@ -320,6 +320,13 @@ def plot_TI_convergence(forward, ferr, backward, berr):
     ax.set_xlabel("Fraction of non-zero samples")
     ax.set_ylabel("dG (kcal/mol)")
     fig.legend()
+    fwd50 = forward[len(forward)//2-1]
+    bwd50 = backward[len(backward)//2-1]
+    delta50 = fwd50-bwd50
+    avg50 = (fwd50+bwd50)/2
+    txt = r"$\Delta G_{50} =$"+f"{np.round(delta50,2)}"
+    ax.annotate(txt, (0.5, avg50))
+    ax.plot([0.5, 0.5], [fwd50, bwd50], color="black")
 
     return fig, ax
 
