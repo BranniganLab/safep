@@ -130,7 +130,7 @@ def parse_TI_log(logpath):
 
     return DBC, Lsched
 
-def l_from_energy(dataTI):
+def l_from_energy(dataTI, DBC):
     guessedLs = [
         safep.guessL(
             U,
@@ -146,7 +146,7 @@ def l_from_energy(dataTI):
 
     return dataTI
 
-def l_from_sched(dataTI, Lsched):
+def l_from_sched(dataTI, Lsched, DBC):
     Ls = (dataTI.index.values-1)//DBC['numSteps']
 
     dataLs = np.round([DBC['schedule'][i] for i in Ls], 3)
