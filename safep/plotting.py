@@ -181,10 +181,10 @@ def plot_general(cumulative, cumulativeYlim, perWindow, perWindowYlim, RT, width
     fig.set_figheight(height*3)
     fig.tight_layout()
     
-    for ax in [cumAx,eachAx,hystAx,pdfAx, ddGAx]:
+    for ax in [cumAx,eachAx,hystAx,pdfAx]:
         ax.set_ylabel(ax.get_ylabel(), fontsize=fontsize)
 
-    return fig, [cumAx,eachAx,hystAx,pdfAx, ddGAx] 
+    return fig, [cumAx,eachAx,hystAx,pdfAx] 
 
 
 '''
