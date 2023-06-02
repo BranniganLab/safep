@@ -131,6 +131,66 @@ def fb_discrepancy_hist(dG_f, dG_b):
 
 
 def plot_general(cumulative, cumulativeYlim, perWindow, perWindowYlim, RT, width=8, height=4, PDFtype='KDE', fontsize=12):
+    fig, axes = plt.subplots(3,2, sharex='col', sharey='row', gridspec_kw={'width_ratios': [2, 1]})
+    ((cumAx, del1),( eachAx, del2), (hystAx, pdfAx)) = axes
+
+    fig.delaxes(del1)
+    fig.delaxes(del2)
+
+    # Cumulative change in kcal/mol
+    cumAx.errorbar(cumulative.index, cumulative.BAR.f*RT, yerr=cumulative.BAR.errors, marker=None, linewidth=1)
+    cumAx.set(ylabel=r'Cumulative $\mathrm{\Delta} G_{\lambda}$'+'\n(kcal/mol)', ylim=cumulativeYlim)
+
+    # Per-window change in kcal/mol
+    eachAx.errorbar(perWindow.index, perWindow.BAR.df*RT, yerr=perWindow.BAR.ddf, marker=None, linewidth=1)
+    eachAx.plot(perWindow.index, perWindow.EXP.dG_f*RT, marker=None, linewidth=1, alpha=0.5)
+    eachAx.errorbar(perWindow.index, -perWindow.EXP.dG_b*RT, marker=None, linewidth=1, alpha=0.5)
+    eachAx.set(ylabel=r'$\mathrm{\Delta} G_\lambda$'+'\n'+r'$\left(kcal/mol\right)$', ylim=perWindowYlim)
+
+    #Hysteresis Plots
+    diff = perWindow.EXP['difference']
+    hystAx.vlines(perWindow.index, np.zeros(len(perWindow)), diff, label="fwd - bwd", linewidth=2)
+    hystAx.set(ylabel=r'$\delta_\lambda$ (kcal/mol)', ylim=(-1,1))
+    hystAx.set_xlabel(xlabel=r'$\lambda$', fontsize=fontsize)
+    
+    if PDFtype=='KDE':
+        kernel = sp.stats.gaussian_kde(diff)
+        pdfX = np.linspace(-1, 1, 1000)
+        pdfY = kernel(pdfX)
+        pdfAx.plot(pdfY, pdfX, label='KDE')
+    elif PDFtype=='Histogram':
+        pdfY, pdfX = np.histogram(diff, density=True)
+        pdfX = pdfX[:-1]+(pdfX[1]-pdfX[0])/2
+        pdfAx.plot(pdfY, pdfX,  label="Estimated Distribution")
+    else:
+        raise(f"Error: PDFtype {PDFtype} not recognized")
+    
+    pdfAx.set_xlabel(PDFtype, fontsize=fontsize)
+
+    std = np.std(diff)
+    mean = np.average(diff)
+    temp = pd.Series(pdfY, index=pdfX)
+    mode = temp.idxmax()
+    
+    textstr = r"$\rm mode=$"+f"{np.round(mode,2)}"+"\n"+fr"$\mu$={np.round(mean,2)}"+"\n"+fr"$\sigma$={np.round(std,2)}"
+    props = dict(boxstyle='square', facecolor='white', alpha=0.5)
+    pdfAx.text(0.15, 0.95, textstr, transform=pdfAx.transAxes, fontsize=14,
+            verticalalignment='top', bbox=props)
+
+    fig.set_figwidth(width)
+    fig.set_figheight(height*3)
+    fig.tight_layout()
+    
+    for ax in [cumAx,eachAx,hystAx,pdfAx]:
+        ax.set_ylabel(ax.get_ylabel(), fontsize=fontsize)
+
+    return fig, [cumAx,eachAx,hystAx,pdfAx] 
+
+
+'''
+This is a deprecated plotting function
+'''
+def plot_general_legacy(cumulative, cumulativeYlim, perWindow, perWindowYlim, RT, width=8, height=4, PDFtype='KDE', fontsize=12):
     fig, axes = plt.subplots(4,2, sharex='col', sharey='row', gridspec_kw={'width_ratios': [2, 1]})
     ((cumAx, del1),( eachAx, del2), (ddGAx, del3), (hystAx, pdfAx)) = axes
 
@@ -193,9 +253,6 @@ def plot_general(cumulative, cumulativeYlim, perWindow, perWindowYlim, RT, width
         ax.set_ylabel(ax.get_ylabel(), fontsize=fontsize)
 
     return fig, [cumAx,eachAx,hystAx,pdfAx, ddGAx] 
-
-
-
 
 
 

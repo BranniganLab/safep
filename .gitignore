@@ -1,3 +1,9 @@
 .ipynb_checkpoints
 __pycache__
 Untitled.ipynb
+*.bak
+*.ini
+safep.egg-info*
+*.png
+*.bz2
+*.pdf
