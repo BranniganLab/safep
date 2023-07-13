@@ -137,7 +137,10 @@ def read_and_process(fepoutFiles, temperature, decorrelate, detectEQ):
     """
     fepoutFiles = natsorted(fepoutFiles)
     u_nk = namd.extract_u_nk(fepoutFiles, temperature)
-
+    
+    if detectEQ and decorrelate:
+    	print("Warning: detecting equilibrium ALSO decorrelates the samples")
+    
     if detectEQ:
         print("Detecting Equilibrium (includes decorrelating)")
         u_nk = detect_equilibrium_u_nk(u_nk)
