@@ -106,7 +106,7 @@ def detect_equilibrium_u_nk(u_nk: pd.DataFrame):
             use_col = -1
         else:
             use_col = 0
-        grp_series = group.dropna(axis=1).iloc[:, use_col]
+        grp_series = group.dropna(axis=1).sort_index(axis=1).iloc[:, use_col]
         test = subsampling.equilibrium_detection(grp_sorted, grp_series)
         EQ = pd.concat([EQ, test])
     return EQ
