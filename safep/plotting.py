@@ -50,10 +50,9 @@ def do_conv_plot(ax, X, fs, ferr, fwdColor, label=None):
     return ax
 
 
-def convergence_plot(theax, fs, ferr, bs, berr, fwdColor='#0072B2', bwdColor='#D55E00', lgndF=None, lgndB=None, fontsize=12):
+def convergence_plot(theax, fs, ferr, bs, berr, fwdColor='#0072B2', bwdColor='#D55E00', lgndF=None, lgndB=None, fontsize=12, errorbars=True):
     '''
-    Convergence plot. Does the convergence calculation and plotting.
-    Arguments: u_nk, tau (an error tuning factor), units (kT or kcal/mol), RT
+    Convergence plot. Does the convergence plotting.
     Returns: a pyplot
     '''
     if not lgndF:
@@ -63,9 +62,35 @@ def convergence_plot(theax, fs, ferr, bs, berr, fwdColor='#0072B2', bwdColor='#D
         
     lower = fs[-1]-ferr[-1]
     upper = fs[-1]+ferr[-1]
-    theax.fill_between([0,1],[lower, lower], [upper, upper], color=bwdColor, alpha=0.25)
-    theax.errorbar(np.arange(len(fs))/len(fs)+0.1, fs, yerr=ferr, marker='o', linewidth=1, color=fwdColor, markerfacecolor='white', markeredgewidth=1, markeredgecolor=fwdColor, ms=5)
-    theax.errorbar(np.arange(len(bs))/len(fs)+0.1, bs, yerr=berr, marker='o', linewidth=1, color=bwdColor, markerfacecolor='white', markeredgewidth=1, markeredgecolor=bwdColor, ms=5, linestyle='--')
+    theax.fill_between([0,1],[lower, lower], [upper, upper], color='gray', alpha=0.1)
+
+    fwdparams = {'marker':'o',
+                'linewidth':1,
+                'color':fwdColor,
+                'markerfacecolor':'white',
+                'markeredgewidth':1,
+                'markeredgecolor':fwdColor,
+                'ms':5,
+                }
+    bwdparams = {'marker':'o',
+                'linewidth':1,
+                'color':bwdColor,
+                'markerfacecolor':'white',
+                'markeredgewidth':1,
+                'markeredgecolor':bwdColor,
+                'ms':5,
+                'linestyle':'--'}
+
+    xfwd = np.arange(len(fs))/len(fs)+0.1
+    xbwd = np.arange(len(bs))/len(fs)+0.1
+
+    if errorbars:
+        theax.errorbar(xfwd, fs, yerr=ferr, **fwdparams)
+        theax.errorbar(xbwd, bs, yerr=berr, **bwdparams)
+    else:
+        theax.errorbar(xfwd, fs, **fwdparams)
+        theax.errorbar(xbwd, bs, **bwdparams)
+
 
     theax.xaxis.set_ticks([0, 0.2, 0.4, 0.6, 0.8, 1])
     
