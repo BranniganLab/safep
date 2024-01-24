@@ -134,26 +134,50 @@ def fb_discrepancy_hist(dG_f, dG_b):
     return plt.gca()
 
 
-def plot_general(cumulative, cumulativeYlim, perWindow, perWindowYlim, RT, width=8, height=4, PDFtype='KDE', fontsize=12):
-    fig, axes = plt.subplots(3,2, sharex='col', sharey='row', gridspec_kw={'width_ratios': [2, 1]})
-    ((cumAx, del1),( eachAx, del2), (hystAx, pdfAx)) = axes
+def plot_general(cumulative, 
+                 cumulativeYlim, 
+                 perWindow, 
+                 perWindowYlim, 
+                 RT, 
+                 width=8, 
+                 height=4, 
+                 PDFtype='KDE', 
+                 fontsize=12,
+                 fig=None,
+                 axes=None,
+                 hysttype='classic',
+                 label=None,
+                 color='blue',
+                 errorbars=True):
+    if fig is None and axes is None:
+        fig, axes = plt.subplots(3,2, sharex='col', sharey='row', gridspec_kw={'width_ratios': [2, 1]})
+        ((cumAx, del1),( eachAx, del2), (hystAx, pdfAx)) = axes
 
-    fig.delaxes(del1)
-    fig.delaxes(del2)
+        fig.delaxes(del1)
+        fig.delaxes(del2)
+    else:
+        cumAx, eachAx, hystAx, pdfAx = axes
 
     # Cumulative change in kcal/mol
-    cumAx.errorbar(cumulative.index, cumulative.BAR.f*RT, yerr=cumulative.BAR.errors, marker=None, linewidth=1)
+    cumAx.errorbar(cumulative.index, cumulative.BAR.f*RT, yerr=cumulative.BAR.errors, marker=None, linewidth=1, label=label, color=color)
     cumAx.set(ylabel=r'Cumulative $\mathrm{\Delta} G_{\lambda}$'+'\n(kcal/mol)', ylim=cumulativeYlim)
 
     # Per-window change in kcal/mol
-    eachAx.errorbar(perWindow.index, perWindow.BAR.df*RT, yerr=perWindow.BAR.ddf, marker=None, linewidth=1)
-    eachAx.plot(perWindow.index, perWindow.EXP.dG_f*RT, marker=None, linewidth=1, alpha=0.5)
-    eachAx.errorbar(perWindow.index, -perWindow.EXP.dG_b*RT, marker=None, linewidth=1, alpha=0.5)
+    if errorbars:
+        eachAx.errorbar(perWindow.index, perWindow.BAR.df*RT, yerr=perWindow.BAR.ddf, marker=None, linewidth=1, color=color)
+        eachAx.errorbar(perWindow.index, -perWindow.EXP.dG_b*RT, marker=None, linewidth=1, alpha=0.5, linestyle='--', color=color)
+    eachAx.plot(perWindow.index, perWindow.EXP.dG_f*RT, marker=None, linewidth=1, alpha=0.5, color=color)
+        
     eachAx.set(ylabel=r'$\mathrm{\Delta} G_\lambda$'+'\n'+r'$\left(kcal/mol\right)$', ylim=perWindowYlim)
 
     #Hysteresis Plots
     diff = perWindow.EXP['difference']
-    hystAx.vlines(perWindow.index, np.zeros(len(perWindow)), diff, label="fwd - bwd", linewidth=2)
+    assert hysttype in ['classic', 'lines'], f"ERROR: I don't know how to plot hysttype={hysttype}"
+    if hysttype == 'classic':
+        hystAx.vlines(perWindow.index, np.zeros(len(perWindow)), diff, label="fwd - bwd", linewidth=2, color=color)
+    elif hysttype == 'lines':
+        hystAx.plot(perWindow.index, diff, label="fwd - bwd", linewidth=1, color=color)
+
     hystAx.set(ylabel=r'$\delta_\lambda$ (kcal/mol)', ylim=(-1,1))
     hystAx.set_xlabel(xlabel=r'$\lambda$', fontsize=fontsize)
     
@@ -161,11 +185,11 @@ def plot_general(cumulative, cumulativeYlim, perWindow, perWindowYlim, RT, width
         kernel = sp.stats.gaussian_kde(diff)
         pdfX = np.linspace(-1, 1, 1000)
         pdfY = kernel(pdfX)
-        pdfAx.plot(pdfY, pdfX, label='KDE')
+        pdfAx.plot(pdfY, pdfX, label='KDE', color=color)
     elif PDFtype=='Histogram':
         pdfY, pdfX = np.histogram(diff, density=True)
         pdfX = pdfX[:-1]+(pdfX[1]-pdfX[0])/2
-        pdfAx.plot(pdfY, pdfX,  label="Estimated Distribution")
+        pdfAx.plot(pdfY, pdfX,  label="Estimated Distribution", color=color)
     else:
         raise(f"Error: PDFtype {PDFtype} not recognized")
     
