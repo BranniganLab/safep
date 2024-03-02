@@ -18,27 +18,27 @@ def plot_samples(theax, u_nk, color='blue', label='Raw Data'):
     return theax
 
 
-def convergence_plot(theax, fs, ferr, bs, berr, fwdColor='#0072B2', bwdColor='#D55E00', lgndF=None, lgndB=None):
-    '''
-    A revised convergence plot. Plays nicely with other plotting functions and is more customizable.
-    Arguments: theax[is] on which to plot, fs (forward estimates), ferr (forward errors), bs (backward-sampled estimates), berr (backward-sampled errors), fwdColor, bwdColor, lgndF legend forward color, lgndB legend backward color
-    Returns: theax[is]
-    '''
-    if not lgndF:
-        lgndF=fwdColor
-        lgndB=bwdColor
+# def convergence_plot(theax, fs, ferr, bs, berr, fwdColor='#0072B2', bwdColor='#D55E00', lgndF=None, lgndB=None):
+#     '''
+#     A revised convergence plot. Plays nicely with other plotting functions and is more customizable.
+#     Arguments: theax[is] on which to plot, fs (forward estimates), ferr (forward errors), bs (backward-sampled estimates), berr (backward-sampled errors), fwdColor, bwdColor, lgndF legend forward color, lgndB legend backward color
+#     Returns: theax[is]
+#     '''
+#     if not lgndF:
+#         lgndF=fwdColor
+#         lgndB=bwdColor
         
-    theax.errorbar(np.arange(len(fs))/len(fs)+0.1, fs, yerr=ferr, marker='o', linewidth=1, color=fwdColor, markerfacecolor='white', markeredgewidth=1, markeredgecolor=fwdColor, ms=5)
-    theax.errorbar(np.arange(len(bs))/len(fs)+0.1, bs, yerr=berr, marker='o', linewidth=1, color=bwdColor, markerfacecolor='white', markeredgewidth=1, markeredgecolor=bwdColor, ms=5, linestyle='--')
+#     theax.errorbar(np.arange(len(fs))/len(fs)+0.1, fs, yerr=ferr, marker='o', linewidth=1, color=fwdColor, markerfacecolor='white', markeredgewidth=1, markeredgecolor=fwdColor, ms=5)
+#     theax.errorbar(np.arange(len(bs))/len(fs)+0.1, bs, yerr=berr, marker='o', linewidth=1, color=bwdColor, markerfacecolor='white', markeredgewidth=1, markeredgecolor=bwdColor, ms=5, linestyle='--')
 
-    theax.xaxis.set_ticks([0, 0.2, 0.4, 0.6, 0.8, 1])
+#     theax.xaxis.set_ticks([0, 0.2, 0.4, 0.6, 0.8, 1])
     
-    finalMean = fs[-1]
-    theax.axhline(y= finalMean, linestyle='-.', color='gray')
-    theax.plot(0, finalMean, linewidth=1, color=lgndF, label='Forward Time Sampling')
-    theax.plot(0, finalMean, linewidth=1, color=lgndB, linestyle='--', label='Backward Time Sampling')
+#     finalMean = fs[-1]
+#     theax.axhline(y= finalMean, linestyle='-.', color='gray')
+#     theax.plot(0, finalMean, linewidth=1, color=lgndF, label='Forward Time Sampling')
+#     theax.plot(0, finalMean, linewidth=1, color=lgndB, linestyle='--', label='Backward Time Sampling')
     
-    return theax
+#     return theax
 
 def do_conv_plot(ax, X, fs, ferr, fwdColor, label=None):
     '''
