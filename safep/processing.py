@@ -195,12 +195,13 @@ def alt_convergence(u_nk, nbins):
     return np.array(forward), np.array(forward_error)
 
 
-def do_convergence(u_nk, tau=1, num_points=10):
+def do_convergence(u_nk, tau=1, num_points=10, estimator='BAR'):
     """
     Convergence calculation. Incrementally adds data from either the start or the end of each windows simulation and calculates the resulting change in free energy.
     Arguments: u_nk, tau (an error scaling factor), num_points (number of chunks)
     Returns: forward-sampled estimate (starting from t=start), forward-sampled error, backward-sampled estimate (from t=end), backward-sampled error
     """
+    assert estimator in ['BAR', 'EXP'], "ERROR: I only know BAR and EXP estimators."
     groups = u_nk.groupby("fep-lambda")
 
     forward = []
@@ -210,18 +211,33 @@ def do_convergence(u_nk, tau=1, num_points=10):
     for i in range(1, num_points + 1):
         # forward
         partial = subsample(groups, 0, 100 * i / num_points)
-        estimate = BAR().fit(partial)
-        l, l_mid, f, df, ddf, errors = get_BAR(estimate)
+        if estimator=='BAR':
+            estimate = BAR().fit(partial)
+            l, l_mid, f, df, ddf, errors = get_BAR(estimate)
+            f_append = f.iloc[-1]
+            err_append = errors[-1]
+        else:
+            expl, expmid, dG_fs, dG_bs = get_exponential(partial)
+            f_append = np.average([dG_fs[-1], dG_bs[-1]])
+            err_append = np.std([dG_fs[-1], dG_bs[-1]])
 
-        forward.append(f.iloc[-1])
-        forward_error.append(errors[-1])
-
+        forward.append(f_append)
+        forward_error.append(err_append)
+        
+        # backward
         partial = subsample(groups, 100 * (1 - i / num_points), 100)
-        estimate = BAR().fit(partial)
-        l, l_mid, f, df, ddf, errors = get_BAR(estimate)
+        if estimator=='BAR':
+            estimate = BAR().fit(partial)
+            l, l_mid, f, df, ddf, errors = get_BAR(estimate)
+            f_append = f.iloc[-1]
+            err_append = errors[-1]
+        else:
+            expl, expmid, dG_fs, dG_bs = get_exponential(partial)
+            f_append = np.average([dG_fs[-1], dG_bs[-1]])
+            err_append = np.std([dG_fs[-1], dG_bs[-1]])
 
-        backward.append(f.iloc[-1])
-        backward_error.append(errors[-1])
+        backward.append(f_append)
+        backward_error.append(err_append)
 
     return (
         np.array(forward),
