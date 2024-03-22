@@ -23,18 +23,18 @@ def do_conv_plot(ax, X, fs, ferr, fwd_color, label=None):
     Arguments: ax[is], X (the X values), fs (forward estimates), ferr (forward errors), fwdColor (the forward color), label text
     Returns: ax[is]
     '''
-    ax.errorbar(X, fs, yerr=ferr, marker=None, linewidth=1, color=fwdColor, markerfacecolor='white', markeredgewidth=1, markeredgecolor=fwdColor, ms=5, label=label)
+    ax.errorbar(X, fs, yerr=ferr, marker=None, linewidth=1, color=fwd_color, markerfacecolor='white', markeredgewidth=1, markeredgecolor=fwd_color, ms=5, label=label)
     return ax
 
 
-def convergence_plot(theax, fs, ferr, bs, berr, fwdColor='#0072B2', bwdColor='#D55E00', lgndF=None, lgndB=None, fontsize=12, errorbars=True):
+def convergence_plot(theax, fs, ferr, bs, berr, fwd_color='#0072B2', bwd_color='#D55E00', fwd_legend=None, bwd_legend=None, fontsize=12, errorbars=True):
     '''
     Convergence plot. Does the convergence plotting.
     Returns: a pyplot
     '''
-    if not lgndF:
-        lgndF=fwdColor
-        lgndB=bwdColor
+    if not fwd_legend:
+        fwd_legend=fwd_color
+        bwd_legend=bwd_color
         
         
     lower = fs[-1]-ferr[-1]
@@ -43,18 +43,18 @@ def convergence_plot(theax, fs, ferr, bs, berr, fwdColor='#0072B2', bwdColor='#D
 
     fwdparams = {'marker':'o',
                 'linewidth':1,
-                'color':fwdColor,
+                'color':fwd_color,
                 'markerfacecolor':'white',
                 'markeredgewidth':1,
-                'markeredgecolor':fwdColor,
+                'markeredgecolor':fwd_color,
                 'ms':5,
                 }
     bwdparams = {'marker':'o',
                 'linewidth':1,
-                'color':bwdColor,
+                'color':bwd_color,
                 'markerfacecolor':'white',
                 'markeredgewidth':1,
-                'markeredgecolor':bwdColor,
+                'markeredgecolor':bwd_color,
                 'ms':5,
                 'linestyle':'--'}
 
@@ -71,12 +71,12 @@ def convergence_plot(theax, fs, ferr, bs, berr, fwdColor='#0072B2', bwdColor='#D
 
     theax.xaxis.set_ticks([0, 0.2, 0.4, 0.6, 0.8, 1])
     
-    finalMean = fs[-1]
-    theax.axhline(y= finalMean, linestyle='-.', color='gray')
-    theax.set_ylim((finalMean-0.75, finalMean+0.75))
+    final_mean = fs[-1]
+    theax.axhline(y= final_mean, linestyle='-.', color='gray')
+    theax.set_ylim((final_mean-0.75, final_mean+0.75))
     
-    theax.plot(0, finalMean, linewidth=1, color=lgndF, label='Forward Time Sampling')
-    theax.plot(0, finalMean, linewidth=1, color=lgndB, linestyle='--', label='Backward Time Sampling')
+    theax.plot(0, final_mean, linewidth=1, color=fwd_legend, label='Forward Time Sampling')
+    theax.plot(0, final_mean, linewidth=1, color=bwd_legend, linestyle='--', label='Backward Time Sampling')
     theax.set_xlabel('Fraction of Simulation Time', fontsize=fontsize)
     theax.set_ylabel(r'Total $\mathrm{\Delta} G$ (kcal/mol)', fontsize=fontsize)
     theax.legend()
