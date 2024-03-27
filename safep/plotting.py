@@ -9,6 +9,19 @@ from .processing import get_n_samples
 
 
 def plot_samples(theax, u_nk, color='blue', label='Raw Data'):
+    """
+    Plot the number of samples against the lambda values.
+
+    Args:
+        theax (matplotlib.axes.Axes): The axes object to plot on.
+        u_nk (pd.DataFrame): The input data frame containing the samples and lambda values.
+        color (str, optional): The color of the plot line. Defaults to 'blue'.
+        label (str, optional): The label for the plot legend. Defaults to 'Raw Data'.
+
+    Returns:
+        matplotlib.axes.Axes: The axes object after plotting the data.
+
+    """
     samples = get_n_samples(u_nk)
     theax.plot(samples, color=color, label=label)
     plt.yscale('log') 
@@ -163,7 +176,7 @@ def plot_general(cumulative, cumulativeYlim, perWindow, perWindowYlim, RT, width
     for ax in [cumAx,eachAx,hystAx,pdfAx]:
         ax.set_ylabel(ax.get_ylabel(), fontsize=fontsize)
 
-    return fig, [cumAx,eachAx,hystAx,pdfAx] 
+    return fig, [cumAx,eachAx,hystAx,pdfAx]
 
 
 '''
