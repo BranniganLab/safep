@@ -7,3 +7,5 @@ safep.egg-info*
 *.png
 *.bz2
 *.pdf
+.DS_Store
+.vscode
