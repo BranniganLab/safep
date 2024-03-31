@@ -10,6 +10,8 @@ SAFEP-related scripts and tools
 
 These scripts and notebooks are broadly applicable to FEP analysis.
 
+A complete tutorial is available at:
+`SAFEP Tutorial https://doi.org/10.33011/livecoms.5.1.2067`_
 
 Installation
 ------------
