@@ -1,3 +1,6 @@
 autodocsumm
 sphinx_rtd_theme
 safep
+numpy
+pandas
+matplotlib
