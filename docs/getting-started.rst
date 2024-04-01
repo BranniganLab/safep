@@ -28,7 +28,7 @@ OR
 Notebooks
 ----------
 - BAR_Estimator_Basic: General use FEP analysis. Includes cumulative dG estimates, error estimates, and measures of convergence.
-- BAR_Estimator_Expanded: Extendend functionality including bootstrapped error estimates, kernel estimation of dL distributions, and more.
+- BAR_Estimator_Expanded: Extended functionality including bootstrapped error estimates, kernel estimation of dL distributions, and more.
 
 
 Examples
