@@ -4,3 +4,4 @@ safep
 numpy
 pandas
 matplotlib
+scipy
