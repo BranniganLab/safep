@@ -5,3 +5,5 @@ numpy
 pandas
 matplotlib
 scipy
+alchemlyb
+pymbar
