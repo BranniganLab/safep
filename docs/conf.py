@@ -22,7 +22,7 @@ extensions = [
       'autodocsumm', 
       'sphinx.ext.coverage'
 ]
-
+auto_doc_default_options = {'autosummary': True}
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
