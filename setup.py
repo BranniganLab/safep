@@ -8,7 +8,7 @@ setup(
     author='Brannigan Lab',
     author_email='grace.brannigan@rutgers.edu',
     packages=['safep'],
-    install_requires=['numpy>=1.22.0','pandas>=1.4.0', 'alchemlyb==2.0.0', 'matplotlib>=3.5.0', 'natsort>=7.1.0', 'tqdm'],
+    install_requires=['numpy>=1.22.0','pandas>=1.4.0', 'alchemlyb==2.0.0', 'matplotlib>=3.6.0', 'natsort>=7.1.0', 'tqdm', 'scipy>=1.11.0'],
 
     classifiers=[
         'Development Status :: 1 - Planning',
