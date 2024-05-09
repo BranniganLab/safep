@@ -1,4 +1,6 @@
 # SAFEP
+See detailed documentation here: https://safep-alchemy.readthedocs.io/en/latest/
+
 SAFEP-related scripts and tools
 
 These scripts and notebooks are broadly applicable to FEP analysis.
