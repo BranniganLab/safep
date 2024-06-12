@@ -191,7 +191,7 @@ def plot_general(cumulative,
         each_ax.errorbar(per_window.index, -per_window.EXP.dG_b*RT, marker=None, linewidth=1, alpha=0.5, linestyle='--', color=color)
     each_ax.plot(per_window.index, per_window.EXP.dG_f*RT, marker=None, linewidth=1, alpha=0.5, color=color)
 
-    each_ax.set(ylabel=r'$\mathrm{\Delta} G_\lambda$'+'\n'+r'$\left(kcal/mol\right)$', ylim=per_window_ylim)
+    each_ax.set(ylabel=r'$\mathrm{\Delta} G_\lambda$'+'\n'+r'$\left(\mathrm{kcal}/\mathrm{mol}\right)$', ylim=per_window_ylim)
 
     #Hysteresis Plots
     hyst_ax, pdf_ax = plot_hysteresis((hyst_ax, pdf_ax), per_window, hysttype, color, fontsize, pdf_type, xlim)
