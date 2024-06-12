@@ -1,28 +1,8 @@
 # Import block
-import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-
 import numpy as np
-from numpy.lib.stride_tricks import sliding_window_view
-
-from scipy.stats import linregress as lr
-from scipy.stats import norm
-from scipy.special import erfc
-from scipy.optimize import curve_fit as scipyFit
-from scipy.stats import skew
-
 import pandas as pd
 
-from alchemlyb.visualisation.dF_state import plot_dF_state
-from alchemlyb.parsing import namd
-from alchemlyb.estimators import BAR
-from alchemlyb.visualisation.dF_state import plot_dF_state
-from alchemlyb.visualisation import plot_convergence
-
 import re
-from tqdm import tqdm #for progress bars
-from natsort import natsorted #for sorting "naturally" instead of alphabetically
-from glob import glob #file regexes
 
 from .helpers import *
 
@@ -85,9 +65,9 @@ def read_FEPOUT(fileName, step=1):
             if line[0] == '#':
                 frame = 0
                 #print(line)
-                Lambda = re.search('LAMBDA SET TO (\d+(\.\d+)*)', line)
-                Lambda2 = re.search('LAMBDA2 (\d+(\.\d+)*)', line)
-                LambdaIDWS = re.search('LAMBDA_IDWS (\d+(\.\d+)*)', line)
+                Lambda = re.search(r'LAMBDA SET TO (\d+(\.\d+)*)', line)
+                Lambda2 = re.search(r'LAMBDA2 (\d+(\.\d+)*)', line)
+                LambdaIDWS = re.search(r'LAMBDA_IDWS (\d+(\.\d+)*)', line)
                 if Lambda:
                     L = Lambda.group(1)
                     #print(f'L={L}')
