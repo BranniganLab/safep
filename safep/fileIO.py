@@ -65,9 +65,9 @@ def read_FEPOUT(fileName, step=1):
             if line[0] == '#':
                 frame = 0
                 #print(line)
-                Lambda = re.search('LAMBDA SET TO (\d+(\.\d+)*)', line)
-                Lambda2 = re.search('LAMBDA2 (\d+(\.\d+)*)', line)
-                LambdaIDWS = re.search('LAMBDA_IDWS (\d+(\.\d+)*)', line)
+                Lambda = re.search(r'LAMBDA SET TO (\d+(\.\d+)*)', line)
+                Lambda2 = re.search(r'LAMBDA2 (\d+(\.\d+)*)', line)
+                LambdaIDWS = re.search(r'LAMBDA_IDWS (\d+(\.\d+)*)', line)
                 if Lambda:
                     L = Lambda.group(1)
                     #print(f'L={L}')
