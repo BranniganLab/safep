@@ -1,0 +1,11 @@
+autodocsumm
+sphinx_rtd_theme
+safep
+numpy
+pandas
+matplotlib
+scipy
+alchemlyb
+pymbar
+natsort
+tqdm
