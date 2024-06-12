@@ -1,30 +1,19 @@
 # Import block
-import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
 
 from scipy.stats import linregress as lr
 from scipy.stats import norm
-from scipy.special import erfc
 from scipy.optimize import curve_fit as scipyFit
-from scipy.stats import skew
 
 import pandas as pd
 
-from alchemlyb.visualisation.dF_state import plot_dF_state
 from alchemlyb.parsing import namd
 from alchemlyb.estimators import BAR
-from alchemlyb.visualisation.dF_state import plot_dF_state
-from alchemlyb.visualisation import plot_convergence
 from alchemlyb.preprocessing import subsampling
 
-import re
-from tqdm import tqdm  # for progress bars
-from natsort import (
-    natsorted,
-)  # for sorting "naturally" instead of alphabetically
+from natsort import natsorted
 from glob import glob  # file regexes
 
 from .helpers import *
@@ -106,7 +95,7 @@ def detect_equilibrium_u_nk(u_nk: pd.DataFrame):
             use_col = -1
         else:
             use_col = 0
-        grp_series = group.dropna(axis=1).iloc[:, use_col]
+        grp_series = group.dropna(axis=1).sort_index(axis=1).iloc[:, use_col]
         test = subsampling.equilibrium_detection(grp_sorted, grp_series)
         EQ = pd.concat([EQ, test])
     return EQ
@@ -133,19 +122,20 @@ def read_and_process(fepoutFiles, temperature, decorrelate, detectEQ):
     """
     Read NAMD fepout files for a single calculation and carry out any decorrelation or equilibrium detection
     Arguments: files to parse, temperature, decorrelate (boolean, whether or not to use alchemlyb's decorrelation functions), detectEQ (boolean, whether or not to use alchemlyb's equilibrium detection)
-    Returns: u_nk, affix (a string that describes the data processing)
+    Returns: u_nk
     """
     fepoutFiles = natsorted(fepoutFiles)
     u_nk = namd.extract_u_nk(fepoutFiles, temperature)
-
-    affix = ""
-
+    
+    if detectEQ and decorrelate:
+    	print("Warning: detecting equilibrium ALSO decorrelates the samples")
+    
     if detectEQ:
-        print("Detecting Equilibrium")
-        affix = f"{affix}_AutoEquilibrium"
+        print("Detecting Equilibrium (includes decorrelating)")
         u_nk = detect_equilibrium_u_nk(u_nk)
-    else:
-        affix = f"{affix}_HardEquilibrium"
+    elif decorrelate:
+        print(f"Decorrelating samples")
+        u_nk = decorrelate_u_nk(u_nk)
 
     return u_nk
 

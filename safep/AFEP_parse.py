@@ -1,10 +1,5 @@
 #Large datasets can be difficult to parse on a workstation due to inefficiencies in the way data is represented for pymbar. When possible, reduce the size of your dataset.
 import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-
-from numpy.lib.stride_tricks import sliding_window_view
-from scipy.stats import linregress as lr
-from scipy.stats import norm
 
 from glob import glob #file regexes
 import pandas as pd
