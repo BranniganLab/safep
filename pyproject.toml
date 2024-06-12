@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+dependencies = [
+    'numpy>=1.22.0',
+    'pandas>=1.4.0', 
+    'alchemlyb==2.0.0', 
+    'matplotlib>=3.5.0', 
+    'natsort>=7.1.0', 
+    'tqdm',
+    ]
+
+name = 'safep'
+version = "0.1.4"
+
+authors = [{name='Brannigan Lab', email='grace.brannigan@rutgers.edu'}]
+
+description = 'Tools for Analyzing and Debugging (SA)FEP calculations'
+readme = "README.md"
+
+requires-python = ">=3.10"
+
+classifiers = [
+    'Development Status :: 4 - Beta',
+	'Intended Audience :: Science/Research',
+	'Operating System :: POSIX :: Linux',        
+	'Programming Language :: Python :: 3.12',
+	"License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+	"Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/BranniganLab/safep"
+Issues = "https://github.com/BranniganLab/safep/issues"
