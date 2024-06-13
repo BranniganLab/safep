@@ -187,9 +187,9 @@ def plot_general(cumulative,
 
     # Per-window change in kcal/mol
     if errorbars:
-        each_ax.errorbar(per_window.index, per_window.BAR.df*RT, yerr=per_window.BAR.ddf, marker=None, linewidth=1, color=color, label="forward EXP")
+        each_ax.errorbar(per_window.index, per_window.BAR.df*RT, yerr=per_window.BAR.ddf, marker=None, linewidth=1, alpha=0.5, color=color, label="forward EXP")
         each_ax.errorbar(per_window.index, -per_window.EXP.dG_b*RT, marker=None, linewidth=1, alpha=0.5, linestyle='--', color=color, label="backward EXP")
-    each_ax.plot(per_window.index, per_window.EXP.dG_f*RT, marker=None, linewidth=1, alpha=0.5, color=color, label="BAR")
+    each_ax.plot(per_window.index, per_window.EXP.dG_f*RT, marker=None, linewidth=1, color=color, label="BAR")
 
     each_ax.set(ylabel=r'$\mathrm{\Delta} G_\lambda$'+'\n'+r'$\left(kcal/mol\right)$', ylim=per_window_ylim)
 
