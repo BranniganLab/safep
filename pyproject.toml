@@ -34,3 +34,6 @@ classifiers = [
 [project.urls]
 Homepage = "https://github.com/BranniganLab/safep"
 Issues = "https://github.com/BranniganLab/safep/issues"
+
+[project.scripts]
+safepcli = "safep.cli.safepcli:main"
