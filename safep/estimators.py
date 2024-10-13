@@ -1,27 +1,8 @@
-# Import block
-import matplotlib.pyplot as plt
-
+"""
+Estimators for getting free energies from energy differences.
+"""
 import numpy as np
-from numpy.lib.stride_tricks import sliding_window_view
-
-from scipy.stats import linregress as lr
-from scipy.stats import norm
-from scipy.special import erfc
-from scipy.optimize import curve_fit as scipyFit
-from scipy.stats import skew
-
 import pandas as pd
-
-from alchemlyb.visualisation.dF_state import plot_dF_state
-from alchemlyb.parsing import namd
-from alchemlyb.estimators import BAR
-from alchemlyb.visualisation.dF_state import plot_dF_state
-from alchemlyb.visualisation import plot_convergence
-
-import re
-from tqdm import tqdm  # for progress bars
-from natsort import natsorted  # for sorting "naturally" instead of alphabetically
-from glob import glob  # file regexes
 
 from .helpers import *
 
@@ -29,8 +10,15 @@ from .helpers import *
 def get_exponential(u_nk):
     """
     Get exponential estimation of the change in free energy.
-    Arguments: u_nk in alchemlyb format
-    Returns: l[ambdas], l_mid [lambda window midpoints], dG_f [forward estimates], dG_b [backward estimates]
+
+    Args:
+        u_nk in alchemlyb format
+
+    Returns:
+        l[ambdas]
+        l_mid [lambda window midpoints]
+        dG_f [forward estimates]
+        dG_b [backward estimates]
     """
 
     groups = u_nk.groupby(level=1)
@@ -50,8 +38,17 @@ def get_exponential(u_nk):
 def get_BAR(bar):
     """
     Extract key information from an alchemlyb.BAR object. Useful for plotting.
-    Arguments: a fitted BAR object
-    Returns: l[ambdas], l_mid [lambda window midpoints], f [the cumulative free energy], df [the per-window free energy], ddf [the per-window errors], errors [the cumulative error]
+
+    Args:
+        a fitted BAR object
+
+    Returns: 
+        l[ambdas]
+        l_mid [lambda window midpoints]
+        f [the cumulative free energy]
+        df [the per-window free energy]
+        ddf [the per-window errors]
+        errors [the cumulative error]
     """
 
     states = bar.states_
@@ -76,8 +73,14 @@ def get_BAR(bar):
 def do_estimation(u_nk, method="both"):
     """
     Run both exponential and BAR estimators and return the results in tidy dataframes.
-    Arguments: u_nk in the alchemlyb format, method of fitting (String: BAR, EXP, or both)
-    Returns: perWindow estimates (including errors), cumulative estimates (including errors)
+
+    Args:
+        u_nk: in the alchemlyb format
+        method: of fitting (String: BAR, EXP, or both)
+
+    Returns:
+        perWindow estimates (including errors)
+        cumulative estimates (including errors)
     """
     u_nk = u_nk.sort_index(level=1)
     cumulative = pd.DataFrame()
@@ -117,6 +120,18 @@ def do_estimation(u_nk, method="both"):
 
 # Light-weight exponential estimator. Requires alternative parser.
 def get_dG_from_data(data, temperature):
+    """
+    Extract the forward and backward delta G's from an alchemlyb u_nk dataframe.
+    Probably unnecessary.
+
+    Args:
+        data (pd.DataFrame): an alchemlyb-formatted pandas dataframe
+        temperature: the temperature of the simulations
+
+    Returns:
+        The forward dG list
+        The backward dG list
+    """
     from scipy.constants import R, calorie
 
     beta = 1 / (
