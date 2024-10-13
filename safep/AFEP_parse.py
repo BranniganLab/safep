@@ -10,6 +10,8 @@ from glob import glob
 import matplotlib.pyplot as plt
 import numpy as np
 from alchemlyb.estimators import BAR
+from safep.processing import read_and_process, get_BAR, get_EXP, get_PDF
+from safep.plotting import convergence_plot
 
 
 if __name__ == "__main__":
