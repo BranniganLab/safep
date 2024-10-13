@@ -1,6 +1,7 @@
 """
 Estimators for getting free energies from energy differences.
 """
+
 import numpy as np
 import pandas as pd
 
@@ -42,7 +43,7 @@ def get_BAR(bar):
     Args:
         a fitted BAR object
 
-    Returns: 
+    Returns:
         l[ambdas]
         l_mid [lambda window midpoints]
         f [the cumulative free energy]
