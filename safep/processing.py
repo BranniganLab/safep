@@ -126,10 +126,10 @@ def read_and_process(fepoutFiles, temperature, decorrelate, detectEQ):
     """
     fepoutFiles = natsorted(fepoutFiles)
     u_nk = namd.extract_u_nk(fepoutFiles, temperature)
-    
+
     if detectEQ and decorrelate:
-    	print("Warning: detecting equilibrium ALSO decorrelates the samples")
-    
+        print("Warning: detecting equilibrium ALSO decorrelates the samples")
+
     if detectEQ:
         print("Detecting Equilibrium (includes decorrelating)")
         u_nk = detect_equilibrium_u_nk(u_nk)
@@ -183,9 +183,7 @@ def alt_convergence(u_nk, nbins):
     num_points = nbins
     for i in range(1, num_points + 1):
         # forward
-        partial = subsample(
-            groups, 100 * (i - 1) / num_points, 100 * i / num_points
-        )
+        partial = subsample(groups, 100 * (i - 1) / num_points, 100 * i / num_points)
         estimate = BAR().fit(partial)
         l, l_mid, f, df, ddf, errors = get_BAR(estimate)
 
@@ -195,13 +193,13 @@ def alt_convergence(u_nk, nbins):
     return np.array(forward), np.array(forward_error)
 
 
-def do_convergence(u_nk, tau=1, num_points=10, estimator='BAR'):
+def do_convergence(u_nk, tau=1, num_points=10, estimator="BAR"):
     """
     Convergence calculation. Incrementally adds data from either the start or the end of each windows simulation and calculates the resulting change in free energy.
     Arguments: u_nk, tau (an error scaling factor), num_points (number of chunks)
     Returns: forward-sampled estimate (starting from t=start), forward-sampled error, backward-sampled estimate (from t=end), backward-sampled error
     """
-    assert estimator in ['BAR', 'EXP'], "ERROR: I only know BAR and EXP estimators."
+    assert estimator in ["BAR", "EXP"], "ERROR: I only know BAR and EXP estimators."
     groups = u_nk.groupby("fep-lambda")
 
     forward = []
@@ -211,7 +209,7 @@ def do_convergence(u_nk, tau=1, num_points=10, estimator='BAR'):
     for i in range(1, num_points + 1):
         # forward
         partial = subsample(groups, 0, 100 * i / num_points)
-        if estimator=='BAR':
+        if estimator == "BAR":
             estimate = BAR().fit(partial)
             l, l_mid, f, df, ddf, errors = get_BAR(estimate)
             f_append = f.iloc[-1]
@@ -223,10 +221,10 @@ def do_convergence(u_nk, tau=1, num_points=10, estimator='BAR'):
 
         forward.append(f_append)
         forward_error.append(err_append)
-        
+
         # backward
         partial = subsample(groups, 100 * (1 - i / num_points), 100)
-        if estimator=='BAR':
+        if estimator == "BAR":
             estimate = BAR().fit(partial)
             l, l_mid, f, df, ddf, errors = get_BAR(estimate)
             f_append = f.iloc[-1]
@@ -246,6 +244,7 @@ def do_convergence(u_nk, tau=1, num_points=10, estimator='BAR'):
         np.array(backward_error),
     )
 
+
 def do_per_lambda_convergence(u_nk):
     """
     Convergence calculation. Incrementally adds data from either the start or the end of each windows simulation and calculates the resulting change in free energy.
@@ -259,13 +258,15 @@ def do_per_lambda_convergence(u_nk):
     end = 100
 
     partial = subsample(groups, start, midpoint)
-    first_half, _ = do_estimation(partial, method='BAR')
+    first_half, _ = do_estimation(partial, method="BAR")
 
     partial = subsample(groups, midpoint, end)
-    last_half, _ = do_estimation(partial, method='BAR')
+    last_half, _ = do_estimation(partial, method="BAR")
 
-    convergence = last_half-first_half
-    convergence.loc[:,('BAR','ddf')] = [np.sqrt(fe**2+be**2) for fe, be in zip(first_half.BAR.ddf, last_half.BAR.ddf)]
+    convergence = last_half - first_half
+    convergence.loc[:, ("BAR", "ddf")] = [
+        np.sqrt(fe**2 + be**2) for fe, be in zip(first_half.BAR.ddf, last_half.BAR.ddf)
+    ]
     return convergence
 
 
@@ -453,9 +454,7 @@ def u_nk_from_DF(data, temperature, eqTime, warnings=True):
     u_nk = u_nk.loc[u_nk.index.get_level_values("time") >= eqTime]
 
     # Shift and align values to be consistent with alchemlyb standards
-    lambdas = list(
-        set(u_nk.index.get_level_values(1)).union(set(u_nk.columns))
-    )
+    lambdas = list(set(u_nk.index.get_level_values(1)).union(set(u_nk.columns)))
     lambdas.sort()
     warns = set([])
 
@@ -469,9 +468,7 @@ def u_nk_from_DF(data, temperature, eqTime, warnings=True):
     prev = lambdas[0]
     for L in lambdas[1:]:
         try:
-            u_nk.loc[(slice(None), L), prev] = u_nk.loc[
-                (slice(None), L), prev
-            ].shift(1)
+            u_nk.loc[(slice(None), L), prev] = u_nk.loc[(slice(None), L), prev].shift(1)
         except:
             if warnings:
                 warns.add(L)
