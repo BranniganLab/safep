@@ -37,7 +37,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--decorrelate",
         type=bool,
-        help="Flag to determine whether or not to decorrelate the data. (1=decorrelate, 0=use all data)",
+        help="Flag to determine whether or not to decorrelate the data. \
+            (1=decorrelate, 0=use all data)",
         default=0,
     )
     parser.add_argument(
@@ -49,7 +50,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--fittingMethod",
         type=str,
-        help="Method for fitting the forward-backward discrepancies (hysteresis). LS=least squares, ML=maximum likelihood Default: LS",
+        help="Method for fitting the forward-backward discrepancies (hysteresis). \
+            LS=least squares, ML=maximum likelihood Default: LS",
         default="LS",
     )
     parser.add_argument(
@@ -87,7 +89,8 @@ if __name__ == "__main__":
 
     if (totalSize / 10**9) > maxSize:
         print(
-            f"Error: desired targets (Total size:{np.round(totalSize/10**9, 2)}GB) exceed your max size. Either increase your maximum acceptable file size, or use the 'Extended' notebook"
+            f"Error: desired targets (Total size:{np.round(totalSize/10**9, 2)}GB) exceed your \
+                max size. Either increase your maximum acceptable file size, or use the 'Extended' notebook"
         )
         raise
 
@@ -99,7 +102,9 @@ if __name__ == "__main__":
     bar = BAR()
     bar.fit(u_nk)
     l, l_mid, f, df, ddf, errors = get_BAR(bar)
-    changeAndError = f"\u0394G = {np.round(f.iloc[-1]*RT, 1)}\u00B1{np.round(errors[-1], 3)} kcal/mol"
+    final_dg = np.round(f.iloc[-1]*RT, 1)
+    final_dg_error = np.round(errors[-1], 3)
+    changeAndError = f"\u0394G = {final_dg}\u00B1{final_dg_error} kcal/mol"
     print(changeAndError)
 
     if args.makeFigures == 1:
@@ -135,7 +140,8 @@ if __name__ == "__main__":
             plt.clf()
         except:
             print(
-                "Failed to generate convergence plot. Probably due to too few samples after decorrelation."
+                "Failed to generate convergence plot. " +
+                "Probably due to too few samples after decorrelation."
             )
 
         ####
@@ -178,12 +184,16 @@ if __name__ == "__main__":
         fig.set_figheight(10)
         if DiscrepancyFitting == "LS":
             pdfAx.title.set_text(
-                f"Least squares fitting of cdf(fwd-bkwd)\nSkewness: {np.round(skew(X),2)}\nFitted parameters: Mean={np.round(fitted[0],3)}, Stdv={np.round(fitted[1],3)}\nPopulation parameters: Mean={np.round(np.average(X),3)}, Stdv={np.round(np.std(X),3)}"
+                f"Least squares fitting of cdf(fwd-bkwd)\nSkewness: {np.round(skew(X),2)}\n" +
+                f"Fitted parameters: Mean={np.round(fitted[0],3)}, Stdv={np.round(fitted[1],3)}\n" +
+                f"Population parameters: Mean={np.round(np.average(X),3)}, Stdv={np.round(np.std(X),3)}"
             )
             plt.savefig(f"{path}LeastSquares_pdf_{affix}.png", dpi=600)
         elif DiscrepancyFitting == "ML":
             pdfAx.title.set_text(
-                f"Maximum likelihood fitting of fwd-bkwd\nFitted parameters: Mean={np.round(fitted[0],3)}, Stdv={np.round(fitted[1],3)}\nPopulation parameters: Mean={np.round(np.average(X),3)}, Stdv={np.round(np.std(X),3)}"
+                f"Maximum likelihood fitting of fwd-bkwd\nFitted parameters: " +
+                f"Mean={np.round(fitted[0],3)}, Stdv={np.round(fitted[1],3)}\n" +
+                f"Population parameters: Mean={np.round(np.average(X),3)}, Stdv={np.round(np.std(X),3)}"
             )
             plt.savefig(f"{path}MaximumLikelihood_pdf_{affix}.png", dpi=600)
         plt.clf()
