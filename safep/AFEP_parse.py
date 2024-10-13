@@ -6,22 +6,10 @@ represented for pymbar. When possible, reduce the size of your dataset.
 """
 import matplotlib.pyplot as plt
 
-from glob import glob  # file regexes
-import pandas as pd
+from glob import glob 
 import matplotlib.pyplot as plt
 import numpy as np
-from tqdm import tqdm  # for progress bars
-import re  # regex
-from natsort import natsorted  # for sorting "naturally" instead of alphabetically
-
-from alchemlyb.visualisation.dF_state import plot_dF_state
-
-from alchemlyb.parsing import namd
 from alchemlyb.estimators import BAR
-from alchemlyb.visualisation.dF_state import plot_dF_state
-from alchemlyb.visualisation import plot_convergence
-
-import re
 
 
 if __name__ == "__main__":
