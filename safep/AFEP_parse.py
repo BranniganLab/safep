@@ -98,7 +98,7 @@ if __name__ == "__main__":
 
     print(f"DetectEQ: {detectEQ}")
     print(f"Decorr: {decorrelate}")
-    u_nk, affix = readAndProcess(fepoutFiles, temperature, decorrelate, detectEQ)
+    u_nk, affix = read_and_process(fepoutFiles, temperature, decorrelate, detectEQ)
 
     u_nk = u_nk.sort_index(level=1)
     bar = BAR()
@@ -166,7 +166,7 @@ if __name__ == "__main__":
         ###
         # Do residual fitting
         ###
-        X, Y, pdfX, pdfY, fitted, pdfXnorm, pdfYnorm, pdfYexpected = getPDF(dG_f, dG_b)
+        X, Y, pdfX, pdfY, fitted, pdfXnorm, pdfYnorm, pdfYexpected = get_PDF(dG_f, dG_b)
 
         # plot the data
         fig, (pdfAx, pdfResid) = plt.subplots(2, 1, sharex=True)
@@ -185,6 +185,7 @@ if __name__ == "__main__":
 
         fig.set_figheight(10)
         if DiscrepancyFitting == "LS":
+            raise NotImplementedError
             pdfAx.title.set_text(
                 f"Least squares fitting of cdf(fwd-bkwd)\nSkewness: {np.round(skew(X),2)}\n" +
                 f"Fitted parameters: Mean={np.round(fitted[0],3)}, Stdv={np.round(fitted[1],3)}\n" +
