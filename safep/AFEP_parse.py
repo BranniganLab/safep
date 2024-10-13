@@ -73,7 +73,7 @@ if __name__ == "__main__":
 
     path = args.path
     filename = args.fepoutre
-    maxSize = args.maxSize
+    MAXSIZE = args.maxSize
     temperature = args.temperature
     decorrelate = args.decorrelate == 1
     detectEQ = args.detectEQ == 1
@@ -84,27 +84,28 @@ if __name__ == "__main__":
     fepoutFiles = glob(path + filename)
     print(f"Processing: {path+filename}")
 
-    totalSize = 0
+    # Misidentified as a constant. pylint: disable=invalid-name
+    total_size = 0
     for file in fepoutFiles:
-        totalSize += os.path.getsize(file)
+        total_size += os.path.getsize(file)
     print(f"Fepout Files: {len(fepoutFiles)}\n")
 
-    if (totalSize / 10**9) > maxSize:
+    if (total_size / 10**9) > MAXSIZE:
         print(
-            f"Error: desired targets (Total size:{np.round(totalSize/10**9, 2)}GB) exceed your "
+            f"Error: desired targets (Total size:{np.round(total_size/10**9, 2)}GB) exceed your "
             + "max size. Either increase your maximum acceptable file size, "
             + "or use the 'Extended' notebook"
         )
-        raise
+        raise RuntimeError
 
     print(f"DetectEQ: {detectEQ}")
     print(f"Decorr: {decorrelate}")
     u_nk, affix = read_and_process(fepoutFiles, temperature, decorrelate, detectEQ)
 
     u_nk = u_nk.sort_index(level=1)
-    bar = BAR()
-    bar.fit(u_nk)
-    l, l_mid, f, df, ddf, errors = get_BAR(bar)
+    bar_estimator = BAR()
+    bar_estimator.fit(u_nk)
+    l, l_mid, f, df, ddf, errors = get_BAR(bar_estimator)
     final_dg = np.round(f.iloc[-1] * RT, 1)
     final_dg_error = np.round(errors[-1], 3)
     changeAndError = f"\u0394G = {final_dg}\u00B1{final_dg_error} kcal/mol"
@@ -141,14 +142,14 @@ if __name__ == "__main__":
             plt.title(f"Convergence {affix}")
             plt.savefig(f"{path}convergence_{affix}.png", dpi=600)
             plt.clf()
-        except:
+        except ValueError:
             print(
                 "Failed to generate convergence plot. "
                 + "Probably due to too few samples after decorrelation."
             )
 
         ####
-        l, l_mid, dG_f, dG_b = get_EXP(u_nk)
+        l, l_mid, dG_f, dG_b = get_exponential(u_nk)
         plt.vlines(
             l_mid,
             np.zeros(len(l_mid)),
@@ -199,7 +200,7 @@ if __name__ == "__main__":
             plt.savefig(f"{path}LeastSquares_pdf_{affix}.png", dpi=600)
         elif DiscrepancyFitting == "ML":
             pdfAx.title.set_text(
-                f"Maximum likelihood fitting of fwd-bkwd\nFitted parameters: "
+                "Maximum likelihood fitting of fwd-bkwd\nFitted parameters: "
                 + f"Mean={np.round(fitted[0],3)}, Stdv={np.round(fitted[1],3)}\n"
                 + f"Population parameters: Mean={np.round(np.average(X),3)}, "
                 + f"Stdv={np.round(np.std(X),3)}"
