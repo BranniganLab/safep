@@ -1,10 +1,15 @@
 """
 Estimators for getting free energies from energy differences.
+
+.. todo:
+    - Consider merging comparisons using in
+    - get_BAR doesn't conform to snake-case
 """
 
 import numpy as np
 import pandas as pd
 from alchemlyb.estimators import BAR
+from scipy.constants import R, calorie
 
 # from .helpers import
 
@@ -138,7 +143,6 @@ def get_delta_free_energy_from_data(data, temperature):
         The forward delta_free_energy list
         The backward delta_free_energy list
     """
-    from scipy.constants import R, calorie
 
     beta = 1 / (
         R / (1000 * calorie) * temperature
