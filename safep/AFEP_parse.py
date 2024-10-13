@@ -4,9 +4,10 @@ Basic CLI for parsing and plotting standardized NAMD fep outputs.
 Large datasets can be difficult to parse on a workstation due to inefficiencies in the way data is 
 represented for pymbar. When possible, reduce the size of your dataset.
 """
+
 import matplotlib.pyplot as plt
 
-from glob import glob 
+from glob import glob
 import matplotlib.pyplot as plt
 import numpy as np
 from alchemlyb.estimators import BAR
@@ -104,7 +105,7 @@ if __name__ == "__main__":
     bar = BAR()
     bar.fit(u_nk)
     l, l_mid, f, df, ddf, errors = get_BAR(bar)
-    final_dg = np.round(f.iloc[-1]*RT, 1)
+    final_dg = np.round(f.iloc[-1] * RT, 1)
     final_dg_error = np.round(errors[-1], 3)
     changeAndError = f"\u0394G = {final_dg}\u00B1{final_dg_error} kcal/mol"
     print(changeAndError)
@@ -142,8 +143,8 @@ if __name__ == "__main__":
             plt.clf()
         except:
             print(
-                "Failed to generate convergence plot. " +
-                "Probably due to too few samples after decorrelation."
+                "Failed to generate convergence plot. "
+                + "Probably due to too few samples after decorrelation."
             )
 
         ####
@@ -187,16 +188,16 @@ if __name__ == "__main__":
         if DiscrepancyFitting == "LS":
             raise NotImplementedError
             pdfAx.title.set_text(
-                f"Least squares fitting of cdf(fwd-bkwd)\nSkewness: {np.round(skew(X),2)}\n" +
-                f"Fitted parameters: Mean={np.round(fitted[0],3)}, Stdv={np.round(fitted[1],3)}\n" +
-                f"Population parameters: Mean={np.round(np.average(X),3)}, Stdv={np.round(np.std(X),3)}"
+                f"Least squares fitting of cdf(fwd-bkwd)\nSkewness: {np.round(skew(X),2)}\n"
+                + f"Fitted parameters: Mean={np.round(fitted[0],3)}, Stdv={np.round(fitted[1],3)}\n"
+                + f"Population parameters: Mean={np.round(np.average(X),3)}, Stdv={np.round(np.std(X),3)}"
             )
             plt.savefig(f"{path}LeastSquares_pdf_{affix}.png", dpi=600)
         elif DiscrepancyFitting == "ML":
             pdfAx.title.set_text(
-                f"Maximum likelihood fitting of fwd-bkwd\nFitted parameters: " +
-                f"Mean={np.round(fitted[0],3)}, Stdv={np.round(fitted[1],3)}\n" +
-                f"Population parameters: Mean={np.round(np.average(X),3)}, Stdv={np.round(np.std(X),3)}"
+                f"Maximum likelihood fitting of fwd-bkwd\nFitted parameters: "
+                + f"Mean={np.round(fitted[0],3)}, Stdv={np.round(fitted[1],3)}\n"
+                + f"Population parameters: Mean={np.round(np.average(X),3)}, Stdv={np.round(np.std(X),3)}"
             )
             plt.savefig(f"{path}MaximumLikelihood_pdf_{affix}.png", dpi=600)
         plt.clf()
