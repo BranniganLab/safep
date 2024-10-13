@@ -1,4 +1,9 @@
-# Large datasets can be difficult to parse on a workstation due to inefficiencies in the way data is represented for pymbar. When possible, reduce the size of your dataset.
+"""
+Basic CLI for parsing and plotting standardized NAMD fep outputs.
+
+Large datasets can be difficult to parse on a workstation due to inefficiencies in the way data is 
+represented for pymbar. When possible, reduce the size of your dataset.
+"""
 import matplotlib.pyplot as plt
 
 from glob import glob  # file regexes
