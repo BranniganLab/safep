@@ -92,8 +92,9 @@ if __name__ == "__main__":
 
     if (totalSize / 10**9) > maxSize:
         print(
-            f"Error: desired targets (Total size:{np.round(totalSize/10**9, 2)}GB) exceed your \
-                max size. Either increase your maximum acceptable file size, or use the 'Extended' notebook"
+            f"Error: desired targets (Total size:{np.round(totalSize/10**9, 2)}GB) exceed your "
+            + "max size. Either increase your maximum acceptable file size, "
+            + "or use the 'Extended' notebook"
         )
         raise
 
@@ -186,18 +187,23 @@ if __name__ == "__main__":
 
         fig.set_figheight(10)
         if DiscrepancyFitting == "LS":
-            raise NotImplementedError
+            rounded_skew = np.round(skew(X), 2)
+            rounded_mean = np.round(fitted[0], 3)
+            rounded_stdev = np.round(fitted[1], 3)
+            rounded_avg = np.round(np.average(X), 3)
+            rounded_pop_std = np.round(np.std(X), 3)
             pdfAx.title.set_text(
-                f"Least squares fitting of cdf(fwd-bkwd)\nSkewness: {np.round(skew(X),2)}\n"
-                + f"Fitted parameters: Mean={np.round(fitted[0],3)}, Stdv={np.round(fitted[1],3)}\n"
-                + f"Population parameters: Mean={np.round(np.average(X),3)}, Stdv={np.round(np.std(X),3)}"
+                f"Least squares fitting of cdf(fwd-bkwd)\nSkewness: {rounded_skew}\n"
+                + f"Fitted parameters: Mean={rounded_mean}, Stdv={rounded_stdev}\n"
+                + f"Population parameters: Mean={rounded_avg}, Stdv={rounded_pop_std}"
             )
             plt.savefig(f"{path}LeastSquares_pdf_{affix}.png", dpi=600)
         elif DiscrepancyFitting == "ML":
             pdfAx.title.set_text(
                 f"Maximum likelihood fitting of fwd-bkwd\nFitted parameters: "
                 + f"Mean={np.round(fitted[0],3)}, Stdv={np.round(fitted[1],3)}\n"
-                + f"Population parameters: Mean={np.round(np.average(X),3)}, Stdv={np.round(np.std(X),3)}"
+                + f"Population parameters: Mean={np.round(np.average(X),3)}, "
+                + f"Stdv={np.round(np.std(X),3)}"
             )
             plt.savefig(f"{path}MaximumLikelihood_pdf_{affix}.png", dpi=600)
         plt.clf()
