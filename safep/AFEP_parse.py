@@ -1,4 +1,7 @@
-# Large datasets can be difficult to parse on a workstation due to inefficiencies in the way data is represented for pymbar. When possible, reduce the size of your dataset.
+"""
+Large datasets can be difficult to parse on a workstation due to inefficiencies 
+in the way data is represented for pymbar. When possible, reduce the size of your dataset.
+"""
 import argparse
 import os
 import warnings
@@ -51,7 +54,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--fittingMethod",
         type=str,
-        help="Method for fitting the forward-backward discrepancies (hysteresis). LS=least squares, ML=maximum likelihood Default: LS",
+        help="Method for fitting the forward-backward discrepancies (hysteresis)."
+        + "LS=least squares, ML=maximum likelihood Default: LS",
         default="LS",
     )
     parser.add_argument(
@@ -94,7 +98,8 @@ if __name__ == "__main__":
         color: str
 
     # # Extract key features from the MBAR fitting and get ΔG
-    # Note: alchemlyb operates in units of kT by default. We multiply by RT to convert to units of kcal/mol.
+    # Note: alchemlyb operates in units of kT by default.
+    # We multiply by RT to convert to units of kcal/mol.
 
     # # Read and plot number of samples after detecting EQ
 
@@ -104,18 +109,19 @@ if __name__ == "__main__":
         unkpath = replica.joinpath("decorrelated.csv")
         u_nk = None
         if unkpath.is_file():
-            print(f"Found existing dataframe. Reading.")
+            print("Found existing dataframe. Reading.")
             u_nk = safep.read_UNK(unkpath)
         else:
             print(
                 f"Didn't find existing dataframe at {unkpath}. Checking for raw fepout files."
             )
             fepoutFiles = list(replica.glob(filename_pattern))
-            totalSize = 0
+            total_size = 0
             for file in fepoutFiles:
-                totalSize += os.path.getsize(file)
+                total_size += os.path.getsize(file)
             print(
-                f"Will process {len(fepoutFiles)} fepout files.\nTotal size:{np.round(totalSize/10**9, 2)}GB"
+                f"Will process {len(fepoutFiles)} fepout files."
+                + f"\nTotal size:{np.round(total_size/10**9, 2)}GB"
             )
 
             if len(list(fepoutFiles)) > 0:
@@ -174,7 +180,8 @@ if __name__ == "__main__":
     toprint += "\n"
     mean = np.average(dGs)
 
-    # If there are only a few replicas, the MBAR estimated error will be more reliable, albeit underestimated
+    # If there are only a few replicas,
+    # the MBAR estimated error will be more reliable, albeit underestimated
     if len(dGs) < 3:
         sterr = np.sqrt(np.sum(np.square(errors)))
     else:
@@ -185,24 +192,35 @@ if __name__ == "__main__":
     if args.makeFigures == 1:
         # # Plot data
         def do_agg_data(dataax, plotax):
+            """
+            Aggregates data from a given matplotlib axis, computes statistical measures,
+            and displays them on another axis.
+
+            Parameters:
+            dataax (matplotlib.axes.Axes): The axis containing lines with data to be aggregated.
+            plotax (matplotlib.axes.Axes): The axis where the statistical summary will be displayed.
+
+            Returns:
+            matplotlib.axes.Axes: The plot axis with the statistical summary text added.
+            """
             agg_data = []
             lines = dataax.lines
             for line in lines:
                 agg_data.append(line.get_ydata())
             flat = np.array(agg_data).flatten()
             kernel = sp.stats.gaussian_kde(flat)
-            pdfX = np.linspace(-1, 1, 1000)
-            pdfY = kernel(pdfX)
+            pdf_x = np.linspace(-1, 1, 1000)
+            pdf_y = kernel(pdf_x)
             std = np.std(flat)
-            mean = np.average(flat)
-            temp = pd.Series(pdfY, index=pdfX)
+            average = np.average(flat)
+            temp = pd.Series(pdf_y, index=pdf_x)
             mode = temp.idxmax()
 
             textstr = (
                 r"$\rm mode=$"
                 + f"{np.round(mode,2)}"
                 + "\n"
-                + fr"$\mu$={np.round(mean,2)}"
+                + fr"$\mu$={np.round(average,2)}"
                 + "\n"
                 + fr"$\sigma$={np.round(std,2)}"
             )
@@ -255,7 +273,8 @@ if __name__ == "__main__":
         axes[0].legend()
         plt.savefig(dataroot.joinpath("FEP_general_figures.pdf"))
 
-        # # Plot the estimated total change in free energy as a function of simulation time; contiguous subsets starting at t=0 ("Forward") and t=end ("Reverse")
+        # # Plot the estimated total change in free energy as a function of simulation time;
+        # contiguous subsets starting at t=0 ("Forward") and t=end ("Reverse")
 
         fig, convAx = plt.subplots(1, 1)
 
