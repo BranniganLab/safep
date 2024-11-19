@@ -73,7 +73,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    dataroot = Path(".")
+    dataroot = Path(args.path)
     replica_pattern = args.replicare
     replicas = dataroot.glob(replica_pattern)
     filename_pattern = args.fepoutre
@@ -139,7 +139,7 @@ if __name__ == "__main__":
                         ax, u_nk, color="orange", label="Equilibrium-Detected"
                     )
 
-                plt.savefig(f"./{str(replica)}_FEP_number_of_samples.pdf")
+                plt.savefig(dataroot.joinpath(f"{str(replica)}_FEP_number_of_samples.pdf")
                 safep.save_UNK(u_nk, unkpath)
             else:
                 print(f"WARNING: no fepout files found for {replica}. Skipping.")
