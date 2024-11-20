@@ -102,6 +102,7 @@ def detect_equilibrium_u_nk(u_nk: pd.DataFrame):
 
 
 def decorrelate_u_nk(u_nk: pd.DataFrame, method="dE") -> pd.DataFrame:
+    u_nk = u_nk.sort_index(axis=0, level=1).sort_index(axis=1)
     groups = u_nk.groupby("fep-lambda")
     decorr = pd.DataFrame([])
     for key, group in groups:
@@ -126,7 +127,6 @@ def read_and_process(fepoutFiles, temperature, decorrelate, detectEQ):
     """
     fepoutFiles = natsorted(fepoutFiles)
     u_nk = namd.extract_u_nk(fepoutFiles, temperature)
-    
     if detectEQ and decorrelate:
     	print("Warning: detecting equilibrium ALSO decorrelates the samples")
     
