@@ -14,11 +14,12 @@ def process_TI(dataTI, restraint, Lsched):
     for key, group in dataTI.groupby('L'):
         dUs[key] = [harmonicWall_dUdL(restraint, coord, key) for coord in group.DBC]
 
+    # Note: here input parameter Lsched is ignored and overwritten
     Lsched = np.sort(list(dUs.keys()))
     dL = Lsched[1] - Lsched[0]
     TIperWindow = pd.DataFrame(index=Lsched)
     TIperWindow['dGdL'] = [np.mean(dUs[L])*dL for L in Lsched]
-    TIperWindow['error'] = [np.std(dUs[L])*dL for L in Lsched]
+    TIperWindow['error'] = [np.std(dUs[L])*dL for L in Lsched] 
 
     TIcumulative = pd.DataFrame()
     TIcumulative['dG'] = np.cumsum(TIperWindow.dGdL)
@@ -71,11 +72,13 @@ def make_harmonicWall_from_Colvars(w):
         return None
 
     HW = {  'name': w['name'],
+            'colvar': CVs[0],
             'FC': float(w['forceConstant']),
             'targetFC': float(w['targetForceConstant']),
             'lowerWalls': float(w['lowerWalls'].strip('{ }')),
             'upperWalls': float(w['upperWalls'].strip('{ }')),
             'numSteps': int(w['targetNumSteps']),
+            'numStages': int(w['targetNumStages']),
             'targetEQ': int(w['targetEquilSteps']),
             'decoupling': w['decoupling'] in ['on', 'true', 'yes']} # interpret as Boolean
     # Deal with keywords that have changed name

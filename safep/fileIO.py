@@ -165,14 +165,12 @@ def parse_Colvars_log(filename):
                 current = {}
                 current['children'] = list()
                 colvars.append(current)
-                print(f'New colvar at level {level}')
                 continue
 
             match = re.match(r'^colvars:\s+Initializing a new "(.*)" instance.$', line) # Bias
             if match:
                 key = match.group(1).strip()
                 level = 1
-                print(f'New bias {key} at level {level}')
                 current = {}
                 current['key'] = key
                 biases.append(current)
@@ -186,7 +184,6 @@ def parse_Colvars_log(filename):
                 if level == 1: # Top-level CVCs are not indented, fix manually
                     level = 2
                 key = match.group(2).strip()
-                print(f'New cvc {key} at level {level}')
                 new_child = True
 
             match = re.match(r'^colvars:(\s+)Initializing atom group "(.*)".$', line) # atom group
@@ -194,7 +191,6 @@ def parse_Colvars_log(filename):
                 prev_level = level
                 level = (len(match.group(1))-1) // 2
                 key = match.group(2).strip()
-                print(f'New atom group {key} at level {level}')
                 new_child = True
 
             if new_child: # Common to new CVCs and atom groups

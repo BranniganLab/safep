@@ -1,0 +1,675 @@
+Charm++> No provisioning arguments specified. Running with a single PE.
+         Use +auto-provision to fully subscribe resources or +p1 to silence this message.
+Charm++: standalone mode (not using charmrun)
+Charm++> Running in Multicore mode: 1 threads (PEs)
+Charm++> Using recursive bisection (scheme 3) for topology aware partitions
+Converse/Charm++ Commit ID: v6.10.0
+Warning> Randomization of virtual memory (ASLR) is turned on in the kernel, thread migration may not work! Run 'echo 0 > /proc/sys/kernel/randomize_va_space' as root to disable it, or try running with '+isomalloc_sync'.
+CharmLB> Load balancer assumes all CPUs are same.
+Charm++> Running on 1 hosts (2 sockets x 10 cores x 1 PUs = 20-way SMP)
+Charm++> cpu topology info is gathered in 0.000 seconds.
+Info: NAMD 3.1alpha2 for Linux-x86_64-multicore
+Info: 
+Info: Please visit http://www.ks.uiuc.edu/Research/namd/
+Info: for updates, documentation, and support information.
+Info: 
+Info: Please cite Phillips et al., J. Chem. Phys. 153:044130 (2020) doi:10.1063/5.0014475
+Info: in all publications reporting results obtained with NAMD.
+Info: 
+Info: Based on Charm++/Converse 61000 for multicore-linux-x86_64
+Info: Built Thu Nov 28 09:19:02 PM CET 2024 by jhenin on eurus
+Info: 1 NAMD  3.1alpha2  Linux-x86_64-multicore  1    eurus  jhenin
+Info: Running on 1 processors, 1 nodes, 1 physical nodes.
+Info: CPU topology information available.
+Info: Charm++/Converse parallel runtime startup completed at 0.00226379 s
+CkLoopLib is used in SMP with simple dynamic scheduling (converse-level notification)
+Info: 24.4219 MB of memory in use based on /proc/self/stat
+Info: Configuration file is RFEP_decouple.namd
+Info: Working in the current directory /data/jhenin/Tests/10ala
+TCL: Suspending until startup complete.
+Info: SIMULATION PARAMETERS:
+Info: TIMESTEP               0.5
+Info: NUMBER OF STEPS        2000
+Info: STEPS PER CYCLE        20
+Info: LOAD BALANCER  Centralized
+Info: LOAD BALANCING STRATEGY  New Load Balancers -- DEFAULT
+Info: LDB PERIOD             4000 steps
+Info: FIRST LDB TIMESTEP     100
+Info: LAST LDB TIMESTEP     -1
+Info: LDB BACKGROUND SCALING 1
+Info: HOM BACKGROUND SCALING 1
+Info: MIN ATOMS PER PATCH    40
+Info: EMPTY PATCH LOAD       40 ATOMS
+Info: INITIAL TEMPERATURE    300
+Info: CENTER OF MASS MOVING INITIALLY? NO
+Info: DIELECTRIC             1
+Info: EXCLUDE                SCALED ONE-FOUR
+Info: 1-4 ELECTROSTATICS SCALED BY 1
+Info: MODIFIED 1-4 VDW PARAMETERS WILL BE USED
+Info: NO DCD TRAJECTORY OUTPUT
+Info: NO EXTENDED SYSTEM TRAJECTORY OUTPUT
+Info: NO VELOCITY DCD OUTPUT
+Info: NO FORCE DCD OUTPUT
+Info: OUTPUT FILENAME        RFEP_decouple
+Info: RESTART FILENAME       RFEP_decoupler
+Info: RESTART FREQUENCY      20000
+Info: BINARY RESTART FILES WILL BE USED
+Info: SWITCHING ACTIVE
+Info: SWITCHING ON           9
+Info: SWITCHING OFF          11
+Info: PAIRLIST DISTANCE      12
+Info: PAIRLIST SHRINK RATE   0.01
+Info: PAIRLIST GROW RATE     0.01
+Info: PAIRLIST TRIGGER       0.3
+Info: PAIRLISTS PER CYCLE    2
+Info: PAIRLISTS ENABLED
+Info: MARGIN                 1
+Info: HYDROGEN GROUP CUTOFF  2.8
+Info: PATCH DIMENSION        15.8
+Info: ENERGY OUTPUT STEPS    200
+Info: ENERGY EVALUATION STEPS    4
+Info: OUTPUT ENERGY PRECISION 4
+Info: CROSSTERM ENERGY INCLUDED IN DIHEDRAL
+Info: TIMING OUTPUT STEPS    2000
+Info: HARMONIC CONSTRAINTS ACTIVE
+Info: HARMONIC CONS EXP      2
+Info: COLLECTIVE VARIABLES CALCULATION REQUESTED
+Info: LANGEVIN DYNAMICS ACTIVE
+Info: LANGEVIN TEMPERATURE   300
+Info: LANGEVIN USING BBK INTEGRATOR
+Info: LANGEVIN DAMPING COEFFICIENT IS 5 INVERSE PS
+Info: LANGEVIN DYNAMICS APPLIED TO HYDROGENS
+Info: USING VERLET I (r-RESPA) MTS SCHEME.
+Info: C1 SPLITTING OF LONG RANGE ELECTROSTATICS
+Info: PLACING ATOMS IN PATCHES BY HYDROGEN GROUPS
+Info: NONBONDED FORCES EVALUATED EVERY 2 STEPS
+Info: RANDOM NUMBER SEED     87654321
+Info: USE HYDROGEN BONDS?    NO
+Info: COORDINATE PDB         beta-ideal.pdb
+Info: STRUCTURE FILE         da.psf
+Info: PARAMETER file: CHARMM format! 
+Info: PARAMETERS             ../toppar/par_all22_prot.inp
+Info: USING ARITHMETIC MEAN TO COMBINE L-J SIGMA PARAMETERS
+Info: SUMMARY OF PARAMETERS:
+Info: 140 BONDS
+Info: 356 ANGLES
+Info: 459 DIHEDRAL
+Info: 43 IMPROPER
+Info: 6 CROSSTERM
+Info: 95 VDW
+Info: 0 VDW_PAIRS
+Info: 0 NBTHOLE_PAIRS
+Info: TIME FOR READING PSF FILE: 0.000876878
+Info: Reading pdb file beta-ideal.pdb
+Info: TIME FOR READING PDB FILE: 0.000200553
+Info: 
+Info: ****************************
+Info: STRUCTURE SUMMARY:
+Info: 104 ATOMS
+Info: 103 BONDS
+Info: 183 ANGLES
+Info: 251 DIHEDRALS
+Info: 22 IMPROPERS
+Info: 0 CROSSTERMS
+Info: 0 EXCLUSIONS
+Info: 9 CONSTRAINTS
+Info: 312 DEGREES OF FREEDOM
+Info: 51 HYDROGEN GROUPS
+Info: 4 ATOMS IN LARGEST HYDROGEN GROUP
+Info: 51 MIGRATION GROUPS
+Info: 4 ATOMS IN LARGEST MIGRATION GROUP
+Info: TOTAL MASS = 727.821 amu
+Info: TOTAL CHARGE = 6.70552e-08 e
+Info: *****************************
+Info: 
+Info: Entering startup at 0.0159378 s, 125.872 MB of memory in use
+Info: Startup phase 0 took 4.8337e-05 s, 125.872 MB of memory in use
+Info: ADDED 536 IMPLICIT EXCLUSIONS
+Info: Startup phase 1 took 0.000266108 s, 125.872 MB of memory in use
+Info: NONBONDED TABLE R-SQUARED SPACING: 0.0625
+Info: NONBONDED TABLE SIZE: 705 POINTS
+Info: INCONSISTENCY IN FAST TABLE ENERGY VS FORCE: 0.000290235 AT 0.251946
+Info: INCONSISTENCY IN VDWA TABLE ENERGY VS FORCE: 0.0040507 AT 0.251946
+Info: ABSOLUTE IMPRECISION IN VDWB TABLE ENERGY: 1.03398e-25 AT 10.9972
+Info: RELATIVE IMPRECISION IN VDWB TABLE ENERGY: 1.12007e-16 AT 10.9972
+Info: INCONSISTENCY IN VDWB TABLE ENERGY VS FORCE: 0.00150189 AT 0.251946
+Info: Startup phase 2 took 0.000923992 s, 125.872 MB of memory in use
+Info: Startup phase 3 took 3.654e-05 s, 125.872 MB of memory in use
+Info: Startup phase 4 took 2.647e-05 s, 125.872 MB of memory in use
+Info: Startup phase 5 took 2.3454e-05 s, 125.872 MB of memory in use
+Info: ORIGINAL ATOMS MINMAX IS -8.74 -6.092 -5.698  8.734 5.057 5.584
+Info: ADJUSTED ATOMS MINMAX IS -7.50912 -5.17862 -5.17225  7.55213 4.56762 4.30025
+Info: PATCH GRID IS 2 BY 1 BY 1
+Info: PATCH GRID IS 1-AWAY BY 1-AWAY BY 1-AWAY
+Info: REMOVING COM VELOCITY 0.194743 1.2251 0.544614
+Info: LARGEST PATCH (0) HAS 52 ATOMS
+Info: TORUS A SIZE 1 USING 0
+Info: TORUS B SIZE 1 USING 0
+Info: TORUS C SIZE 1 USING 0
+Info: TORUS MINIMAL MESH SIZE IS 1 BY 1 BY 1
+Info: Placed 100% of base nodes on same physical node as patch
+Info: Startup phase 6 took 0.000207593 s, 125.872 MB of memory in use
+Info: Startup phase 7 took 3.5908e-05 s, 125.872 MB of memory in use
+Info: Startup phase 8 took 2.4709e-05 s, 125.872 MB of memory in use
+Info: Startup phase 9 took 2.3209e-05 s, 125.872 MB of memory in use
+Info: Startup phase 10 took 2.2908e-05 s, 125.872 MB of memory in use
+Info: Startup phase 11 took 2.37e-05 s, 125.872 MB of memory in use
+LDB: Central LB being created...
+Info: Startup phase 12 took 3.455e-05 s, 125.872 MB of memory in use
+Info: CREATING 21 COMPUTE OBJECTS
+colvars: ----------------------------------------------------------------------
+colvars: Initializing the collective variables module, version 2024-11-18.
+colvars: Please cite Fiorin et al, Mol Phys 2013:
+colvars:   https://doi.org/10.1080/00268976.2013.813594
+colvars: as well as all other papers listed below for individual features used.
+colvars: Summary of compile-time features available in this build:
+colvars:   - C++ language version: 201103
+colvars:   - SMP parallelism: enabled (num. threads = 1)
+colvars:   - Multiple replicas: enabled (replica number 1 of 1)
+colvars:   - Lepton custom functions: available
+colvars:   - Tcl interpreter: available
+colvars: Redefining the Tcl "cv" command to the new script interface.
+colvars: Using NAMD interface, version "2024-10-05".
+colvars: The restart output state file will be "RFEP_decoupler.colvars.state".
+colvars: The final output state file will be "RFEP_decouple.colvars.state".
+Info: Startup phase 13 took 0.000761217 s, 125.872 MB of memory in use
+Info: Startup phase 14 took 5.1557e-05 s, 125.872 MB of memory in use
+Info: Startup phase 15 took 4.4844e-05 s, 125.872 MB of memory in use
+Info: Finished startup at 0.0184929 s, 125.872 MB of memory in use
+
+colvars: ----------------------------------------------------------------------
+colvars: Reading new configuration:
+colvars: # units = "" [default]
+colvars: # smp = on [default]
+colvars: # colvarsTrajFrequency = 20
+colvars: # colvarsRestartFrequency = 20000 [default]
+colvars: # scriptedColvarForces = off [default]
+colvars: # scriptingAfterBiases = off [default]
+colvars: # sourceTclFile = "" [default]
+colvars: ----------------------------------------------------------------------
+colvars:   Initializing a new collective variable.
+colvars:   # name = "d"
+colvars:   Initializing a new "distance" component.
+colvars:     # name = "" [default]
+colvars:     # componentCoeff = 1 [default]
+colvars:     # componentExp = 1 [default]
+colvars:     # period = 0 [default]
+colvars:     # wrapAround = 0 [default]
+colvars:     # forceNoPBC = off [default]
+colvars:     # scalable = on [default]
+colvars:       Initializing atom group "group1".
+colvars:       # name = "" [default]
+colvars:       # centerToOrigin = off [default]
+colvars:       # centerToReference = off [default]
+colvars:       # rotateToReference = off [default]
+colvars:       # atomsOfGroup = "" [default]
+colvars:       # indexGroup = "" [default]
+colvars:       # psfSegID =  [default]
+colvars:       # atomsFile = "" [default]
+colvars:       # dummyAtom = ( 0 , 0 , 0 ) [default]
+colvars:       # enableFitGradients = on [default]
+colvars:       Enabling scalable calculation for group "group1".
+colvars:       # printAtomIDs = off [default]
+colvars:       Atom group "group1" defined with 1 atoms requested: total mass = 14.007, total charge = -0.62.
+colvars:       Initializing atom group "group2".
+colvars:       # name = "" [default]
+colvars:       # centerToOrigin = off [default]
+colvars:       # centerToReference = off [default]
+colvars:       # rotateToReference = off [default]
+colvars:       # atomsOfGroup = "" [default]
+colvars:       # indexGroup = "" [default]
+colvars:       # psfSegID =  [default]
+colvars:       # atomsFile = "" [default]
+colvars:       # dummyAtom = ( 0 , 0 , 0 ) [default]
+colvars:       # enableFitGradients = on [default]
+colvars:       Enabling scalable calculation for group "group2".
+colvars:       # printAtomIDs = off [default]
+colvars:       Atom group "group2" defined with 1 atoms requested: total mass = 1.008, total charge = 0.09.
+colvars:     # oneSiteSystemForce = off [default]
+colvars:     # oneSiteTotalForce = off [default]
+colvars:   All components initialized.
+colvars:   # timeStepFactor = 1 [default]
+colvars:   # width = 1 [default]
+colvars:   # lowerBoundary = 0 [default]
+colvars:   # upperBoundary = 1 [default]
+colvars:   # hardLowerBoundary = on [default]
+colvars:   # hardUpperBoundary = off [default]
+colvars:   # expandBoundaries = off [default]
+colvars:   # extendedLagrangian = off [default]
+colvars:   # outputValue = on [default]
+colvars:   # outputVelocity = off [default]
+colvars:   # outputTotalForce = off [default]
+colvars:   # outputAppliedForce = off [default]
+colvars:   # subtractAppliedForce = off [default]
+colvars:   # runAve = off [default]
+colvars:   # corrFunc = off [default]
+colvars: ----------------------------------------------------------------------
+colvars: Collective variables initialized, 1 in total.
+colvars: ----------------------------------------------------------------------
+colvars:   Initializing a new "harmonicwalls" instance.
+colvars:   # name = "harmonicwalls1" [default]
+colvars:   # colvars = { d }
+colvars:   # stepZeroData = off [default]
+colvars:   # outputEnergy = on
+colvars:   # outputFreq = 20000 [default]
+colvars:   # timeStepFactor = 1 [default]
+colvars:   # writeTISamples = off [default]
+colvars:   # writeTIPMF = off [default]
+colvars:   # forceConstant = 20
+colvars:   # decoupling = on
+colvars:   # targetForceConstant = 20 [default]
+colvars:   Initial step for restraint change: 0
+colvars:   # targetNumSteps = 2000
+colvars:   # targetNumStages = 10
+colvars:   # outputAccumulatedWork = off [default]
+colvars:   # targetEquilSteps = 0 [default]
+colvars:   # lambdaSchedule =  [default]
+colvars:   # lambdaExponent = 4
+colvars:   # lowerWalls = { 0 } [default]
+colvars:   Lower walls were not provided.
+colvars:   # upperWalls = { 5 }
+colvars:   # upperWallConstant = 20 [default]
+colvars:   The upper wall force constant for colvar "d" will be rescaled to 20 according to the specified width (1).
+colvars: ----------------------------------------------------------------------
+colvars: Collective variables biases initialized, 1 in total.
+colvars: ----------------------------------------------------------------------
+colvars: Collective variables module (re)initialized.
+colvars: ----------------------------------------------------------------------
+colvars: Updating NAMD interface:
+colvars: updating atomic data (0 atoms).
+colvars: updating group data (2 scalable groups, 2 atoms in total).
+colvars: updating grid object data (0 grid objects in total).
+colvars: 
+colvars: SUMMARY OF COLVARS FEATURES USED SO FAR AND THEIR CITATIONS:
+colvars: 
+colvars: - Colvars module:
+colvars: - Colvars-NAMD interface:
+colvars: - Optimal rotation via flexible fitting:
+colvars: - distance colvar component:
+colvars: - harmonicWalls colvar bias implementation:
+colvars:   Fiorin2013 https://doi.org/10.1080/00268976.2013.813594
+colvars: 
+colvars: - NAMD engine:
+colvars: - Scalable center-of-mass computation (NAMD):
+colvars:   Phillips2020 https://doi.org/10.1063/5.0014475
+colvars: 
+colvars: updating target temperature (T = 300 K).
+TCL: Original numsteps 2000 will be ignored.
+TCL: Running for 22000 steps
+colvars: Updating NAMD interface:
+colvars: updating atomic data (0 atoms).
+colvars: updating group data (2 scalable groups, 2 atoms in total).
+colvars: updating grid object data (0 grid objects in total).
+colvars: updating target temperature (T = 300 K).
+colvars: Current simulation parameters: initial step = 0, integration timestep = 0.5
+colvars: Updating atomic parameters (masses, charges, etc).
+colvars: Re-initialized atom group for variable "d":0/0. 1 atoms: total mass = 14.007, total charge = -0.62.
+colvars: Re-initialized atom group for variable "d":0/1. 1 atoms: total mass = 1.008, total charge = 0.09.
+colvars: The restart output state file will be "RFEP_decoupler.colvars.state".
+colvars:   Restraint harmonicwalls1, stage 0 : lambda = 1, k = 20
+colvars: Synchronizing (emptying the buffer of) trajectory file "RFEP_decouple.colvars.traj".
+ETITLE:      TS           BOND          ANGLE          DIHED          IMPRP               ELECT            VDW       BOUNDARY           MISC        KINETIC               TOTAL           TEMP      POTENTIAL         TOTAL3        TEMPAVG
+
+ENERGY:       0        38.0157        44.9576        30.5126         3.8101             84.6499        -9.2323       504.4578         0.0866        83.8839            781.1419       270.5917       697.2580       781.3366       270.5917
+
+LDB: ============= START OF LOAD BALANCING ============== 0.039659
+LDB: ============== END OF LOAD BALANCING =============== 0.0396868
+LDB: =============== DONE WITH MIGRATION ================ 0.0397021
+LDB: ============= START OF LOAD BALANCING ============== 0.0545953
+LDB: ============== END OF LOAD BALANCING =============== 0.0546157
+LDB: =============== DONE WITH MIGRATION ================ 0.0546509
+Info: Initial time: 1 CPUs 0.000186993 s/step 0.00432854 days/ns 125.872 MB memory
+LDB: ============= START OF LOAD BALANCING ============== 0.0584074
+LDB: ============== END OF LOAD BALANCING =============== 0.0584257
+LDB: =============== DONE WITH MIGRATION ================ 0.0584392
+LDB: ============= START OF LOAD BALANCING ============== 0.0730525
+LDB: ============== END OF LOAD BALANCING =============== 0.0730704
+LDB: =============== DONE WITH MIGRATION ================ 0.0730966
+Info: Initial time: 1 CPUs 0.000182997 s/step 0.00423605 days/ns 125.872 MB memory
+ENERGY:     200        61.1594        87.5586        40.9839         8.2561             73.2242        -0.6607       120.8193        15.4339       251.4918            658.2665       811.2592       406.7747       658.7429       639.1858
+
+LDB: ============= START OF LOAD BALANCING ============== 0.0912614
+LDB: ============== END OF LOAD BALANCING =============== 0.0912786
+LDB: =============== DONE WITH MIGRATION ================ 0.0913137
+Info: Initial time: 1 CPUs 0.000181088 s/step 0.00419184 days/ns 125.872 MB memory
+LDB: ============= START OF LOAD BALANCING ============== 0.107847
+LDB: ============== END OF LOAD BALANCING =============== 0.10786
+LDB: =============== DONE WITH MIGRATION ================ 0.107879
+Info: Benchmark time: 1 CPUs 0.000163825 s/step 0.00379224 days/ns 125.872 MB memory
+ENERGY:     400        37.4169        78.4021        58.4847         7.7186             84.7847        -5.5019        21.9393        10.2116       193.3454            486.8014       623.6912       293.4560       486.7652       823.3925
+
+Info: Benchmark time: 1 CPUs 0.000128778 s/step 0.00298097 days/ns 125.872 MB memory
+Info: Benchmark time: 1 CPUs 0.000138371 s/step 0.00320302 days/ns 125.872 MB memory
+ENERGY:     600        38.6860        62.0707        62.2760        10.0103             84.6670       -11.2952        19.0764        16.8873       128.5746            410.9532       414.7544       282.3786       410.6564       537.7620
+
+Info: Benchmark time: 1 CPUs 0.000131791 s/step 0.00305072 days/ns 125.872 MB memory
+Info: Benchmark time: 1 CPUs 0.000132679 s/step 0.00307128 days/ns 125.872 MB memory
+ENERGY:     800        36.9840        59.6920        58.9623         9.8130             92.0338       -10.2466        14.7492         0.0000       123.3749            385.3627       397.9814       261.9877       385.8820       414.6915
+
+Info: Benchmark time: 1 CPUs 0.000129768 s/step 0.00300388 days/ns 125.872 MB memory
+ENERGY:    1000        46.3818        61.2911        43.2469        12.3973             88.8413       -10.3106        12.4981         0.0000       112.9329            367.2788       364.2975       254.3459       367.3238       393.8936
+
+ENERGY:    1200        38.4738        58.9528        39.8824        10.7723             77.7701       -12.8344         6.4773         0.0000       122.5923            342.0865       395.4566       219.4942       342.0443       400.8974
+
+ENERGY:    1400        37.9087        66.7552        39.0341         5.9921             82.2114        -9.7417         8.1187         0.1542        89.7817            320.2143       289.6168       230.4326       320.2621       359.3848
+
+ENERGY:    1600        38.7771        51.5259        33.2215         4.4817             81.9094       -13.8763         6.1905         0.0000       113.1495            315.3794       364.9964       202.2298       315.5366       323.3552
+
+ENERGY:    1800        37.4826        60.8466        36.8378         7.8884             76.5472       -11.4395         1.3039         0.0000       101.2305            310.6976       326.5482       209.4670       310.4289       334.2266
+
+colvars:   Restraint harmonicwalls1 Lambda= 1 dA/dLambda= 10.5919
+colvars:   Restraint harmonicwalls1, stage 1 : lambda = 0.9, k = 13.122
+TIMING: 2000  CPU: 0.279804, 0.000138559/step  Wall: 0.29716, 0.000139635/step, 0.000775749 hours remaining, 125.872100 MB of memory in use.
+PERFORMANCE: 2000  averaging 309.378 ns/day, 0.000139635 sec/step with standard deviation 0
+ETITLE:      TS           BOND          ANGLE          DIHED          IMPRP               ELECT            VDW       BOUNDARY           MISC        KINETIC               TOTAL           TEMP      POTENTIAL         TOTAL3        TEMPAVG
+
+ENERGY:    2000        41.1919        60.3655        35.9203         5.0919             74.6284       -15.3279         2.5888         0.0000        89.4178            293.8769       288.4429       204.4591       294.0271       307.6730
+
+ENERGY:    2200        31.8022        65.5700        36.5262         3.6388             74.3885        -8.3931         1.6011         0.0119        89.0666            294.2122       287.3099       205.1456       294.3826       303.5145
+
+ENERGY:    2400        40.7041        51.9464        34.0848         6.5715             82.2461       -14.1920         7.1392         0.0536        98.0840            306.6376       316.3981       208.5536       307.6705       304.3115
+
+ENERGY:    2600        35.4382        53.8957        35.9039         8.2230             76.4830       -10.2239         3.3698         0.0040        93.0618            296.1555       300.1976       203.0937       296.7574       305.4263
+
+ENERGY:    2800        37.7616        57.5675        43.4550         8.1421             70.3064        -9.9370         1.5778         0.0000        91.4929            300.3664       295.1368       208.8734       300.8692       312.9496
+
+ENERGY:    3000        45.3838        49.2665        38.9834         6.2561             75.0904        -7.7995         2.8651         0.0000        90.7128            300.7586       292.6201       210.0458       300.2334       309.1868
+
+ENERGY:    3200        40.0073        50.6196        36.0561         6.2472             85.1109       -14.5723         2.3070         0.0000       100.4669            306.2426       324.0850       205.7756       306.7897       320.8158
+
+ENERGY:    3400        32.2688        53.8292        31.5775         1.8280             86.1712       -12.5170         2.4409         0.0000        97.3408            292.9393       314.0007       195.5985       292.7636       303.8970
+
+ENERGY:    3600        22.4250        53.9997        32.2270         3.2182             87.7094       -15.8290         2.0091         0.0000       109.3072            295.0666       352.6019       185.7594       296.1750       294.5200
+
+ENERGY:    3800        39.3144        56.8207        34.8326         6.0332             80.6774        -8.8699         1.4363         0.0000        92.1609            302.4056       297.2915       210.2448       302.6660       293.4258
+
+colvars:   Restraint harmonicwalls1 Lambda= 0.9 dA/dLambda= 0.125837
+colvars:   Restraint harmonicwalls1, stage 2 : lambda = 0.8, k = 8.192
+TIMING: 4000  CPU: 0.539775, 0.000129986/step  Wall: 0.55688, 0.00012986/step, 0.0006493 hours remaining, 125.872100 MB of memory in use.
+PERFORMANCE: 4000  averaging 320.6 ns/day, 0.000134747 sec/step with standard deviation 6.91191e-06
+ETITLE:      TS           BOND          ANGLE          DIHED          IMPRP               ELECT            VDW       BOUNDARY           MISC        KINETIC               TOTAL           TEMP      POTENTIAL         TOTAL3        TEMPAVG
+
+ENERGY:    4000        30.2781        67.7234        36.4297         5.2679             77.9196       -16.3751         1.5953         0.0000       100.7461            303.5851       324.9857       202.8389       303.9542       323.0652
+
+ENERGY:    4200        45.2488        59.4700        37.1463         4.8043             73.4313        -9.6202         3.5815         0.0000       102.8460            316.9080       331.7595       214.0620       316.8682       337.9213
+
+LDB: ============= START OF LOAD BALANCING ============== 0.613135
+LDB: ============== END OF LOAD BALANCING =============== 0.613151
+LDB: =============== DONE WITH MIGRATION ================ 0.613167
+LDB: ============= START OF LOAD BALANCING ============== 0.626075
+LDB: ============== END OF LOAD BALANCING =============== 0.626088
+LDB: =============== DONE WITH MIGRATION ================ 0.62611
+ENERGY:    4400        33.8224        62.8264        35.2739         7.0420             83.2589       -10.6206         2.7487         0.0000       105.3294            319.6812       339.7702       214.3518       319.9358       349.8886
+
+ENERGY:    4600        38.6903        56.4676        36.7832         4.9206             84.8117       -11.0045         3.7790         0.0000        93.6879            308.1357       302.2171       214.4479       308.4200       335.3590
+
+ENERGY:    4800        39.4408        55.4887        32.0960         9.6756             81.0251       -15.1293         3.0461         0.0250        91.0342            296.7021       293.6569       205.6679       296.7448       314.4369
+
+ENERGY:    5000        34.1594        51.6206        35.2565         6.9776             80.3041       -11.2455         3.7563         0.1543        85.6687            286.6522       276.3491       200.9834       286.5686       294.2498
+
+ENERGY:    5200        34.3118        59.6701        33.8208         7.5817             69.3998       -14.2495         4.0763         0.0000        85.2102            279.8213       274.8702       194.6110       279.6415       281.5662
+
+ENERGY:    5400        37.5669        55.6157        31.6834         4.8331             80.7372       -14.4777         1.1038         0.0000        96.9987            294.0612       312.8971       197.0625       294.7145       302.4752
+
+ENERGY:    5600        34.5040        51.6952        37.4454         5.5635             78.5670       -13.0109         1.9399         0.0000        96.1001            292.8044       309.9986       196.7042       293.1060       309.5397
+
+ENERGY:    5800        31.9169        57.8855        34.0796         5.8766             77.1050       -11.6247         2.0243         0.0907       101.1008            298.4547       326.1296       197.3539       298.2939       311.8616
+
+colvars:   Restraint harmonicwalls1 Lambda= 0.8 dA/dLambda= 0.254564
+colvars:   Restraint harmonicwalls1, stage 3 : lambda = 0.7, k = 4.802
+TIMING: 6000  CPU: 0.795748, 0.000127986/step  Wall: 0.813019, 0.00012807/step, 0.000569198 hours remaining, 125.872100 MB of memory in use.
+PERFORMANCE: 6000  averaging 325.985 ns/day, 0.000132521 sec/step with standard deviation 6.22508e-06
+ETITLE:      TS           BOND          ANGLE          DIHED          IMPRP               ELECT            VDW       BOUNDARY           MISC        KINETIC               TOTAL           TEMP      POTENTIAL         TOTAL3        TEMPAVG
+
+ENERGY:    6000        30.6517        59.1730        31.1398         6.5319             74.1890       -11.2912         3.4304         0.2432        88.1403            282.2083       284.3218       194.0680       282.0610       305.1078
+
+ENERGY:    6200        33.9130        46.8109        33.9562         4.6090             84.2020       -14.8319         1.7750         0.0541        93.1681            283.6564       300.5406       190.4883       284.5630       297.6551
+
+ENERGY:    6400        33.5501        48.9571        34.3599         6.6440             80.0713       -13.0779         0.6407         0.0000        85.5269            276.6722       275.8917       191.1452       277.1739       282.1106
+
+ENERGY:    6600        31.5636        47.2396        34.7274         5.1385             77.9333        -9.6359         2.7326         0.1916        93.4820            283.3727       301.5531       189.8907       283.1470       291.9985
+
+ENERGY:    6800        31.1508        49.3553        33.8716         7.2576             76.4279       -14.0144         2.0806         0.3012        91.4249            277.8555       294.9172       186.4306       278.2059       292.3999
+
+ENERGY:    7000        31.7866        52.4375        32.2239         8.3233             75.3673       -12.2246         1.6682         0.0135        88.5399            278.1357       285.6108       189.5958       278.6470       279.5618
+
+ENERGY:    7200        37.4428        59.9274        29.8508         4.8474             78.5491        -9.9028         1.2625         0.1000        91.8319            293.9092       296.2303       202.0773       293.6069       305.8186
+
+ENERGY:    7400        31.0272        60.4368        33.3289         3.3864             77.9199       -10.7888         2.1112         0.3656        94.2312            292.0185       303.9698       197.7873       292.7451       315.7439
+
+ENERGY:    7600        33.6244        58.5555        33.8507         5.3580             79.0945       -13.9569         0.7105         0.6748        89.8308            287.7424       289.7751       197.9116       287.6590       312.1143
+
+ENERGY:    7800        34.2665        48.2955        32.6953         4.2426             78.3332        -7.6302         0.9178         0.0920        94.9238            286.1364       306.2039       191.2127       286.4379       299.1786
+
+colvars:   Restraint harmonicwalls1 Lambda= 0.7 dA/dLambda= 1.31023
+colvars:   Restraint harmonicwalls1, stage 4 : lambda = 0.6, k = 2.592
+TIMING: 8000  CPU: 1.05575, 0.000129999/step  Wall: 1.07043, 0.000128703/step, 0.000500511 hours remaining, 125.872100 MB of memory in use.
+PERFORMANCE: 8000  averaging 328.35 ns/day, 0.000131567 sec/step with standard deviation 5.42953e-06
+ETITLE:      TS           BOND          ANGLE          DIHED          IMPRP               ELECT            VDW       BOUNDARY           MISC        KINETIC               TOTAL           TEMP      POTENTIAL         TOTAL3        TEMPAVG
+
+ENERGY:    8000        38.1091        45.6564        32.5970         3.7248             81.6606        -8.9579         1.7097         0.0095        98.3765            292.8857       317.3416       194.5092       293.2230       297.6783
+
+ENERGY:    8200        29.5632        53.1903        34.1521         6.7427             79.1775        -9.2653         3.6297         0.0000        90.1838            287.3740       290.9139       197.1901       287.5328       298.8160
+
+LDB: ============= START OF LOAD BALANCING ============== 1.1258
+LDB: ============== END OF LOAD BALANCING =============== 1.12581
+LDB: =============== DONE WITH MIGRATION ================ 1.12582
+LDB: ============= START OF LOAD BALANCING ============== 1.13936
+LDB: ============== END OF LOAD BALANCING =============== 1.13937
+LDB: =============== DONE WITH MIGRATION ================ 1.13939
+ENERGY:    8400        32.4862        51.9386        31.1878         4.5849             79.7327       -13.0711         4.4975         0.0000        93.1255            284.4822       300.4030       191.3568       284.6177       304.5379
+
+ENERGY:    8600        42.2960        49.5838        39.7801         4.8367             79.9207       -10.4179         1.9323         0.0000        83.1787            291.1103       268.3168       207.9316       290.9557       296.2326
+
+ENERGY:    8800        23.5921        44.0778        41.6068         5.3311             78.2739       -10.5600         1.7258         0.0000        98.4778            282.5254       317.6684       184.0477       282.5254       297.9836
+
+ENERGY:    9000        27.9378        52.7065        35.5197         4.7168             80.8018        -9.7281         2.8401         0.0163        85.9249            280.7358       277.1754       194.8109       281.6578       285.8313
+
+ENERGY:    9200        27.2672        54.6554        37.9982         6.9682             73.6385        -8.5250         3.4022         0.0846        86.7048            282.1942       279.6914       195.4893       282.1130       282.6809
+
+ENERGY:    9400        34.7916        54.9487        33.1190         5.4083             73.8893       -13.9985         2.5863         0.1597        92.4871            283.3914       298.3436       190.9043       283.0462       294.3927
+
+ENERGY:    9600        45.1792        55.2367        32.1515         5.8580             71.3269       -13.7512         2.3410         0.1826        98.6107            297.1354       318.0973       198.5246       296.9412       299.7815
+
+ENERGY:    9800        35.7484        57.5658        31.8641         6.0560             77.3112       -14.0988         3.1034         0.2516        96.7015            294.5031       311.9384       197.8017       294.7869       310.4183
+
+colvars:   Restraint harmonicwalls1 Lambda= 0.6 dA/dLambda= 0.423453
+colvars:   Restraint harmonicwalls1, stage 5 : lambda = 0.5, k = 1.25
+TIMING: 10000  CPU: 1.31174, 0.000127999/step  Wall: 1.32667, 0.00012812/step, 0.000427068 hours remaining, 125.872100 MB of memory in use.
+PERFORMANCE: 10000  averaging 330.08 ns/day, 0.000130877 sec/step with standard deviation 4.94828e-06
+ETITLE:      TS           BOND          ANGLE          DIHED          IMPRP               ELECT            VDW       BOUNDARY           MISC        KINETIC               TOTAL           TEMP      POTENTIAL         TOTAL3        TEMPAVG
+
+ENERGY:   10000        38.2056        57.8802        32.9621         3.6262             75.0505       -11.7156         3.8608         0.0494       101.4515            301.3708       327.2610       199.9193       301.9866       316.4587
+
+ENERGY:   10200        37.6472        71.2582        34.2813         6.1783             65.1478       -13.9926         2.3156         0.0697        91.5585            294.4639       295.3481       202.9055       295.4859       320.2143
+
+ENERGY:   10400        38.5419        61.7051        29.7382         4.6921             67.3682       -11.9735         2.6441         0.0815       105.1750            297.9726       339.2721       192.7977       298.2500       312.9895
+
+ENERGY:   10600        32.9417        67.6217        32.3737         3.5114             72.6963        -8.4657         3.5366         0.0458        86.8722            291.1338       280.2314       204.2615       291.2803       308.6116
+
+ENERGY:   10800        26.4892        51.4097        35.8012         2.7664             83.5732       -15.2127         3.2130         0.0544        93.3663            281.4607       301.1797       188.0944       281.3487       285.6133
+
+ENERGY:   11000        32.6363        52.2741        39.1414         3.3132             70.7463       -15.7948         1.8445         0.0028        88.8872            273.0510       286.7313       184.1638       272.8386       280.8481
+
+ENERGY:   11200        33.5158        52.6079        33.2805         3.7310             81.5473       -16.7659         1.3894         0.0261        94.9634            284.2955       306.3318       189.3321       284.5549       289.5699
+
+ENERGY:   11400        29.2574        43.1150        31.8858         4.9776             80.1506       -17.5541         2.0283         0.0000        91.2037            265.0643       294.2038       173.8605       265.4873       283.5497
+
+ENERGY:   11600        31.1692        52.8834        32.3846         6.7893             76.1569       -10.5857         0.7696         0.0163        88.6939            278.2776       286.1077       189.5837       278.3563       280.3772
+
+ENERGY:   11800        26.4322        48.0076        34.1281         5.1587             83.7640       -14.4117         1.2131         0.0000        91.8716            276.1637       296.3583       184.2921       276.6772       292.6275
+
+colvars:   Restraint harmonicwalls1 Lambda= 0.5 dA/dLambda= 0.329636
+colvars:   Restraint harmonicwalls1, stage 6 : lambda = 0.4, k = 0.512
+TIMING: 12000  CPU: 1.56372, 0.000125987/step  Wall: 1.58029, 0.000126814/step, 0.00035226 hours remaining, 125.872100 MB of memory in use.
+PERFORMANCE: 12000  averaging 331.797 ns/day, 0.0001302 sec/step with standard deviation 4.72663e-06
+ETITLE:      TS           BOND          ANGLE          DIHED          IMPRP               ELECT            VDW       BOUNDARY           MISC        KINETIC               TOTAL           TEMP      POTENTIAL         TOTAL3        TEMPAVG
+
+ENERGY:   12000        39.1534        48.9198        29.4283         5.0760             85.3373       -16.0892         1.7047         0.0359       108.8075            302.3736       350.9898       193.5661       302.1107       312.2642
+
+ENERGY:   12200        38.2972        60.5933        31.5277         5.0291             77.6948       -16.8529         1.9579         0.0212        95.2782            293.5464       307.3473       198.2681       293.6694       330.0289
+
+LDB: ============= START OF LOAD BALANCING ============== 1.63625
+LDB: ============== END OF LOAD BALANCING =============== 1.63627
+LDB: =============== DONE WITH MIGRATION ================ 1.63628
+LDB: ============= START OF LOAD BALANCING ============== 1.64899
+LDB: ============== END OF LOAD BALANCING =============== 1.649
+LDB: =============== DONE WITH MIGRATION ================ 1.64902
+ENERGY:   12400        34.7059        54.1295        31.1055         6.1747             79.3008       -14.8252         1.5017         0.0056        88.3051            280.4036       284.8535       192.0986       280.4833       307.3329
+
+ENERGY:   12600        34.4916        54.8670        31.6034         5.1806             79.2461       -13.3160         3.6042         0.0713        86.6122            282.3604       279.3925       195.7482       282.7353       306.1247
+
+ENERGY:   12800        34.1458        47.2745        30.7870         3.4118             78.8353       -15.6106         5.6828         0.0194        91.1368            275.6828       293.9880       184.5460       276.2225       283.2873
+
+ENERGY:   13000        33.2646        47.6886        27.7629         2.2624             80.7470       -15.3711         4.7769         0.0172        84.7876            265.9361       273.5068       181.1485       266.3488       274.1282
+
+ENERGY:   13200        25.6431        46.5757        31.5335         5.0797             80.0528       -15.3130         4.4291         0.0126        85.7027            263.7163       276.4588       178.0135       263.8050       265.0485
+
+ENERGY:   13400        40.8767        48.0732        31.8158         3.8469             81.1411       -14.2644         3.0077         0.0051        85.5532            280.0553       275.9765       194.5021       280.0203       271.3544
+
+ENERGY:   13600        31.1187        54.0591        31.9503         4.7899             77.7819       -12.1961         3.9212         0.0067        92.1320            283.5636       297.1981       191.4316       283.8456       296.5931
+
+ENERGY:   13800        34.8370        58.2332        29.7413         4.0485             83.1493       -18.5167         2.6635         0.0003        97.0872            291.2436       313.1827       194.1564       291.2028       306.2987
+
+colvars:   Restraint harmonicwalls1 Lambda= 0.4 dA/dLambda= 0.236179
+colvars:   Restraint harmonicwalls1, stage 7 : lambda = 0.3, k = 0.162
+TIMING: 14000  CPU: 1.81572, 0.000125999/step  Wall: 1.83178, 0.000125746/step, 0.000279435 hours remaining, 125.872100 MB of memory in use.
+PERFORMANCE: 14000  averaging 333.426 ns/day, 0.000129564 sec/step with standard deviation 4.63165e-06
+ETITLE:      TS           BOND          ANGLE          DIHED          IMPRP               ELECT            VDW       BOUNDARY           MISC        KINETIC               TOTAL           TEMP      POTENTIAL         TOTAL3        TEMPAVG
+
+ENERGY:   14000        37.4067        57.6355        30.9005         3.8194             81.4156       -13.4475         4.9646         0.0136        93.3595            296.0677       301.1579       202.7083       296.2984       306.9933
+
+ENERGY:   14200        41.7198        66.0997        30.1759         6.0349             81.5973       -18.7443         3.2484         0.0510        90.4272            300.6099       291.6989       210.1827       300.2207       322.9546
+
+ENERGY:   14400        33.5472        44.5732        35.1360         5.3883             76.3351       -15.6722         3.3311         0.0063        94.4820            277.1271       304.7787       182.6451       277.0132       304.7604
+
+ENERGY:   14600        30.2844        49.0476        31.5043         4.2627             76.5082       -13.5773         3.2682         0.0061        79.1003            260.4045       255.1608       181.3042       261.1354       272.5379
+
+ENERGY:   14800        33.4919        54.1081        29.8764         8.2306             83.3599       -15.7143         2.3056         0.0001        77.7142            273.3724       250.6895       195.6582       273.9750       274.7865
+
+ENERGY:   15000        38.4813        61.8695        28.3873         2.1009             72.2716       -17.0135         2.1369         0.0082       101.7464            289.9885       328.2123       188.2421       290.2271       295.3106
+
+ENERGY:   15200        39.2400        55.2135        28.7352         5.8426             80.7944       -16.3685         4.8096         0.0234        98.3716            296.6618       317.3260       198.2902       296.4175       322.8404
+
+ENERGY:   15400        36.9932        56.8827        28.3942         2.6478             79.6791       -14.4845         1.5661         0.0120       102.5664            294.2570       330.8575       191.6905       294.1961       317.1341
+
+ENERGY:   15600        24.7326        62.1081        30.4404         8.8706             77.7903        -9.9156         3.6538         0.0129        99.1936            296.8867       319.9776       197.6931       297.1146       316.8319
+
+ENERGY:   15800        41.4636        53.2639        30.6135         7.6158             82.5039       -10.2691         2.5905         0.0221       103.5296            311.3337       333.9646       207.8041       311.5773       329.1964
+
+colvars:   Restraint harmonicwalls1 Lambda= 0.3 dA/dLambda= 0.182549
+colvars:   Restraint harmonicwalls1, stage 8 : lambda = 0.2, k = 0.032
+TIMING: 16000  CPU: 2.06772, 0.000125999/step  Wall: 2.08526, 0.000126738/step, 0.000211231 hours remaining, 125.872100 MB of memory in use.
+PERFORMANCE: 16000  averaging 334.338 ns/day, 0.000129211 sec/step with standard deviation 4.40289e-06
+ETITLE:      TS           BOND          ANGLE          DIHED          IMPRP               ELECT            VDW       BOUNDARY           MISC        KINETIC               TOTAL           TEMP      POTENTIAL         TOTAL3        TEMPAVG
+
+ENERGY:   16000        36.3730        55.5449        35.8724        11.4010             73.1353       -15.5718         1.8031         0.0033        99.0109            297.5720       319.3881       198.5612       298.5494       324.6318
+
+ENERGY:   16200        37.8893        67.0866        37.7105         6.9717             70.4484       -18.8638         1.3793         0.0091       101.7062            304.3374       328.0827       202.6312       304.4078       321.4594
+
+LDB: ============= START OF LOAD BALANCING ============== 2.14133
+LDB: ============== END OF LOAD BALANCING =============== 2.14136
+LDB: =============== DONE WITH MIGRATION ================ 2.14143
+LDB: ============= START OF LOAD BALANCING ============== 2.15396
+LDB: ============== END OF LOAD BALANCING =============== 2.15397
+LDB: =============== DONE WITH MIGRATION ================ 2.154
+ENERGY:   16400        30.0058        52.7442        38.7201         9.9273             83.1526       -11.8442         3.7453         0.0012       102.7444            309.1967       331.4317       206.4523       309.3158       332.8697
+
+ENERGY:   16600        42.6400        56.6476        38.6114         5.9538             79.1873       -16.3465         1.5090         0.0085        87.4395            295.6507       282.0613       208.2112       295.6280       314.2105
+
+ENERGY:   16800        35.6993        64.5486        35.1638         3.8899             73.3716       -13.9058         2.1018         0.0112        96.0402            296.9207       309.8053       200.8806       296.5244       310.0533
+
+ENERGY:   17000        35.3105        52.3142        30.0803         6.9964             83.6118       -15.9682         3.6799         0.0149       100.3550            296.3948       323.7239       196.0398       296.7834       309.9852
+
+ENERGY:   17200        42.1635        49.1363        35.3230         6.8065             78.4335       -17.6410         2.0598         0.0178        97.4260            293.7254       314.2755       196.2994       294.0660       306.0082
+
+ENERGY:   17400        40.8214        63.0587        34.0935         4.4550             76.7905       -13.5202         2.0649         0.0125        92.8001            300.5764       299.3533       207.7764       300.8856       317.6822
+
+ENERGY:   17600        35.7232        55.6001        34.0656         5.3176             81.2241       -16.8734         2.2077         0.0146        95.5539            292.8334       308.2366       197.2796       292.9358       305.7389
+
+ENERGY:   17800        35.9449        48.1171        30.8439         2.6168             72.8851        -3.4612         3.6155         0.0046       113.9961            304.5629       367.7271       190.5668       304.8398       321.8035
+
+colvars:   Restraint harmonicwalls1 Lambda= 0.2 dA/dLambda= 0.178428
+colvars:   Restraint harmonicwalls1, stage 9 : lambda = 0.1, k = 0.002
+TIMING: 18000  CPU: 2.31968, 0.000125981/step  Wall: 2.33684, 0.000125791/step, 0.000139768 hours remaining, 125.872100 MB of memory in use.
+PERFORMANCE: 18000  averaging 335.324 ns/day, 0.000128831 sec/step with standard deviation 4.27335e-06
+ETITLE:      TS           BOND          ANGLE          DIHED          IMPRP               ELECT            VDW       BOUNDARY           MISC        KINETIC               TOTAL           TEMP      POTENTIAL         TOTAL3        TEMPAVG
+
+ENERGY:   18000        35.6080        57.1039        33.5966         3.2527             80.1711        -9.5090         3.9056         0.0000        82.6357            286.7645       266.5651       204.1288       286.8231       317.9406
+
+ENERGY:   18200        40.8772        47.2620        30.3690         2.5374             77.7913        -6.6464         3.3864         0.0001        93.3996            288.9767       301.2874       195.5771       288.8961       305.4884
+
+ENERGY:   18400        32.5819        55.6355        28.9543         4.9912             83.2349       -14.4345         5.0203         0.0003        85.3969            281.3809       275.4723       195.9840       281.8584       306.2443
+
+ENERGY:   18600        35.3976        55.3429        30.8736         2.8267             80.5251       -14.6140         5.4593         0.0000        95.1472            290.9586       306.9247       195.8113       291.5694       299.0125
+
+ENERGY:   18800        29.8029        44.6661        33.5016         4.5284             81.9956       -18.0287         5.3215         0.0000       100.8991            282.6867       325.4790       181.7876       282.6842       299.5578
+
+ENERGY:   19000        40.3777        50.5952        33.9799         5.2805             84.6200       -18.0771         2.5500         0.0000        79.0508            278.3771       255.0010       199.3263       278.0972       282.2361
+
+ENERGY:   19200        28.3474        44.1902        30.8243         3.8251             78.2808       -11.5934         4.3739         0.0003        89.6212            267.8698       289.0991       178.2486       267.4431       282.0078
+
+ENERGY:   19400        42.1186        49.3675        30.3697         2.6056             77.0240       -12.8850         2.5475         0.0011        80.0225            271.1715       258.1357       191.1490       271.5313       275.6533
+
+ENERGY:   19600        35.8998        53.2069        30.0630         4.7825             75.2947        -8.7915         2.2696         0.0011        95.6382            288.3642       308.5086       192.7260       289.0904       296.4330
+
+ENERGY:   19800        35.8313        64.7088        25.8565         2.7652             78.0455       -14.1897         2.3599         0.0011        81.6425            277.0210       263.3613       195.3785       277.2849       302.9137
+
+colvars:   Restraint harmonicwalls1 Lambda= 0.1 dA/dLambda= 0.0177558
+colvars:   Restraint harmonicwalls1, stage 10 : lambda = 0, k = 0
+colvars: Synchronizing (emptying the buffer of) trajectory file "RFEP_decouple.colvars.traj".
+colvars: Saving collective variables state to "RFEP_decoupler.colvars.state".
+TIMING: 20000  CPU: 2.57564, 0.000127983/step  Wall: 2.59344, 0.000128298/step, 7.12768e-05 hours remaining, 125.872100 MB of memory in use.
+PERFORMANCE: 20000  averaging 335.462 ns/day, 0.000128777 sec/step with standard deviation 4.03247e-06
+ETITLE:      TS           BOND          ANGLE          DIHED          IMPRP               ELECT            VDW       BOUNDARY           MISC        KINETIC               TOTAL           TEMP      POTENTIAL         TOTAL3        TEMPAVG
+
+ENERGY:   20000        29.5841        55.6363        28.0433         4.4870             73.0713       -11.1060         3.5899         0.0000        93.7393            277.0452       302.3831       183.3059       277.4623       283.6411
+
+WRITING EXTENDED SYSTEM TO RESTART FILE AT STEP 20000
+WRITING COORDINATES TO RESTART FILE AT STEP 20000
+FINISHED WRITING RESTART COORDINATES
+The last position output (seq=20000) takes 0.000 seconds, 125.872 MB of memory in use
+WRITING VELOCITIES TO RESTART FILE AT STEP 20000
+FINISHED WRITING RESTART VELOCITIES
+The last velocity output (seq=20000) takes 0.000 seconds, 125.872 MB of memory in use
+ENERGY:   20200        31.2217        53.7358        30.2452         4.8978             76.3532       -13.5413         2.1573         0.0000        91.1384            276.2082       293.9930       185.0698       275.9684       289.9017
+
+LDB: ============= START OF LOAD BALANCING ============== 2.65054
+LDB: ============== END OF LOAD BALANCING =============== 2.65057
+LDB: =============== DONE WITH MIGRATION ================ 2.65058
+LDB: ============= START OF LOAD BALANCING ============== 2.66347
+LDB: ============== END OF LOAD BALANCING =============== 2.6635
+LDB: =============== DONE WITH MIGRATION ================ 2.66353
+ENERGY:   20400        38.4335        46.6679        26.9461         3.0252             86.4784       -12.8994         1.8708         0.0000        88.0685            278.5910       284.0904       190.5225       278.7727       278.7900
+
+ENERGY:   20600        38.2726        52.3756        30.7762         5.0427             75.8656       -10.4726         2.6585         0.0000        89.3004            283.8189       288.0640       194.5185       284.1479       297.9629
+
+ENERGY:   20800        31.9221        57.3732        30.6751         5.6259             75.8022       -14.0076         5.0558         0.0000        88.2805            280.7271       284.7740       192.4466       280.4583       297.7717
+
+ENERGY:   21000        33.2934        59.4298        31.9073         3.6834             70.3136       -12.4712         3.7555         0.0000        87.3065            277.2182       281.6324       189.9116       277.8741       281.9773
+
+ENERGY:   21200        31.3162        49.2499        30.4004         3.7075             74.4424       -10.9088         2.9199         0.0000        96.8018            277.9293       312.2622       181.1275       278.6372       284.0813
+
+ENERGY:   21400        34.1071        52.4443        33.8745         3.3095             79.5463        -9.1932         2.6674         0.0000        90.0286            286.7845       290.4131       196.7559       286.5773       304.3510
+
+ENERGY:   21600        39.5908        53.2853        32.4905         5.6937             78.6718       -10.3824         2.4448         0.0000        96.0738            297.8683       309.9138       201.7945       297.7224       314.4911
+
+ENERGY:   21800        40.1187        58.4453        32.4989         4.0509             76.4512        -9.2360         4.0390         0.0000        82.6665            289.0345       266.6647       206.3679       289.5358       302.6248
+
+colvars:   Restraint harmonicwalls1 Lambda= 0 dA/dLambda= 0
+colvars: Saving collective variables state to "RFEP_decouple.colvars.state".
+TIMING: 22000  CPU: 2.83161, 0.000127981/step  Wall: 2.84731, 0.000126935/step, 0 hours remaining, 125.872100 MB of memory in use.
+PERFORMANCE: 22000  averaging 335.899 ns/day, 0.00012861 sec/step with standard deviation 3.86567e-06
+ETITLE:      TS           BOND          ANGLE          DIHED          IMPRP               ELECT            VDW       BOUNDARY           MISC        KINETIC               TOTAL           TEMP      POTENTIAL         TOTAL3        TEMPAVG
+
+ENERGY:   22000        37.3176        52.5154        34.4378         6.2854             79.1898       -10.1441         3.6530         0.0000        90.3138            293.5686       291.3331       203.2548       293.3376       309.7512
+
+WRITING EXTENDED SYSTEM TO OUTPUT FILE AT STEP 22000
+WRITING COORDINATES TO OUTPUT FILE AT STEP 22000
+The last position output (seq=-2) takes 0.000 seconds, 125.872 MB of memory in use
+WRITING VELOCITIES TO OUTPUT FILE AT STEP 22000
+The last velocity output (seq=-2) takes 0.000 seconds, 125.872 MB of memory in use
+====================================================
+
+WallClock: 2.865649  CPUTime: 2.850297  Memory: 125.872100 MB
+[Partition 0][Node 0] End of program
