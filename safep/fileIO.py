@@ -129,3 +129,90 @@ def read_Files(files, step=1):
     data["dVdW"] = data.vdW_ldl - data.vdW_l
     
     return data
+
+
+def parse_Colvars_log(filename):
+    '''
+    Parses Colvars standard output from a log file
+
+    Returns dictionaries containing key-value pairs
+    global_conf: top-level Colvars parameters
+    colvars: list of dicts, one for each colvar
+    biases: list of dicts, one for each bias
+
+    Note: within colvars, parameters of sub-objects CVCs and atom groups are found as nested dictionaries
+    in a list under the 'children' key, e.g.:
+    colvars[0]['children'][0] is the first CVC of the first colvar
+    colvars[0]['children'][0]['children'][0] is the first atom group of that CVC
+    '''
+    global_conf = {}
+    global_conf['parent'] = global_conf # top-level object is own parent
+    level = prev_level = 0
+
+    colvars = list()
+    biases = list()
+    current = global_conf
+
+    with open(filename) as file:
+        for line in file:
+            if re.match(r'^colvars:\s+Reading new configuration:', line):
+                level = 0
+                current = global_conf
+                continue
+
+            if re.match(r'^colvars:\s+Initializing a new collective variable.', line): # colvar
+                level = 1
+                current = {}
+                current['children'] = list()
+                colvars.append(current)
+                print(f'New colvar at level {level}')
+                continue
+
+            match = re.match(r'^colvars:\s+Initializing a new "(.*)" instance.$', line) # Bias
+            if match:
+                key = match.group(1).strip()
+                level = 1
+                print(f'New bias {key} at level {level}')
+                current = {}
+                current['key'] = key
+                biases.append(current)
+                continue
+
+            new_child = False
+            match = re.match(r'^colvars:(\s+)Initializing a new "(.*)" component.$', line) # component
+            if match:
+                prev_level = level
+                level = (len(match.group(1))-1) // 2
+                if level == 1: # Top-level CVCs are not indented, fix manually
+                    level = 2
+                key = match.group(2).strip()
+                print(f'New cvc {key} at level {level}')
+                new_child = True
+
+            match = re.match(r'^colvars:(\s+)Initializing atom group "(.*)".$', line) # atom group
+            if match:
+                prev_level = level
+                level = (len(match.group(1))-1) // 2
+                key = match.group(2).strip()
+                print(f'New atom group {key} at level {level}')
+                new_child = True
+
+            if new_child: # Common to new CVCs and atom groups
+                if level > prev_level:
+                    parent = current
+                elif level < prev_level:
+                    parent = parent['parent']
+                parent['children'].append({})
+                current = parent['children'][-1]
+                current['key'] = key
+                current['children'] = list()
+                continue
+
+            match = re.match(r'^colvars:\s+#\s+(\w+) = (.*?)\s*(?:\[default\])?$', line) # key-value pair
+            if match:
+                key = match.group(1)
+                value = match.group(2).strip(' "')  # Extract key and value, remove extra spaces
+                current[key] = value  # Add to dictionary
+                continue
+
+    return global_conf, colvars, biases

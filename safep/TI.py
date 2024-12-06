@@ -59,6 +59,34 @@ def make_harmonicWall(FC=10, targetFC=0, targetFE=1, upperWalls=1, schedule=None
 
     return HW
 
+def make_harmonicWall_from_Colvars(w):
+    if (w['key'] != 'harmonicwalls'):
+        k = w['key']
+        print(f'Error: bias is not a harmonic wall (key: {k})')
+        return None
+
+    CVs = w['colvars'].strip("{}").replace(",", "").split()
+    if len(CVs) != 1:
+        print(f'Error: bias does not act on exactly one colvar (cvs: {CVs})')
+        return None
+
+    HW = {  'name': w['name'],
+            'FC': float(w['forceConstant']),
+            'targetFC': float(w['targetForceConstant']),
+            'lowerWalls': float(w['lowerWalls'].strip('{ }')),
+            'upperWalls': float(w['upperWalls'].strip('{ }')),
+            'numSteps': int(w['targetNumSteps']),
+            'targetEQ': int(w['targetEquilSteps']),
+            'decoupling': w['decoupling'] in ['on', 'true', 'yes']} # interpret as Boolean
+    # Deal with keywords that have changed name
+    if 'targetForceExponent' in w:
+        HW['targetFE'] = int(w['targetForceExponent'])
+    if 'lambdaExponent' in w:
+        HW['targetFE'] = int(w['lambdaExponent'])
+    cleaned = w['lambdaSchedule'].strip("{}").replace(",", "")
+    HW['schedule'] = [float(num) for num in cleaned.split()]
+    return HW
+
 def harmonicWall_U(HW, coord, L):
     d=0
     if HW['upperWalls'] and coord>HW['upperWalls']:
