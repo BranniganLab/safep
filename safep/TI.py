@@ -14,12 +14,11 @@ def process_TI(dataTI, restraint, Lsched):
     for key, group in dataTI.groupby('L'):
         dUs[key] = [harmonicWall_dUdL(restraint, coord, key) for coord in group.DBC]
 
-    # Note: here input parameter Lsched is ignored and overwritten
-    Lsched = np.sort(list(dUs.keys()))
-    dL = Lsched[1] - Lsched[0]
+    Lsched = np.sort(list(dUs.keys())) # FIXME parameter Lsched is ignored and overwritten
+    dL = Lsched[1] - Lsched[0]         # FIXME assumes that the lambda schedule is uniformly spaced
     TIperWindow = pd.DataFrame(index=Lsched)
     TIperWindow['dGdL'] = [np.mean(dUs[L])*dL for L in Lsched]
-    TIperWindow['error'] = [np.std(dUs[L])*dL for L in Lsched] 
+    TIperWindow['error'] = [np.std(dUs[L])*dL for L in Lsched]
 
     TIcumulative = pd.DataFrame()
     TIcumulative['dG'] = np.cumsum(TIperWindow.dGdL)

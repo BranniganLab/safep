@@ -146,28 +146,43 @@ def parse_Colvars_log(filename):
     colvars[0]['children'][0]['children'][0] is the first atom group of that CVC
     '''
     global_conf = {}
-    global_conf['parent'] = global_conf # top-level object is own parent
     level = prev_level = 0
 
     colvars = list()
     biases = list()
     current = global_conf
 
+    TI_traj = {}
+
     with open(filename) as file:
+        # Header: get version and output prefix, then break
+        for line in file:
+            match = re.match(r'^colvars: Initializing the collective variables module, version (.*).$', line)
+            if match:
+                global_conf['version'] = match.group(1).strip()
+                break
+
+        for line in file:
+            match = re.match(r'^colvars: The final output state file will be "(.+).colvars.state".$', line)
+            if match:
+                global_conf['output_prefix'] = match.group(1).strip()
+                break
+
+        # Parse rest of file for more config data
         for line in file:
             if re.match(r'^colvars:\s+Reading new configuration:', line):
                 level = 0
                 current = global_conf
                 continue
 
-            if re.match(r'^colvars:\s+Initializing a new collective variable.', line): # colvar
+            if re.match(r'^colvars:\s+Initializing a new collective variable\.', line): # colvar
                 level = 1
                 current = {}
                 current['children'] = list()
                 colvars.append(current)
                 continue
 
-            match = re.match(r'^colvars:\s+Initializing a new "(.*)" instance.$', line) # Bias
+            match = re.match(r'^colvars:\s+Initializing a new "(.*)" instance\.$', line) # Bias
             if match:
                 key = match.group(1).strip()
                 level = 1
@@ -177,7 +192,7 @@ def parse_Colvars_log(filename):
                 continue
 
             new_child = False
-            match = re.match(r'^colvars:(\s+)Initializing a new "(.*)" component.$', line) # component
+            match = re.match(r'^colvars:(\s+)Initializing a new "(.*)" component\.$', line) # component
             if match:
                 prev_level = level
                 level = (len(match.group(1))-1) // 2
@@ -186,7 +201,7 @@ def parse_Colvars_log(filename):
                 key = match.group(2).strip()
                 new_child = True
 
-            match = re.match(r'^colvars:(\s+)Initializing atom group "(.*)".$', line) # atom group
+            match = re.match(r'^colvars:(\s+)Initializing atom group "(.*)"\.$', line) # atom group
             if match:
                 prev_level = level
                 level = (len(match.group(1))-1) // 2
@@ -211,4 +226,38 @@ def parse_Colvars_log(filename):
                 current[key] = value  # Add to dictionary
                 continue
 
-    return global_conf, colvars, biases
+            # Parse free energy derivative estimates - beginning of stage
+            match = re.match(r'^colvars:\s+Restraint (\S+), stage (\S+) : lambda = (\S+), k = (\S+)$', line)
+            if match:
+                name = match.group(1).strip()
+                stage = int(match.group(2).strip())
+                L = float(match.group(3).strip())
+                k = float(match.group(4).strip())
+                if not name in TI_traj:
+                    TI_traj[name] = { 'stage': [stage], 'L':[L], 'k':[k], 'dAdL':[None] }
+                else:
+                    TI_traj[name]['stage'].append(stage)
+                    TI_traj[name]['L'].append(L)
+                    TI_traj[name]['k'].append(k)
+                    TI_traj[name]['dAdL'].append(None)
+                continue
+
+            # Parse free energy derivative estimates - end of stage: add dAdL value
+            match = re.match(r'^colvars:\s+Restraint (\S+) Lambda= (\S+) dA/dLambda= (\S+)$', line)
+            if match:
+                name = match.group(1).strip()
+                L = float(match.group(2).strip())
+                dAdL = float(match.group(3).strip())
+                if TI_traj[name]['L'][-1] != L:
+                    print(f'Error: mismatched lambda value in log: expected lambda = {L} and read:\n{line}')
+                    break
+                TI_traj[name]['dAdL'][-1] = dAdL
+                continue
+
+            # Get explicit trajectory file name
+            match = re.match(r'^colvars: Synchronizing \(emptying the buffer of\) trajectory file "(.+)"\.$', line)
+            if match:
+                global_conf['traj_file'] = match.group(1).strip()
+                continue
+
+    return global_conf, colvars, biases, TI_traj
