@@ -2,6 +2,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+import scipy.integrate
 
 
 def process_TI(dataTI, restraint, Lsched):
@@ -17,13 +18,28 @@ def process_TI(dataTI, restraint, Lsched):
     Lsched = np.sort(list(dUs.keys())) # FIXME parameter Lsched is ignored and overwritten
     dL = Lsched[1] - Lsched[0]         # FIXME assumes that the lambda schedule is uniformly spaced
     TIperWindow = pd.DataFrame(index=Lsched)
-    TIperWindow['dGdL'] = [np.mean(dUs[L])*dL for L in Lsched]
-    TIperWindow['error'] = [np.std(dUs[L])*dL for L in Lsched]
+    TIperWindow['dGdL'] = [np.mean(dUs[L]) for L in Lsched]
+    TIperWindow['error'] = [np.std(dUs[L]) for L in Lsched]
+
+    if Lsched[-1] < 1.0:
+        # TODO test lambdaExponent >= 2
+        lastPoint = pd.DataFrame({
+            "dGdL": pd.Series([0.0], index=[1.0]),
+            'error': pd.Series([0.0], index=[1.0])
+        })
+        TIperWindow = pd.concat([TIperWindow, lastPoint])
+        Lsched = np.concatenate([Lsched, [1.0]])
 
     TIcumulative = pd.DataFrame()
-    TIcumulative['dG'] = np.cumsum(TIperWindow.dGdL)
-    TIcumulative['error'] = np.sqrt(np.divide(np.cumsum(TIperWindow.error**2), np.arange(1,len(TIperWindow)+1)))
-    
+    TIcumulative['dG'] = scipy.integrate.cumulative_trapezoid(TIperWindow.dGdL, x=Lsched, initial=0)
+    TIcumulative.set_index(Lsched, inplace=True)
+
+    # Estimate square error for trapezoid rule by averaging errors in neighboring bins
+    sq_error = np.array(TIperWindow.error**2)
+    sq_error = 0.5 * (sq_error[1:] + sq_error[:-1])
+    error = np.sqrt(np.cumsum(sq_error * dL**2))
+    TIcumulative['error'] = np.concatenate([[0.0], error]) # Include initial 0 error
+
     return TIperWindow, TIcumulative
 
 

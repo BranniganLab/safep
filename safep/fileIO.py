@@ -239,7 +239,7 @@ def parse_Colvars_log(filename):
                     TI_traj[name]['stage'].append(stage)
                     TI_traj[name]['L'].append(L)
                     TI_traj[name]['k'].append(k)
-                    TI_traj[name]['dAdL'].append(None)
+                    TI_traj[name]['dAdL'].append(np.nan) # NaN to be replaced by actual value if present
                 continue
 
             # Parse free energy derivative estimates - end of stage: add dAdL value
