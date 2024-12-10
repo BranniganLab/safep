@@ -66,16 +66,25 @@ def plot_TI(cumulative, perWindow, width=8, height=4, PDFtype='KDE', hystLim=(-1
     return fig, [cumAx,eachAx] 
 
 def make_harmonicWall(FC=10, targetFC=0, targetFE=1, upperWalls=1, schedule=None, numSteps=1000, targetEQ=500, name='HW', lowerWalls=None, lambdaExp=1., decoupling=None):
+    '''
+    This method should rarely be used, as long as a log file exists that can be parsed by parse_Colvars_log
+    and the result fed to make_harmonicWall_from_Colvars
+    '''
+
     # Heuristic to set the default value of the decoupling parameter
     if decoupling is None:
         decoupling = (targetFC == 0 and FC != 0)
 
-    HW = {'name':name, 'targetFC':targetFC, 'targetFE':targetFE, 'FC':FC, 'upperWalls':upperWalls, 'schedule':schedule,
-           'numSteps':numSteps, 'targetEQ':targetEQ, 'lowerWalls':lowerWalls, 'lambdaExp':lambdaExp, 'decoupling':decoupling}
+    HW = {'name':name, 'targetForceConstant':targetFC, 'lambdaExponent':targetFE, 'forceConstant':FC, 'upperWalls':upperWalls, 'schedule':schedule,
+           'targetNumSteps':numSteps, 'targetEquilSteps':targetEQ, 'lowerWalls':lowerWalls, 'lambdaExp':lambdaExp, 'decoupling':decoupling}
 
     return HW
 
 def make_harmonicWall_from_Colvars(w):
+    '''
+    Input: a restraint configuration as a dict produced by parse_Colvars_log
+    '''
+
     if (w['key'] != 'harmonicwalls'):
         k = w['key']
         print(f'Error: bias is not a harmonic wall (key: {k})')
@@ -88,19 +97,19 @@ def make_harmonicWall_from_Colvars(w):
 
     HW = {  'name': w['name'],
             'colvar': CVs[0],
-            'FC': float(w['forceConstant']),
-            'targetFC': float(w['targetForceConstant']),
+            'forceConstant': float(w['forceConstant']),
+            'targetForceConstant': float(w['targetForceConstant']),
             'lowerWalls': float(w['lowerWalls'].strip('{ }')),
             'upperWalls': float(w['upperWalls'].strip('{ }')),
-            'numSteps': int(w['targetNumSteps']),
-            'numStages': int(w['targetNumStages']),
-            'targetEQ': int(w['targetEquilSteps']),
+            'targetNumSteps': int(w['targetNumSteps']),
+            'targetNumStages': int(w['targetNumStages']),
+            'targetEquilSteps': int(w['targetEquilSteps']),
             'decoupling': w['decoupling'] in ['on', 'true', 'yes']} # interpret as Boolean
-    # Deal with keywords that have changed name
+    # Support legacy keyword
     if 'targetForceExponent' in w:
-        HW['targetFE'] = int(w['targetForceExponent'])
+        HW['lambdaExponent'] = int(w['targetForceExponent'])
     if 'lambdaExponent' in w:
-        HW['targetFE'] = int(w['lambdaExponent'])
+        HW['lambdaExponent'] = int(w['lambdaExponent'])
     cleaned = w['lambdaSchedule'].strip("{}").replace(",", "")
     HW['schedule'] = [float(num) for num in cleaned.split()]
     return HW
@@ -113,13 +122,13 @@ def harmonicWall_U(HW, coord, L):
         d = coord-HW['lowerWalls']
     
     if d!=0:
-        alpha = HW['targetFE']
+        alpha = HW['lambdaExponent']
         if HW['decoupling']:
-            kL = (1.-L)**alpha * HW['FC']
+            kL = (1.-L)**alpha * HW['forceConstant']
         else:
-            dk = HW['targetFC']-HW['FC']
+            dk = HW['targetForceConstant']-HW['forceConstant']
             la = L**alpha
-            kL = HW['FC']+la*dk
+            kL = HW['forceConstant']+la*dk
 
         U = 0.5*kL*(d**2)
     else:
@@ -134,11 +143,11 @@ def harmonicWall_dUdL(HW, coord, L):
         d = coord-HW['lowerWalls']
 
     if d!=0:
-        alpha = HW['targetFE']
+        alpha = HW['lambdaExponent']
         if HW['decoupling']:
-            dkL = -alpha * (1.-L)**(alpha-1) * HW['FC']
+            dkL = -alpha * (1.-L)**(alpha-1) * HW['forceConstant']
         else:
-            dk = HW['targetFC']-HW['FC']
+            dk = HW['targetForceConstant']-HW['forceConstant']
             dla = alpha*L**(alpha-1)
             dkL = dla*dk
 
