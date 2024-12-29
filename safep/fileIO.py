@@ -140,10 +140,10 @@ def parse_Colvars_log(filename):
     colvars: list of dicts, one for each colvar
     biases: list of dicts, one for each bias
 
-    Note: within colvars, parameters of sub-objects CVCs and atom groups are found as nested dictionaries
+    Note: within colvars, parameters of sub-objects (components and atom groups) are found as nested dictionaries
     in a list under the 'children' key, e.g.:
-    colvars[0]['children'][0] is the first CVC of the first colvar
-    colvars[0]['children'][0]['children'][0] is the first atom group of that CVC
+    colvars[0]['children'][0] is the first component of the first colvar
+    colvars[0]['children'][0]['children'][0] is the first atom group of that component
     '''
     global_conf = {}
     level = prev_level = 0

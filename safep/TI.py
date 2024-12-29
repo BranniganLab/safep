@@ -80,38 +80,40 @@ def make_harmonicWall(FC=10, targetFC=0, targetFE=1, upperWalls=1, schedule=None
 
     return HW
 
-def make_harmonicWall_from_Colvars(w):
+def make_harmonicWall_from_Colvars(restraint_conf):
     '''
     Input: a restraint configuration as a dict produced by parse_Colvars_log
     '''
 
-    if (w['key'] != 'harmonicwalls'):
-        k = w['key']
-        print(f'Error: bias is not a harmonic wall (key: {k})')
+    if (restraint_conf['key'] != 'harmonicwalls'):
+        keyword = restraint_conf['key']
+        print(f'Error: bias is not a harmonic wall (keyword: {keyword})')
         return None
 
-    CVs = w['colvars'].strip("{}").replace(",", "").split()
+    CVs = restraint_conf['colvars'].strip("{}").replace(",", "").split()
     if len(CVs) != 1:
-        print(f'Error: bias does not act on exactly one colvar (cvs: {CVs})')
-        return None
+        raise RuntimeError (f'Error: bias does not act on exactly one colvar (cvs: {CVs})')
 
-    HW = {  'name': w['name'],
+    HW = {  'name': restraint_conf['name'],
             'colvar': CVs[0],
-            'forceConstant': float(w['forceConstant']),
-            'targetForceConstant': float(w['targetForceConstant']),
-            'lowerWalls': float(w['lowerWalls'].strip('{ }')),
-            'upperWalls': float(w['upperWalls'].strip('{ }')),
-            'targetNumSteps': int(w['targetNumSteps']),
-            'targetNumStages': int(w['targetNumStages']),
-            'targetEquilSteps': int(w['targetEquilSteps']),
-            'decoupling': w['decoupling'] in ['on', 'true', 'yes']} # interpret as Boolean
+            'forceConstant': float(restraint_conf['forceConstant']),
+            'targetForceConstant': float(restraint_conf['targetForceConstant']),
+            'lowerWalls': float(restraint_conf['lowerWalls'].strip('{ }')),
+            'upperWalls': float(restraint_conf['upperWalls'].strip('{ }')),
+            'targetNumSteps': int(restraint_conf['targetNumSteps']),
+            'targetNumStages': int(restraint_conf['targetNumStages']),
+            'targetEquilSteps': int(restraint_conf['targetEquilSteps']),
+            'decoupling': restraint_conf['decoupling'] in ['on', 'true', 'yes']} # interpret as Boolean
     # Support legacy keyword
-    if 'targetForceExponent' in w:
-        HW['lambdaExponent'] = int(w['targetForceExponent'])
-    if 'lambdaExponent' in w:
-        HW['lambdaExponent'] = int(w['lambdaExponent'])
-    cleaned = w['lambdaSchedule'].strip("{}").replace(",", "")
-    HW['schedule'] = [float(num) for num in cleaned.split()]
+    if 'targetForceExponent' in restraint_conf:
+        HW['lambdaExponent'] = int(restraint_conf['targetForceExponent'])
+    if 'lambdaExponent' in restraint_conf:
+        HW['lambdaExponent'] = int(restraint_conf['lambdaExponent'])
+    cleaned = restraint_conf['lambdaSchedule'].strip("{}").replace(",", "")
+    if len(cleaned.split() > 0):
+        HW['lambdaSchedule'] = [float(num) for num in cleaned.split()]
+    else:
+        HW['lambdaSchedule'] = np.linspace(0, 1, HW['targetNumStages'] + 1)
     return HW
 
 def harmonicWall_U(HW, coord, L):
