@@ -205,6 +205,7 @@ def parse_cv_lines(global_conf, cv_lines):
         cv_line = CVLine(line)
 
         if cv_line.new_config:
+            # QUESTION: start_cv_config doesn't actually depend on new_config line being found. Should we have a different check?
             level, current = start_cv_config(global_conf)
         elif cv_line.new_CV:
             level, current = create_cv(colvars)
