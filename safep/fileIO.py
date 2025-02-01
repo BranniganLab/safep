@@ -158,23 +158,21 @@ def parse_Colvars_log(filename):
     with open(filename) as file:
         log = file.read()
 
-    # Header: get version and output prefix
     global_conf['version'] = get_colvars_version(log)
+    global_conf['output_prefix'] = get_output_prefix(log)
 
     lines = log.split('\n')
-    for line in lines:
-        match = re.match(
-            r'^colvars: The final output state file will be "(.+).colvars.state".$', line)
-        if match:
-            global_conf['output_prefix'] = match.group(1).strip()
-            break
-
     cv_lines = [l for l in lines if l.startswith('colvars:')]
 
     # Parse rest of file for more config data
     TI_traj = parse_cv_lines(global_conf, colvars, biases, TI_traj, cv_lines)
 
     return global_conf, colvars, biases, TI_traj
+
+def get_output_prefix(log):
+    match = re.search(r'\ncolvars: The final output state file will be "(.+).colvars.state".\n', log)
+    output_prefix = match.group(1).strip()
+    return output_prefix
 
 def get_colvars_version(log):
     match = re.search(r'\ncolvars: Initializing the collective variables module, version (.*).\n', log)
