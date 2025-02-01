@@ -225,7 +225,8 @@ def parse_cv_lines(global_conf, cv_lines):
         elif cv_line.new_CV:
             level, current = create_cv(colvars)
         elif cv_line.new_bias:
-            level, current = add_bias(biases, cv_line.new_bias)
+            level, current = add_bias(cv_line.new_bias)
+            biases.append(current)
         elif cv_line.new_key_value:
             current = add_new_key_value_pair(current, cv_line.new_key_value)
         elif cv_line.new_RFEP_stage:
@@ -320,11 +321,10 @@ def add_new_key_value_pair(current, new_key_value):
     return current
 
 
-def add_bias(biases, new_bias):
+def add_bias(new_bias):
     key = new_bias.group(1).strip()
     current = Bias(level = 1)
     current['key'] = key
-    biases.append(current)
     return current.level, current
 
 
