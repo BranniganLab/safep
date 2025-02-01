@@ -154,7 +154,7 @@ def parse_Colvars_log(filename):
     with open(filename) as file:
         log = file.read()
 
-    global_conf = {}
+    global_conf = GlobalConfig()
     global_conf['version'] = get_colvars_version(log)
     global_conf['output_prefix'] = get_output_prefix(log)
 
@@ -163,6 +163,8 @@ def parse_Colvars_log(filename):
 
     return global_conf, colvars, biases, TI_traj
 
+class GlobalConfig(dict):
+    pass
 
 def get_output_prefix(log):
     match = re.search(r'\ncolvars: The final output state file will be "(.+).colvars.state".\n',
