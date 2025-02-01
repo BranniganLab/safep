@@ -163,26 +163,36 @@ def parse_Colvars_log(filename):
 
 
 class CVConfig(dict):
+
     def __init__(self, level=0):
         self.level = level
 
+
 class CVC(CVConfig):
+
     def __init__(self, level=0):
         super().__init__(level)
         self['children'] = list()
 
+
 class ChildCVC(CVC):
+
     def __init__(self, key, level=0):
         super().__init__(level)
         self['key'] = key
 
+
+# QUESTION: should biases have children? If so, that would simplify the class structure.
 class Bias(CVConfig):
+
     def __init__(self, new_bias, level=0):
         key = new_bias.group(1).strip()
         super().__init__(level)
         self['key'] = key
 
+
 class GlobalConfig(CVConfig):
+
     def __init__(self, log):
         super().__init__()
         self.get_colvars_version(log)
@@ -191,17 +201,19 @@ class GlobalConfig(CVConfig):
 
     def get_output_prefix(self, log):
         match = re.search(r'\ncolvars: The final output state file will be "(.+).colvars.state".\n',
-                        log)
+                          log)
         self['output_prefix'] = match.group(1).strip()
 
     def get_colvars_version(self, log):
-        match = re.search(r'\ncolvars: Initializing the collective variables module, version (.*).\n',
-                        log)
+        match = re.search(
+            r'\ncolvars: Initializing the collective variables module, version (.*).\n', log)
         self['version'] = match.group(1).strip()
 
     def get_cv_traj_file(self, log):
-        cv_traj_file = re.compile(r'\ncolvars: Synchronizing \(emptying the buffer of\) trajectory file "(.+)"\.\n')
+        cv_traj_file = re.compile(
+            r'\ncolvars: Synchronizing \(emptying the buffer of\) trajectory file "(.+)"\.\n')
         self['traj_file'] = cv_traj_file.search(log).group(1).strip()
+
 
 class CVLine():
     grammar = {'new_config': re.compile(r'^colvars:\s+Reading new configuration:'),
@@ -219,7 +231,6 @@ class CVLine():
             self.__setattr__(name, matched)
 
 
-
 def parse_cv_lines(global_conf, cv_lines):
     biases = list()
     TI_traj = {}
@@ -233,7 +244,7 @@ def parse_cv_lines(global_conf, cv_lines):
         elif cv_line.new_CV:
             level, current = create_cv(colvars)
         elif cv_line.new_bias:
-            current = Bias(cv_line.new_bias, level = 1)
+            current = Bias(cv_line.new_bias, level=1)
             level = current.level
             biases.append(current)
         elif cv_line.new_key_value:
@@ -259,9 +270,6 @@ def parse_cv_lines(global_conf, cv_lines):
             current = ChildCVC(key, level)
             parent['children'].append(current)
     return colvars, biases, TI_traj
-
-
-
 
 
 def add_new_atom_group(level, new_atom_group):
@@ -326,10 +334,8 @@ def add_new_key_value_pair(current, new_key_value):
     return current
 
 
-
-
 def create_cv(colvars):
-    current = CVC(level = 1)
+    current = CVC(level=1)
     colvars.append(current)
     return current.level, current
 
