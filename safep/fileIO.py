@@ -161,7 +161,13 @@ def parse_Colvars_log(filename):
 
     return global_conf, colvars, biases, TI_traj
 
-class GlobalConfig(dict):
+
+class CVConfig(dict):
+    def __init__(self):
+        self['children'] = list()
+        self.level = 0
+
+class GlobalConfig(CVConfig):
     def __init__(self, log):
         self.get_colvars_version(log)
         self.get_output_prefix(log)
@@ -196,9 +202,7 @@ class CVLine():
             matched = regex.match(line)
             self.__setattr__(name, matched)
 
-class CVConfig(dict):
-    def __init__(self):
-        self['children'] = list()
+
 
 def parse_cv_lines(global_conf, cv_lines):
     biases = list()
