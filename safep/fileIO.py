@@ -333,6 +333,5 @@ def create_cv(colvars):
 
 
 def start_cv_config(global_conf):
-    level = 0
     current = global_conf
-    return level, current
+    return current.level, current
