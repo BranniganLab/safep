@@ -165,6 +165,7 @@ class GlobalConfig(dict):
     def __init__(self, log):
         self.get_colvars_version(log)
         self.get_output_prefix(log)
+        self.get_cv_traj_file(log)
 
     def get_output_prefix(self, log):
         match = re.search(r'\ncolvars: The final output state file will be "(.+).colvars.state".\n',
@@ -176,6 +177,10 @@ class GlobalConfig(dict):
                         log)
         self['version'] = match.group(1).strip()
 
+    def get_cv_traj_file(self, log):
+        cv_traj_file = re.compile(r'\ncolvars: Synchronizing \(emptying the buffer of\) trajectory file "(.+)"\.\n')
+        self['traj_file'] = cv_traj_file.search(log).group(1).strip()
+
 class CVLine():
     grammar = {'new_config': re.compile(r'^colvars:\s+Reading new configuration:'),
                 'new_CV': re.compile(r'^colvars:\s+Initializing a new collective variable\.'),
@@ -185,7 +190,6 @@ class CVLine():
                 'new_key_value': re.compile(r'^colvars:\s+#\s+(\w+) = (.*?)\s*(?:\[default\])?$'),
                 'new_RFEP_stage': re.compile(r'^colvars:\s+Restraint (\S+), stage (\S+) : lambda = (\S+), k = (\S+)$'),
                 'end_of_RFEP_stage': re.compile(r'^colvars:\s+Restraint (\S+) Lambda= (\S+) dA/dLambda= (\S+)$'),
-                'cv_traj_file': re.compile(r'^colvars: Synchronizing \(emptying the buffer of\) trajectory file "(.+)"\.$'),
                 }
     def __init__(self, line):
         for name, regex in self.grammar.items():
@@ -216,8 +220,6 @@ def parse_cv_lines(global_conf, cv_lines):
                 TI_traj = continue_RFEP(TI_traj, name, stage, L, k)
         elif cv_line.end_of_RFEP_stage:
             TI_traj = terminate_RFEP_stage(TI_traj, line, cv_line.end_of_RFEP_stage)
-        elif cv_line.cv_traj_file:
-            global_conf['traj_file'] = cv_line.cv_traj_file.group(1).strip()
         elif cv_line.new_component:
             prev_level, level, new_child, key = add_new_component(level, cv_line.new_component)
         elif cv_line.new_atom_group:
