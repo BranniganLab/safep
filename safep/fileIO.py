@@ -163,9 +163,9 @@ def parse_Colvars_log(filename):
 
 
 class CVConfig(dict):
-    def __init__(self):
+    def __init__(self, level=0):
         self['children'] = list()
-        self.level = 0
+        self.level = level
 
 class GlobalConfig(CVConfig):
     def __init__(self, log):
@@ -322,10 +322,9 @@ def add_bias(biases, new_bias):
 
 
 def create_cv(colvars):
-    level = 1
-    current = CVConfig()
+    current = CVConfig(level=1)
     colvars.append(current)
-    return level, current
+    return current.level, current
 
 
 def start_cv_config(global_conf):
