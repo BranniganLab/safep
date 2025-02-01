@@ -164,11 +164,16 @@ def parse_Colvars_log(filename):
 
 class CVConfig(dict):
     def __init__(self, level=0):
-        self['children'] = list()
         self.level = level
+
+class CVC(CVConfig):
+    def __init__(self, level=0):
+        super().__init__(level)
+        self['children'] = list()
 
 class GlobalConfig(CVConfig):
     def __init__(self, log):
+        super().__init__()
         self.get_colvars_version(log)
         self.get_output_prefix(log)
         self.get_cv_traj_file(log)
@@ -322,7 +327,7 @@ def add_bias(biases, new_bias):
 
 
 def create_cv(colvars):
-    current = CVConfig(level=1)
+    current = CVC(level=1)
     colvars.append(current)
     return current.level, current
 
