@@ -177,20 +177,26 @@ def parse_Colvars_log(filename):
     # Parse rest of file for more config data
     for line in cv_lines:
         new_config = re.match(r'^colvars:\s+Reading new configuration:', line)
+        new_CV = re.match(r'^colvars:\s+Initializing a new collective variable\.', line)
+        new_bias = re.match(r'^colvars:\s+Initializing a new "(.*)" instance\.$', line)
+        new_child = False
+        new_component = re.match(r'^colvars:(\s+)Initializing a new "(.*)" component\.$', line)
+        new_atom_group = re.match(r'^colvars:(\s+)Initializing atom group "(.*)"\.$', line)
+        new_key_value = re.match(r'^colvars:\s+#\s+(\w+) = (.*?)\s*(?:\[default\])?$', line)
+        new_RFEP_stage = re.match(r'^colvars:\s+Restraint (\S+), stage (\S+) : lambda = (\S+), k = (\S+)$', line)
+        end_of_RFEP_stage = re.match(r'^colvars:\s+Restraint (\S+) Lambda= (\S+) dA/dLambda= (\S+)$', line)
+        cv_traj_file = re.match(r'^colvars: Synchronizing \(emptying the buffer of\) trajectory file "(.+)"\.$', line)
+
         if new_config:
             level = 0
             current = global_conf
             continue
-        
-        new_CV = re.match(r'^colvars:\s+Initializing a new collective variable\.', line)
         if new_CV:
             level = 1
             current = {}
             current['children'] = list()
             colvars.append(current)
             continue
-
-        new_bias = re.match(r'^colvars:\s+Initializing a new "(.*)" instance\.$', line)
         if new_bias:
             key = new_bias.group(1).strip()
             level = 1
@@ -198,9 +204,6 @@ def parse_Colvars_log(filename):
             current['key'] = key
             biases.append(current)
             continue
-
-        new_child = False
-        new_component = re.match(r'^colvars:(\s+)Initializing a new "(.*)" component\.$', line)
         if new_component:
             prev_level = level
             level = (len(new_component.group(1))-1) // 2
@@ -208,14 +211,11 @@ def parse_Colvars_log(filename):
                 level = 2
             key = new_component.group(2).strip()
             new_child = True
-
-        new_atom_group = re.match(r'^colvars:(\s+)Initializing atom group "(.*)"\.$', line)
         if new_atom_group:
             prev_level = level
             level = (len(new_atom_group.group(1))-1) // 2
             key = new_atom_group.group(2).strip()
             new_child = True
-
         if new_child: # Common to new CVCs and atom groups
             if level > prev_level:
                 parent = current
@@ -227,7 +227,6 @@ def parse_Colvars_log(filename):
             current['children'] = list()
             continue
 
-        new_key_value = re.match(r'^colvars:\s+#\s+(\w+) = (.*?)\s*(?:\[default\])?$', line)
         if new_key_value:
             key = new_key_value.group(1)
             value = new_key_value.group(2).strip(' "')  # Extract key and value, remove extra spaces
@@ -235,7 +234,6 @@ def parse_Colvars_log(filename):
             continue
 
         # Parse free energy derivative estimates - beginning of stage
-        new_RFEP_stage = re.match(r'^colvars:\s+Restraint (\S+), stage (\S+) : lambda = (\S+), k = (\S+)$', line)
         if new_RFEP_stage:
             name = new_RFEP_stage.group(1).strip()
             stage = int(new_RFEP_stage.group(2).strip())
@@ -251,7 +249,6 @@ def parse_Colvars_log(filename):
             continue
 
         # Parse free energy derivative estimates - end of stage: add dAdL value
-        end_of_RFEP_stage = re.match(r'^colvars:\s+Restraint (\S+) Lambda= (\S+) dA/dLambda= (\S+)$', line)
         if end_of_RFEP_stage:
             name = end_of_RFEP_stage.group(1).strip()
             L = float(end_of_RFEP_stage.group(2).strip())
@@ -263,7 +260,6 @@ def parse_Colvars_log(filename):
             continue
 
         # Get explicit trajectory file name
-        cv_traj_file = re.match(r'^colvars: Synchronizing \(emptying the buffer of\) trajectory file "(.+)"\.$', line)
         if cv_traj_file:
             global_conf['traj_file'] = cv_traj_file.group(1).strip()
             continue
