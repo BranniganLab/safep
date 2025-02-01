@@ -176,21 +176,23 @@ def parse_Colvars_log(filename):
 
     # Parse rest of file for more config data
     for line in cv_lines:
-        if re.match(r'^colvars:\s+Reading new configuration:', line):
+        new_config = re.match(r'^colvars:\s+Reading new configuration:', line)
+        if new_config:
             level = 0
             current = global_conf
             continue
-
-        if re.match(r'^colvars:\s+Initializing a new collective variable\.', line): # colvar
+        
+        new_CV = re.match(r'^colvars:\s+Initializing a new collective variable\.', line)
+        if new_CV:
             level = 1
             current = {}
             current['children'] = list()
             colvars.append(current)
             continue
 
-        match = re.match(r'^colvars:\s+Initializing a new "(.*)" instance\.$', line) # Bias
-        if match:
-            key = match.group(1).strip()
+        new_bias = re.match(r'^colvars:\s+Initializing a new "(.*)" instance\.$', line)
+        if new_bias:
+            key = new_bias.group(1).strip()
             level = 1
             current = {}
             current['key'] = key
@@ -198,20 +200,20 @@ def parse_Colvars_log(filename):
             continue
 
         new_child = False
-        match = re.match(r'^colvars:(\s+)Initializing a new "(.*)" component\.$', line) # component
-        if match:
+        new_component = re.match(r'^colvars:(\s+)Initializing a new "(.*)" component\.$', line)
+        if new_component:
             prev_level = level
-            level = (len(match.group(1))-1) // 2
+            level = (len(new_component.group(1))-1) // 2
             if level == 1: # Top-level CVCs are not indented, fix manually
                 level = 2
-            key = match.group(2).strip()
+            key = new_component.group(2).strip()
             new_child = True
 
-        match = re.match(r'^colvars:(\s+)Initializing atom group "(.*)"\.$', line) # atom group
-        if match:
+        new_atom_group = re.match(r'^colvars:(\s+)Initializing atom group "(.*)"\.$', line)
+        if new_atom_group:
             prev_level = level
-            level = (len(match.group(1))-1) // 2
-            key = match.group(2).strip()
+            level = (len(new_atom_group.group(1))-1) // 2
+            key = new_atom_group.group(2).strip()
             new_child = True
 
         if new_child: # Common to new CVCs and atom groups
@@ -225,20 +227,20 @@ def parse_Colvars_log(filename):
             current['children'] = list()
             continue
 
-        match = re.match(r'^colvars:\s+#\s+(\w+) = (.*?)\s*(?:\[default\])?$', line) # key-value pair
-        if match:
-            key = match.group(1)
-            value = match.group(2).strip(' "')  # Extract key and value, remove extra spaces
+        new_key_value = re.match(r'^colvars:\s+#\s+(\w+) = (.*?)\s*(?:\[default\])?$', line)
+        if new_key_value:
+            key = new_key_value.group(1)
+            value = new_key_value.group(2).strip(' "')  # Extract key and value, remove extra spaces
             current[key] = value  # Add to dictionary
             continue
 
         # Parse free energy derivative estimates - beginning of stage
-        match = re.match(r'^colvars:\s+Restraint (\S+), stage (\S+) : lambda = (\S+), k = (\S+)$', line)
-        if match:
-            name = match.group(1).strip()
-            stage = int(match.group(2).strip())
-            L = float(match.group(3).strip())
-            k = float(match.group(4).strip())
+        new_RFEP_stage = re.match(r'^colvars:\s+Restraint (\S+), stage (\S+) : lambda = (\S+), k = (\S+)$', line)
+        if new_RFEP_stage:
+            name = new_RFEP_stage.group(1).strip()
+            stage = int(new_RFEP_stage.group(2).strip())
+            L = float(new_RFEP_stage.group(3).strip())
+            k = float(new_RFEP_stage.group(4).strip())
             if not name in TI_traj:
                 TI_traj[name] = { 'stage': [stage], 'L':[L], 'k':[k], 'dAdL':[None] }
             else:
@@ -249,11 +251,11 @@ def parse_Colvars_log(filename):
             continue
 
         # Parse free energy derivative estimates - end of stage: add dAdL value
-        match = re.match(r'^colvars:\s+Restraint (\S+) Lambda= (\S+) dA/dLambda= (\S+)$', line)
-        if match:
-            name = match.group(1).strip()
-            L = float(match.group(2).strip())
-            dAdL = float(match.group(3).strip())
+        end_of_RFEP_stage = re.match(r'^colvars:\s+Restraint (\S+) Lambda= (\S+) dA/dLambda= (\S+)$', line)
+        if end_of_RFEP_stage:
+            name = end_of_RFEP_stage.group(1).strip()
+            L = float(end_of_RFEP_stage.group(2).strip())
+            dAdL = float(end_of_RFEP_stage.group(3).strip())
             if TI_traj[name]['L'][-1] != L:
                 print(f'Error: mismatched lambda value in log: expected lambda = {L} and read:\n{line}')
                 break
@@ -261,9 +263,9 @@ def parse_Colvars_log(filename):
             continue
 
         # Get explicit trajectory file name
-        match = re.match(r'^colvars: Synchronizing \(emptying the buffer of\) trajectory file "(.+)"\.$', line)
-        if match:
-            global_conf['traj_file'] = match.group(1).strip()
+        cv_traj_file = re.match(r'^colvars: Synchronizing \(emptying the buffer of\) trajectory file "(.+)"\.$', line)
+        if cv_traj_file:
+            global_conf['traj_file'] = cv_traj_file.group(1).strip()
             continue
 
     return global_conf, colvars, biases, TI_traj
