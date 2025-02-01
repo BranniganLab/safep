@@ -189,7 +189,6 @@ class CVLine():
                 'cv_traj_file': re.compile(r'^colvars: Synchronizing \(emptying the buffer of\) trajectory file "(.+)"\.$'),
                 }
     def __init__(self, line):
-        self.new_child = False
         for name, regex in self.grammar.items():
             matched = regex.match(line)
             self.__setattr__(name, matched)
@@ -199,6 +198,7 @@ def parse_cv_lines(global_conf, cv_lines):
     TI_traj = {}
     colvars = list()
     for line in cv_lines:
+        new_child = False
         cv_line = CVLine(line)
 
         if cv_line.new_config:
@@ -220,11 +220,11 @@ def parse_cv_lines(global_conf, cv_lines):
         elif cv_line.cv_traj_file:
             global_conf['traj_file'] = cv_line.cv_traj_file.group(1).strip()
         elif cv_line.new_component:
-            prev_level, level, cv_line.new_child, key = add_new_component(level, cv_line.new_component)
+            prev_level, level, new_child, key = add_new_component(level, cv_line.new_component)
         elif cv_line.new_atom_group:
-            prev_level, level, cv_line.new_child, key = add_new_atom_group(level, cv_line.new_atom_group)
+            prev_level, level, new_child, key = add_new_atom_group(level, cv_line.new_atom_group)
 
-        if cv_line.new_child:  # Common to new CVCs and atom groups
+        if new_child:  # Common to new CVCs and atom groups
             if level > prev_level:
                 parent = current
             elif level < prev_level:
