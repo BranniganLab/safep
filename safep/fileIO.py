@@ -197,7 +197,8 @@ class CVLine():
             self.__setattr__(name, matched)
 
 class CVConfig(dict):
-    pass
+    def __init__(self):
+        self['children'] = list()
 
 def parse_cv_lines(global_conf, cv_lines):
     biases = list()
@@ -322,7 +323,6 @@ def add_bias(biases, new_bias):
 def create_cv(colvars):
     level = 1
     current = CVConfig()
-    current['children'] = list()
     colvars.append(current)
     return level, current
 
