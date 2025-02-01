@@ -224,8 +224,8 @@ def parse_Colvars_log(filename):
             L = float(end_of_RFEP_stage.group(2).strip())
             dAdL = float(end_of_RFEP_stage.group(3).strip())
             if TI_traj[name]['L'][-1] != L:
-                print(f'Error: mismatched lambda value in log: expected lambda = {L} and read:\n{line}')
-                break
+                bad_lambda_msg = f'Error: mismatched lambda value in log: expected lambda = {L} and read:\n{line}'
+                raise RuntimeError(bad_lambda_msg)
             TI_traj[name]['dAdL'][-1] = dAdL
         elif cv_traj_file:
             global_conf['traj_file'] = cv_traj_file.group(1).strip()
