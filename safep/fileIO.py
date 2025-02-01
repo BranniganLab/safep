@@ -188,45 +188,21 @@ def parse_Colvars_log(filename):
         cv_traj_file = re.match(r'^colvars: Synchronizing \(emptying the buffer of\) trajectory file "(.+)"\.$', line)
 
         if new_config:
-            level = 0
-            current = global_conf
+            level, current = start_cv_config(global_conf)
         elif new_CV:
-            level = 1
-            current = {}
-            current['children'] = list()
-            colvars.append(current)
+            level, current = create_cv(colvars)
         elif new_bias:
-            key = new_bias.group(1).strip()
-            level = 1
-            current = {}
-            current['key'] = key
-            biases.append(current)
+            level, current = add_bias(biases, new_bias)
         elif new_key_value:
-            key = new_key_value.group(1)
-            value = new_key_value.group(2).strip(' "')  # Extract key and value, remove extra spaces
-            current[key] = value  # Add to dictionary
+            current = add_new_key_value_pair(current, new_key_value)  
         elif new_RFEP_stage:
-            # Parse free energy derivative estimates - beginning of stage
-            name = new_RFEP_stage.group(1).strip()
-            stage = int(new_RFEP_stage.group(2).strip())
-            L = float(new_RFEP_stage.group(3).strip())
-            k = float(new_RFEP_stage.group(4).strip())
+            name, stage, L, k = parse_RFEP_stage(new_RFEP_stage)
             if not name in TI_traj:
-                TI_traj[name] = { 'stage': [stage], 'L':[L], 'k':[k], 'dAdL':[None] }
+                TI_traj = start_new_RFEP(TI_traj, name, stage, L, k)
             else:
-                TI_traj[name]['stage'].append(stage)
-                TI_traj[name]['L'].append(L)
-                TI_traj[name]['k'].append(k)
-                TI_traj[name]['dAdL'].append(np.nan) # NaN to be replaced by actual value if present
+                TI_traj = continue_RFEP(TI_traj, name, stage, L, k) 
         elif end_of_RFEP_stage:
-            # Parse free energy derivative estimates - end of stage: add dAdL value
-            name = end_of_RFEP_stage.group(1).strip()
-            L = float(end_of_RFEP_stage.group(2).strip())
-            dAdL = float(end_of_RFEP_stage.group(3).strip())
-            if TI_traj[name]['L'][-1] != L:
-                bad_lambda_msg = f'Error: mismatched lambda value in log: expected lambda = {L} and read:\n{line}'
-                raise RuntimeError(bad_lambda_msg)
-            TI_traj[name]['dAdL'][-1] = dAdL
+            TI_traj = terminate_RFEP_stage(TI_traj, line, end_of_RFEP_stage)
         elif cv_traj_file:
             global_conf['traj_file'] = cv_traj_file.group(1).strip()
         elif new_component:
@@ -253,3 +229,73 @@ def parse_Colvars_log(filename):
             current['children'] = list()
 
     return global_conf, colvars, biases, TI_traj
+
+def add_new_component(level, new_component):
+    prev_level = level
+    level = (len(new_component.group(1))-1) // 2
+    if level == 1: # Top-level CVCs are not indented, fix manually
+        level = 2
+    key = new_component.group(2).strip()
+    new_child = True
+    return level
+
+def terminate_RFEP_stage(TI_traj, line, end_of_RFEP_stage):
+    # Parse free energy derivative estimates - end of stage: add dAdL value
+    name = end_of_RFEP_stage.group(1).strip()
+    L = float(end_of_RFEP_stage.group(2).strip())
+    dAdL = float(end_of_RFEP_stage.group(3).strip())
+    if TI_traj[name]['L'][-1] != L:
+        bad_lambda_msg = f'Error: mismatched lambda value in log: expected lambda = {L} and read:\n{line}'
+        raise RuntimeError(bad_lambda_msg)
+    TI_traj[name]['dAdL'][-1] = dAdL
+
+    return TI_traj
+
+def continue_RFEP(TI_traj, name, stage, L, k):
+    TI_traj[name]['stage'].append(stage)
+    TI_traj[name]['L'].append(L)
+    TI_traj[name]['k'].append(k)
+                # NaN to be replaced by actual value if present
+    TI_traj[name]['dAdL'].append(np.nan)
+    return TI_traj
+
+def start_new_RFEP(TI_traj, name, stage, L, k):
+    TI_traj[name] = { 'stage': [stage], 'L':[L], 'k':[k], 'dAdL':[None] }
+    return TI_traj
+
+def parse_RFEP_stage(new_RFEP_stage):
+    # Parse free energy derivative estimates - beginning of stage
+    name = new_RFEP_stage.group(1).strip()
+    stage = int(new_RFEP_stage.group(2).strip())
+    L = float(new_RFEP_stage.group(3).strip())
+    k = float(new_RFEP_stage.group(4).strip())
+    return name,stage,L,k
+
+def add_new_key_value_pair(current, new_key_value):
+    key = new_key_value.group(1)
+            # Extract key and value, remove extra spaces
+    value = new_key_value.group(2).strip(' "')  
+            # Add to dictionary
+    current[key] = value
+
+    return current
+
+def add_bias(biases, new_bias):
+    key = new_bias.group(1).strip()
+    level = 1
+    current = {}
+    current['key'] = key
+    biases.append(current)
+    return level,current
+
+def create_cv(colvars):
+    level = 1
+    current = {}
+    current['children'] = list()
+    colvars.append(current)
+    return level,current
+
+def start_cv_config(global_conf):
+    level = 0
+    current = global_conf
+    return level,current
