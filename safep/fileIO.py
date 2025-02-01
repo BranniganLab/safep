@@ -178,21 +178,21 @@ def get_colvars_version(log):
     return version
 
 class CVLine():
+    grammar = {'new_config': re.compile(r'^colvars:\s+Reading new configuration:'),
+                'new_CV': re.compile(r'^colvars:\s+Initializing a new collective variable\.'),
+                'new_bias': re.compile(r'^colvars:\s+Initializing a new "(.*)" instance\.$'),
+                'new_component': re.compile(r'^colvars:(\s+)Initializing a new "(.*)" component\.$'),
+                'new_atom_group': re.compile(r'^colvars:(\s+)Initializing atom group "(.*)"\.$'),
+                'new_key_value': re.compile(r'^colvars:\s+#\s+(\w+) = (.*?)\s*(?:\[default\])?$'),
+                'new_RFEP_stage': re.compile(r'^colvars:\s+Restraint (\S+), stage (\S+) : lambda = (\S+), k = (\S+)$'),
+                'end_of_RFEP_stage': re.compile(r'^colvars:\s+Restraint (\S+) Lambda= (\S+) dA/dLambda= (\S+)$'),
+                'cv_traj_file': re.compile(r'^colvars: Synchronizing \(emptying the buffer of\) trajectory file "(.+)"\.$'),
+                }
     def __init__(self, line):
-        self.new_config = re.match(r'^colvars:\s+Reading new configuration:', line)
-        self.new_CV = re.match(r'^colvars:\s+Initializing a new collective variable\.', line)
-        self.new_bias = re.match(r'^colvars:\s+Initializing a new "(.*)" instance\.$', line)
         self.new_child = False
-        self.new_component = re.match(r'^colvars:(\s+)Initializing a new "(.*)" component\.$', line)
-        self.new_atom_group = re.match(r'^colvars:(\s+)Initializing atom group "(.*)"\.$', line)
-        self.new_key_value = re.match(r'^colvars:\s+#\s+(\w+) = (.*?)\s*(?:\[default\])?$', line)
-        self.new_RFEP_stage = re.match(
-            r'^colvars:\s+Restraint (\S+), stage (\S+) : lambda = (\S+), k = (\S+)$', line)
-        self.end_of_RFEP_stage = re.match(
-            r'^colvars:\s+Restraint (\S+) Lambda= (\S+) dA/dLambda= (\S+)$', line)
-        self.cv_traj_file = re.match(
-            r'^colvars: Synchronizing \(emptying the buffer of\) trajectory file "(.+)"\.$', line)
-
+        for name, regex in self.grammar.items():
+            matched = regex.match(line)
+            self.__setattr__(name, matched)
 
 def parse_cv_lines(global_conf, cv_lines):
     biases = list()
