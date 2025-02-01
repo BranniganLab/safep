@@ -216,11 +216,16 @@ def parse_Colvars_log(filename):
             elif level < prev_level:
                 parent = parent['parent']
             parent['children'].append({})
-            current = parent['children'][-1]
-            current['key'] = key
-            current['children'] = list()
+            current = add_child(key, parent)
+
 
     return global_conf, colvars, biases, TI_traj
+
+def add_child(key, parent):
+    current = parent['children'][-1]
+    current['key'] = key
+    current['children'] = list()
+    return current
 
 def add_new_atom_group(level, new_atom_group):
     prev_level = level
