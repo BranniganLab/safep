@@ -206,17 +206,9 @@ def parse_Colvars_log(filename):
         elif cv_traj_file:
             global_conf['traj_file'] = cv_traj_file.group(1).strip()
         elif new_component:
-            prev_level = level
-            level = (len(new_component.group(1))-1) // 2
-            if level == 1: # Top-level CVCs are not indented, fix manually
-                level = 2
-            key = new_component.group(2).strip()
-            new_child = True
+            prev_level, level, new_child, key = add_new_component(level, new_component)
         elif new_atom_group:
-            prev_level = level
-            level = (len(new_atom_group.group(1))-1) // 2
-            key = new_atom_group.group(2).strip()
-            new_child = True
+            prev_level, level, new_child, key = add_new_atom_group(level, new_atom_group)
 
         if new_child: # Common to new CVCs and atom groups
             if level > prev_level:
@@ -230,6 +222,13 @@ def parse_Colvars_log(filename):
 
     return global_conf, colvars, biases, TI_traj
 
+def add_new_atom_group(level, new_atom_group):
+    prev_level = level
+    level = (len(new_atom_group.group(1))-1) // 2
+    key = new_atom_group.group(2).strip()
+    new_child = True
+    return prev_level,level,new_child,key
+
 def add_new_component(level, new_component):
     prev_level = level
     level = (len(new_component.group(1))-1) // 2
@@ -237,7 +236,7 @@ def add_new_component(level, new_component):
         level = 2
     key = new_component.group(2).strip()
     new_child = True
-    return level
+    return prev_level, level, new_child, key
 
 def terminate_RFEP_stage(TI_traj, line, end_of_RFEP_stage):
     # Parse free energy derivative estimates - end of stage: add dAdL value
