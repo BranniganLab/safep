@@ -205,7 +205,6 @@ def parse_cv_lines(global_conf, cv_lines):
     TI_traj = {}
     colvars = list()
     for line in cv_lines:
-        new_child = False
         cv_line = CVLine(line)
 
         if cv_line.new_config:
@@ -225,12 +224,12 @@ def parse_cv_lines(global_conf, cv_lines):
                 TI_traj = continue_RFEP(TI_traj, name, stage, L, k)
         elif cv_line.end_of_RFEP_stage:
             TI_traj = terminate_RFEP_stage(TI_traj, line, cv_line.end_of_RFEP_stage)
-        elif cv_line.new_component:
-            prev_level, level, new_child, key = add_new_component(level, cv_line.new_component)
-        elif cv_line.new_atom_group:
-            prev_level, level, new_child, key = add_new_atom_group(level, cv_line.new_atom_group)
+        elif cv_line.new_component or cv_line.new_atom_group:
+            if cv_line.new_component:
+                prev_level, level, key = add_new_component(level, cv_line.new_component)
+            elif cv_line.new_atom_group:
+                prev_level, level, key = add_new_atom_group(level, cv_line.new_atom_group)
 
-        if new_child:  # Common to new CVCs and atom groups
             if level > prev_level:
                 parent = current
             elif level < prev_level:
@@ -251,8 +250,7 @@ def add_new_atom_group(level, new_atom_group):
     prev_level = level
     level = (len(new_atom_group.group(1)) - 1) // 2
     key = new_atom_group.group(2).strip()
-    new_child = True
-    return prev_level, level, new_child, key
+    return prev_level, level, key
 
 
 def add_new_component(level, new_component):
@@ -261,8 +259,7 @@ def add_new_component(level, new_component):
     if level == 1:  # Top-level CVCs are not indented, fix manually
         level = 2
     key = new_component.group(2).strip()
-    new_child = True
-    return prev_level, level, new_child, key
+    return prev_level, level, key
 
 
 def terminate_RFEP_stage(TI_traj, line, end_of_RFEP_stage):
