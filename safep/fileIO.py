@@ -172,7 +172,10 @@ class CVC(CVConfig):
         self['children'] = list()
 
 class Bias(CVConfig):
-    pass
+    def __init__(self, new_bias, level=0):
+        key = new_bias.group(1).strip()
+        super().__init__(level)
+        self['key'] = key
 
 class GlobalConfig(CVConfig):
     def __init__(self, log):
@@ -225,7 +228,8 @@ def parse_cv_lines(global_conf, cv_lines):
         elif cv_line.new_CV:
             level, current = create_cv(colvars)
         elif cv_line.new_bias:
-            level, current = add_bias(cv_line.new_bias)
+            current = Bias(cv_line.new_bias, level = 1)
+            level = current.level
             biases.append(current)
         elif cv_line.new_key_value:
             current = add_new_key_value_pair(current, cv_line.new_key_value)
@@ -321,11 +325,6 @@ def add_new_key_value_pair(current, new_key_value):
     return current
 
 
-def add_bias(new_bias):
-    key = new_bias.group(1).strip()
-    current = Bias(level = 1)
-    current['key'] = key
-    return current.level, current
 
 
 def create_cv(colvars):
