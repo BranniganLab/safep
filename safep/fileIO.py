@@ -171,6 +171,11 @@ class CVC(CVConfig):
         super().__init__(level)
         self['children'] = list()
 
+class ChildCVC(CVC):
+    def __init__(self, key, level=0):
+        super().__init__(level)
+        self['key'] = key
+
 class Bias(CVConfig):
     def __init__(self, new_bias, level=0):
         key = new_bias.group(1).strip()
@@ -251,16 +256,12 @@ def parse_cv_lines(global_conf, cv_lines):
                 parent = current
             elif level < prev_level:
                 parent = parent['parent']
-            parent['children'].append({})
-            current = add_child(key, parent)
+            current = ChildCVC(key, level)
+            parent['children'].append(current)
     return colvars, biases, TI_traj
 
 
-def add_child(key, parent):
-    current = parent['children'][-1]
-    current['key'] = key
-    current['children'] = list()
-    return current
+
 
 
 def add_new_atom_group(level, new_atom_group):
