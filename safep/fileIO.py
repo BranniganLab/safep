@@ -190,29 +190,23 @@ def parse_Colvars_log(filename):
         if new_config:
             level = 0
             current = global_conf
-            continue
-        if new_CV:
+        elif new_CV:
             level = 1
             current = {}
             current['children'] = list()
             colvars.append(current)
-            continue
-        if new_bias:
+        elif new_bias:
             key = new_bias.group(1).strip()
             level = 1
             current = {}
             current['key'] = key
             biases.append(current)
-            continue
-
-        if new_key_value:
+        elif new_key_value:
             key = new_key_value.group(1)
             value = new_key_value.group(2).strip(' "')  # Extract key and value, remove extra spaces
             current[key] = value  # Add to dictionary
-            continue
-
-        # Parse free energy derivative estimates - beginning of stage
-        if new_RFEP_stage:
+        elif new_RFEP_stage:
+            # Parse free energy derivative estimates - beginning of stage
             name = new_RFEP_stage.group(1).strip()
             stage = int(new_RFEP_stage.group(2).strip())
             L = float(new_RFEP_stage.group(3).strip())
@@ -224,10 +218,8 @@ def parse_Colvars_log(filename):
                 TI_traj[name]['L'].append(L)
                 TI_traj[name]['k'].append(k)
                 TI_traj[name]['dAdL'].append(np.nan) # NaN to be replaced by actual value if present
-            continue
-
-        # Parse free energy derivative estimates - end of stage: add dAdL value
-        if end_of_RFEP_stage:
+        elif end_of_RFEP_stage:
+            # Parse free energy derivative estimates - end of stage: add dAdL value
             name = end_of_RFEP_stage.group(1).strip()
             L = float(end_of_RFEP_stage.group(2).strip())
             dAdL = float(end_of_RFEP_stage.group(3).strip())
@@ -235,25 +227,21 @@ def parse_Colvars_log(filename):
                 print(f'Error: mismatched lambda value in log: expected lambda = {L} and read:\n{line}')
                 break
             TI_traj[name]['dAdL'][-1] = dAdL
-            continue
-
-        # Get explicit trajectory file name
-        if cv_traj_file:
+        elif cv_traj_file:
             global_conf['traj_file'] = cv_traj_file.group(1).strip()
-            continue
-
-        if new_component:
+        elif new_component:
             prev_level = level
             level = (len(new_component.group(1))-1) // 2
             if level == 1: # Top-level CVCs are not indented, fix manually
                 level = 2
             key = new_component.group(2).strip()
             new_child = True
-        if new_atom_group:
+        elif new_atom_group:
             prev_level = level
             level = (len(new_atom_group.group(1))-1) // 2
             key = new_atom_group.group(2).strip()
             new_child = True
+
         if new_child: # Common to new CVCs and atom groups
             if level > prev_level:
                 parent = current
@@ -263,6 +251,5 @@ def parse_Colvars_log(filename):
             current = parent['children'][-1]
             current['key'] = key
             current['children'] = list()
-            continue
 
     return global_conf, colvars, biases, TI_traj
