@@ -171,6 +171,9 @@ class CVC(CVConfig):
         super().__init__(level)
         self['children'] = list()
 
+class Bias(CVConfig):
+    pass
+
 class GlobalConfig(CVConfig):
     def __init__(self, log):
         super().__init__()
@@ -319,15 +322,14 @@ def add_new_key_value_pair(current, new_key_value):
 
 def add_bias(biases, new_bias):
     key = new_bias.group(1).strip()
-    level = 1
-    current = {}
+    current = Bias(level = 1)
     current['key'] = key
     biases.append(current)
-    return level, current
+    return current.level, current
 
 
 def create_cv(colvars):
-    current = CVC(level=1)
+    current = CVC(level = 1)
     colvars.append(current)
     return current.level, current
 
