@@ -177,13 +177,29 @@ def get_colvars_version(log):
     version = match.group(1).strip()
     return version
 
+class CVLine():
+    def __init__(self, line):
+        self.new_config = re.match(r'^colvars:\s+Reading new configuration:', line)
+        self.new_CV = re.match(r'^colvars:\s+Initializing a new collective variable\.', line)
+        self.new_bias = re.match(r'^colvars:\s+Initializing a new "(.*)" instance\.$', line)
+        self.new_child = False
+        self.new_component = re.match(r'^colvars:(\s+)Initializing a new "(.*)" component\.$', line)
+        self.new_atom_group = re.match(r'^colvars:(\s+)Initializing atom group "(.*)"\.$', line)
+        self.new_key_value = re.match(r'^colvars:\s+#\s+(\w+) = (.*?)\s*(?:\[default\])?$', line)
+        self.new_RFEP_stage = re.match(
+            r'^colvars:\s+Restraint (\S+), stage (\S+) : lambda = (\S+), k = (\S+)$', line)
+        self.end_of_RFEP_stage = re.match(
+            r'^colvars:\s+Restraint (\S+) Lambda= (\S+) dA/dLambda= (\S+)$', line)
+        self.cv_traj_file = re.match(
+            r'^colvars: Synchronizing \(emptying the buffer of\) trajectory file "(.+)"\.$', line)
+
 
 def parse_cv_lines(global_conf, cv_lines):
     biases = list()
     TI_traj = {}
     colvars = list()
     for line in cv_lines:
-        new_config = re.match(r'^colvars:\s+Reading new configuration:', line)
+        cv_line = CVLine(line)
         new_CV = re.match(r'^colvars:\s+Initializing a new collective variable\.', line)
         new_bias = re.match(r'^colvars:\s+Initializing a new "(.*)" instance\.$', line)
         new_child = False
@@ -197,7 +213,7 @@ def parse_cv_lines(global_conf, cv_lines):
         cv_traj_file = re.match(
             r'^colvars: Synchronizing \(emptying the buffer of\) trajectory file "(.+)"\.$', line)
 
-        if new_config:
+        if cv_line.new_config:
             level, current = start_cv_config(global_conf)
         elif new_CV:
             level, current = create_cv(colvars)
