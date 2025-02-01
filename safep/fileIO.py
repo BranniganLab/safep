@@ -156,7 +156,7 @@ def parse_Colvars_log(filename):
 
     global_conf = GlobalConfig()
     global_conf['version'] = get_colvars_version(log)
-    global_conf['output_prefix'] = get_output_prefix(log)
+    global_conf.get_output_prefix(log)
 
     cv_lines = re.findall(r'\n(colvars:.*)', log)
     colvars, biases, TI_traj = parse_cv_lines(global_conf, cv_lines)
@@ -164,13 +164,11 @@ def parse_Colvars_log(filename):
     return global_conf, colvars, biases, TI_traj
 
 class GlobalConfig(dict):
-    pass
+    def get_output_prefix(self, log):
+        match = re.search(r'\ncolvars: The final output state file will be "(.+).colvars.state".\n',
+                        log)
+        self['output_prefix'] = match.group(1).strip()
 
-def get_output_prefix(log):
-    match = re.search(r'\ncolvars: The final output state file will be "(.+).colvars.state".\n',
-                      log)
-    output_prefix = match.group(1).strip()
-    return output_prefix
 
 
 def get_colvars_version(log):
