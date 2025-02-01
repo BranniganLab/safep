@@ -175,6 +175,12 @@ def parse_Colvars_log(filename):
     cv_lines = [l for l in lines if line.startswith('colvars:')]
 
     # Parse rest of file for more config data
+    TI_traj = parse_cv_lines(global_conf, colvars, biases, TI_traj, cv_lines)
+
+
+    return global_conf, colvars, biases, TI_traj
+
+def parse_cv_lines(global_conf, colvars, biases, TI_traj, cv_lines):
     for line in cv_lines:
         new_config = re.match(r'^colvars:\s+Reading new configuration:', line)
         new_CV = re.match(r'^colvars:\s+Initializing a new collective variable\.', line)
@@ -217,9 +223,7 @@ def parse_Colvars_log(filename):
                 parent = parent['parent']
             parent['children'].append({})
             current = add_child(key, parent)
-
-
-    return global_conf, colvars, biases, TI_traj
+    return TI_traj
 
 def add_child(key, parent):
     current = parent['children'][-1]
