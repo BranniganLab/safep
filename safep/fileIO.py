@@ -1,4 +1,5 @@
 # Import block
+from pathlib import Path
 import numpy as np
 import pandas as pd
 
@@ -16,7 +17,7 @@ def guess_lambda(fname):
     L = int(re.findall(r'\d+', fname)[-1])/100
     return L
 
-from pathlib import Path
+
 def save_UNK(u_nk, filepath, safety=True):
     '''
     Write u_nk to a file
@@ -30,18 +31,19 @@ def save_UNK(u_nk, filepath, safety=True):
         u_nk.to_csv(filepath)
 
     return
-     
+
+
 def read_UNK(filepath):
     '''
     Read a u_nk that was written by saveUNK.
     Arguments: filepath
     Returns: u_nk
     '''
-    u_nk = pd.read_csv(filepath, index_col=[0,1], dtype=float)
+    u_nk = pd.read_csv(filepath, index_col=[0, 1], dtype=float)
     u_nk.columns = [float(x) for x in u_nk.columns]
-    
+
     return u_nk.copy()
-    
+
 
 def read_FEPOUT(fileName, step=1):
     '''
@@ -51,38 +53,38 @@ def read_FEPOUT(fileName, step=1):
     Arguments: fileName, step (stride)
     Returns: a dataframe containing all the data in a fepout file.
     '''
-    colNames = ["type",'step', 'Elec_l', 'Elec_ldl', 'vdW_l', 'vdW_ldl', 'dE', 'dE_avg', 'Temp', 'dG', 'FromLambda', "ToLambda"]
+    colNames = ["type", 'step', 'Elec_l', 'Elec_ldl', 'vdW_l',
+                'vdW_ldl', 'dE', 'dE_avg', 'Temp', 'dG', 'FromLambda', "ToLambda"]
 
     data = []
 
     L = np.nan
     L2 = np.nan
     LIDWS = np.nan
-    
+
     frame = 0
     with open(fileName) as fs:
         for line in fs:
             if line[0] == '#':
                 frame = 0
-                #print(line)
+                # print(line)
                 Lambda = re.search(r'LAMBDA SET TO (\d+(\.\d+)*)', line)
                 Lambda2 = re.search(r'LAMBDA2 (\d+(\.\d+)*)', line)
                 LambdaIDWS = re.search(r'LAMBDA_IDWS (\d+(\.\d+)*)', line)
                 if Lambda:
                     L = Lambda.group(1)
-                    #print(f'L={L}')
+                    # print(f'L={L}')
                 if Lambda2:
                     L2 = Lambda2.group(1)
-                    #print(f'L2={L2}')
+                    # print(f'L2={L2}')
                 if LambdaIDWS:
                     LIDWS = LambdaIDWS.group(1)
-                    #print(f'LIDWS={LIDWS}')
+                    # print(f'LIDWS={LIDWS}')
             elif frame % step <= 1:
                 if np.isnan(L):
                     print("WARNING: lambda is not defined!")
                     L = guess_lambda(fileName)
                     print("Guessing lambda to be {L} based on file name.")
-
 
                 lineList = line.split()
                 lineList.append(L)
@@ -103,16 +105,17 @@ def read_FEPOUT(fileName, step=1):
             stashLIDWS = LIDWS
 
     fs.close()
-    
+
     df = pd.DataFrame(data).dropna()
     df.columns = colNames
-    df = df.iloc[:,1:].astype(float)
-    df["window"]=np.mean([df.FromLambda,df.ToLambda], axis=0)
-    df["up"]=df.ToLambda>df.FromLambda
+    df = df.iloc[:, 1:].astype(float)
+    df["window"] = np.mean([df.FromLambda, df.ToLambda], axis=0)
+    df["up"] = df.ToLambda > df.FromLambda
 
     df = df.sort_index()
     return df
-    
+
+
 def read_Files(files, step=1):
     '''
     Batch readFEPOUT
@@ -124,10 +127,10 @@ def read_Files(files, step=1):
         df = read_FEPOUT(file, step)
         fileList.append(df)
     data = pd.concat(fileList)
-    
+
     data.index = data.window
     data["dVdW"] = data.vdW_ldl - data.vdW_l
-    
+
     return data
 
 
@@ -147,27 +150,25 @@ def parse_Colvars_log(filename):
     colvars[0]['children'][0]['children'][0] is the first atom group of that component
     '''
     global_conf = {}
-    level = prev_level = 0
-
     colvars = list()
     biases = list()
-    current = global_conf
 
     TI_traj = {}
 
     with open(filename) as file:
         lines = file.readlines()
 
-
     # Header: get version and output prefix, then break
     for line in lines:
-        match = re.match(r'^colvars: Initializing the collective variables module, version (.*).$', line)
+        match = re.match(
+            r'^colvars: Initializing the collective variables module, version (.*).$', line)
         if match:
             global_conf['version'] = match.group(1).strip()
             break
 
     for line in lines:
-        match = re.match(r'^colvars: The final output state file will be "(.+).colvars.state".$', line)
+        match = re.match(
+            r'^colvars: The final output state file will be "(.+).colvars.state".$', line)
         if match:
             global_conf['output_prefix'] = match.group(1).strip()
             break
@@ -177,21 +178,29 @@ def parse_Colvars_log(filename):
     # Parse rest of file for more config data
     TI_traj = parse_cv_lines(global_conf, colvars, biases, TI_traj, cv_lines)
 
-
     return global_conf, colvars, biases, TI_traj
+
 
 def parse_cv_lines(global_conf, colvars, biases, TI_traj, cv_lines):
     for line in cv_lines:
         new_config = re.match(r'^colvars:\s+Reading new configuration:', line)
-        new_CV = re.match(r'^colvars:\s+Initializing a new collective variable\.', line)
-        new_bias = re.match(r'^colvars:\s+Initializing a new "(.*)" instance\.$', line)
+        new_CV = re.match(
+            r'^colvars:\s+Initializing a new collective variable\.', line)
+        new_bias = re.match(
+            r'^colvars:\s+Initializing a new "(.*)" instance\.$', line)
         new_child = False
-        new_component = re.match(r'^colvars:(\s+)Initializing a new "(.*)" component\.$', line)
-        new_atom_group = re.match(r'^colvars:(\s+)Initializing atom group "(.*)"\.$', line)
-        new_key_value = re.match(r'^colvars:\s+#\s+(\w+) = (.*?)\s*(?:\[default\])?$', line)
-        new_RFEP_stage = re.match(r'^colvars:\s+Restraint (\S+), stage (\S+) : lambda = (\S+), k = (\S+)$', line)
-        end_of_RFEP_stage = re.match(r'^colvars:\s+Restraint (\S+) Lambda= (\S+) dA/dLambda= (\S+)$', line)
-        cv_traj_file = re.match(r'^colvars: Synchronizing \(emptying the buffer of\) trajectory file "(.+)"\.$', line)
+        new_component = re.match(
+            r'^colvars:(\s+)Initializing a new "(.*)" component\.$', line)
+        new_atom_group = re.match(
+            r'^colvars:(\s+)Initializing atom group "(.*)"\.$', line)
+        new_key_value = re.match(
+            r'^colvars:\s+#\s+(\w+) = (.*?)\s*(?:\[default\])?$', line)
+        new_RFEP_stage = re.match(
+            r'^colvars:\s+Restraint (\S+), stage (\S+) : lambda = (\S+), k = (\S+)$', line)
+        end_of_RFEP_stage = re.match(
+            r'^colvars:\s+Restraint (\S+) Lambda= (\S+) dA/dLambda= (\S+)$', line)
+        cv_traj_file = re.match(
+            r'^colvars: Synchronizing \(emptying the buffer of\) trajectory file "(.+)"\.$', line)
 
         if new_config:
             level, current = start_cv_config(global_conf)
@@ -200,23 +209,25 @@ def parse_cv_lines(global_conf, colvars, biases, TI_traj, cv_lines):
         elif new_bias:
             level, current = add_bias(biases, new_bias)
         elif new_key_value:
-            current = add_new_key_value_pair(current, new_key_value)  
+            current = add_new_key_value_pair(current, new_key_value)
         elif new_RFEP_stage:
             name, stage, L, k = parse_RFEP_stage(new_RFEP_stage)
             if not name in TI_traj:
                 TI_traj = start_new_RFEP(TI_traj, name, stage, L, k)
             else:
-                TI_traj = continue_RFEP(TI_traj, name, stage, L, k) 
+                TI_traj = continue_RFEP(TI_traj, name, stage, L, k)
         elif end_of_RFEP_stage:
             TI_traj = terminate_RFEP_stage(TI_traj, line, end_of_RFEP_stage)
         elif cv_traj_file:
             global_conf['traj_file'] = cv_traj_file.group(1).strip()
         elif new_component:
-            prev_level, level, new_child, key = add_new_component(level, new_component)
+            prev_level, level, new_child, key = add_new_component(
+                level, new_component)
         elif new_atom_group:
-            prev_level, level, new_child, key = add_new_atom_group(level, new_atom_group)
+            prev_level, level, new_child, key = add_new_atom_group(
+                level, new_atom_group)
 
-        if new_child: # Common to new CVCs and atom groups
+        if new_child:  # Common to new CVCs and atom groups
             if level > prev_level:
                 parent = current
             elif level < prev_level:
@@ -225,27 +236,31 @@ def parse_cv_lines(global_conf, colvars, biases, TI_traj, cv_lines):
             current = add_child(key, parent)
     return TI_traj
 
+
 def add_child(key, parent):
     current = parent['children'][-1]
     current['key'] = key
     current['children'] = list()
     return current
 
+
 def add_new_atom_group(level, new_atom_group):
     prev_level = level
     level = (len(new_atom_group.group(1))-1) // 2
     key = new_atom_group.group(2).strip()
     new_child = True
-    return prev_level,level,new_child,key
+    return prev_level, level, new_child, key
+
 
 def add_new_component(level, new_component):
     prev_level = level
     level = (len(new_component.group(1))-1) // 2
-    if level == 1: # Top-level CVCs are not indented, fix manually
+    if level == 1:  # Top-level CVCs are not indented, fix manually
         level = 2
     key = new_component.group(2).strip()
     new_child = True
     return prev_level, level, new_child, key
+
 
 def terminate_RFEP_stage(TI_traj, line, end_of_RFEP_stage):
     # Parse free energy derivative estimates - end of stage: add dAdL value
@@ -259,17 +274,20 @@ def terminate_RFEP_stage(TI_traj, line, end_of_RFEP_stage):
 
     return TI_traj
 
+
 def continue_RFEP(TI_traj, name, stage, L, k):
     TI_traj[name]['stage'].append(stage)
     TI_traj[name]['L'].append(L)
     TI_traj[name]['k'].append(k)
-                # NaN to be replaced by actual value if present
+    # NaN to be replaced by actual value if present
     TI_traj[name]['dAdL'].append(np.nan)
     return TI_traj
 
+
 def start_new_RFEP(TI_traj, name, stage, L, k):
-    TI_traj[name] = { 'stage': [stage], 'L':[L], 'k':[k], 'dAdL':[None] }
+    TI_traj[name] = {'stage': [stage], 'L': [L], 'k': [k], 'dAdL': [None]}
     return TI_traj
+
 
 def parse_RFEP_stage(new_RFEP_stage):
     # Parse free energy derivative estimates - beginning of stage
@@ -277,16 +295,18 @@ def parse_RFEP_stage(new_RFEP_stage):
     stage = int(new_RFEP_stage.group(2).strip())
     L = float(new_RFEP_stage.group(3).strip())
     k = float(new_RFEP_stage.group(4).strip())
-    return name,stage,L,k
+    return name, stage, L, k
+
 
 def add_new_key_value_pair(current, new_key_value):
     key = new_key_value.group(1)
-            # Extract key and value, remove extra spaces
-    value = new_key_value.group(2).strip(' "')  
-            # Add to dictionary
+    # Extract key and value, remove extra spaces
+    value = new_key_value.group(2).strip(' "')
+    # Add to dictionary
     current[key] = value
 
     return current
+
 
 def add_bias(biases, new_bias):
     key = new_bias.group(1).strip()
@@ -294,16 +314,18 @@ def add_bias(biases, new_bias):
     current = {}
     current['key'] = key
     biases.append(current)
-    return level,current
+    return level, current
+
 
 def create_cv(colvars):
     level = 1
     current = {}
     current['children'] = list()
     colvars.append(current)
-    return level,current
+    return level, current
+
 
 def start_cv_config(global_conf):
     level = 0
     current = global_conf
-    return level,current
+    return level, current
