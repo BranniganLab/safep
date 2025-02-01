@@ -169,7 +169,7 @@ def parse_Colvars_log(filename):
             global_conf['output_prefix'] = match.group(1).strip()
             break
 
-    cv_lines = [l for l in lines if line.startswith('colvars:')]
+    cv_lines = [l for l in lines if l.startswith('colvars:')]
 
     # Parse rest of file for more config data
     TI_traj = parse_cv_lines(global_conf, colvars, biases, TI_traj, cv_lines)
