@@ -154,9 +154,7 @@ def parse_Colvars_log(filename):
     with open(filename) as file:
         log = file.read()
 
-    global_conf = GlobalConfig()
-    global_conf['version'] = get_colvars_version(log)
-    global_conf.get_output_prefix(log)
+    global_conf = GlobalConfig(log)
 
     cv_lines = re.findall(r'\n(colvars:.*)', log)
     colvars, biases, TI_traj = parse_cv_lines(global_conf, cv_lines)
@@ -164,18 +162,19 @@ def parse_Colvars_log(filename):
     return global_conf, colvars, biases, TI_traj
 
 class GlobalConfig(dict):
+    def __init__(self, log):
+        self.get_colvars_version(log)
+        self.get_output_prefix(log)
+
     def get_output_prefix(self, log):
         match = re.search(r'\ncolvars: The final output state file will be "(.+).colvars.state".\n',
                         log)
         self['output_prefix'] = match.group(1).strip()
 
-
-
-def get_colvars_version(log):
-    match = re.search(r'\ncolvars: Initializing the collective variables module, version (.*).\n',
-                      log)
-    version = match.group(1).strip()
-    return version
+    def get_colvars_version(self, log):
+        match = re.search(r'\ncolvars: Initializing the collective variables module, version (.*).\n',
+                        log)
+        self['version'] = match.group(1).strip()
 
 class CVLine():
     grammar = {'new_config': re.compile(r'^colvars:\s+Reading new configuration:'),
