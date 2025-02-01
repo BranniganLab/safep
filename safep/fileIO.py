@@ -240,12 +240,12 @@ def parse_cv_lines(global_conf, cv_lines):
 
         if cv_line.new_config:
             # QUESTION: start_cv_config doesn't actually depend on new_config line being found. Should we have a different check?
-            level, current = start_cv_config(global_conf)
+            current = global_conf
         elif cv_line.new_CV:
-            level, current = create_cv(colvars)
+            current = CVC(level=1)
+            colvars.append(current)
         elif cv_line.new_bias:
             current = Bias(cv_line.new_bias, level=1)
-            level = current.level
             biases.append(current)
         elif cv_line.new_key_value:
             current = add_new_key_value_pair(current, cv_line.new_key_value)
@@ -259,15 +259,15 @@ def parse_cv_lines(global_conf, cv_lines):
             TI_traj = terminate_RFEP_stage(TI_traj, line, cv_line.end_of_RFEP_stage)
         elif cv_line.new_component or cv_line.new_atom_group:
             if cv_line.new_component:
-                prev_level, level, key = add_new_component(level, cv_line.new_component)
+                prev_level, current.level, key = add_new_component(current.level, cv_line.new_component)
             elif cv_line.new_atom_group:
-                prev_level, level, key = add_new_atom_group(level, cv_line.new_atom_group)
+                prev_level, current.level, key = add_new_atom_group(current.level, cv_line.new_atom_group)
 
-            if level > prev_level:
+            if current.level > prev_level:
                 parent = current
-            elif level < prev_level:
+            elif current.level < prev_level:
                 parent = parent['parent']
-            current = ChildCVC(key, level)
+            current = ChildCVC(key, current.level)
             parent['children'].append(current)
     return colvars, biases, TI_traj
 
@@ -333,13 +333,3 @@ def add_new_key_value_pair(current, new_key_value):
 
     return current
 
-
-def create_cv(colvars):
-    current = CVC(level=1)
-    colvars.append(current)
-    return current.level, current
-
-
-def start_cv_config(global_conf):
-    current = global_conf
-    return current.level, current
