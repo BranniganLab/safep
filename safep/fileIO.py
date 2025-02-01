@@ -149,17 +149,15 @@ def parse_Colvars_log(filename):
     colvars[0]['children'][0] is the first component of the first colvar
     colvars[0]['children'][0]['children'][0] is the first atom group of that component
     '''
-    global_conf = {}
-
     with open(filename) as file:
         log = file.read()
+
+    global_conf = {}
 
     global_conf['version'] = get_colvars_version(log)
     global_conf['output_prefix'] = get_output_prefix(log)
 
-    lines = log.split('\n')
-    cv_lines = [l for l in lines if l.startswith('colvars:')]
-
+    cv_lines = re.findall(r'\n(colvars:.*)', log)
     colvars, biases, TI_traj = parse_cv_lines(global_conf, cv_lines)
 
     return global_conf, colvars, biases, TI_traj
