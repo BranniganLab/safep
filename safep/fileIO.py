@@ -200,43 +200,31 @@ def parse_cv_lines(global_conf, cv_lines):
     colvars = list()
     for line in cv_lines:
         cv_line = CVLine(line)
-        new_CV = re.match(r'^colvars:\s+Initializing a new collective variable\.', line)
-        new_bias = re.match(r'^colvars:\s+Initializing a new "(.*)" instance\.$', line)
-        new_child = False
-        new_component = re.match(r'^colvars:(\s+)Initializing a new "(.*)" component\.$', line)
-        new_atom_group = re.match(r'^colvars:(\s+)Initializing atom group "(.*)"\.$', line)
-        new_key_value = re.match(r'^colvars:\s+#\s+(\w+) = (.*?)\s*(?:\[default\])?$', line)
-        new_RFEP_stage = re.match(
-            r'^colvars:\s+Restraint (\S+), stage (\S+) : lambda = (\S+), k = (\S+)$', line)
-        end_of_RFEP_stage = re.match(
-            r'^colvars:\s+Restraint (\S+) Lambda= (\S+) dA/dLambda= (\S+)$', line)
-        cv_traj_file = re.match(
-            r'^colvars: Synchronizing \(emptying the buffer of\) trajectory file "(.+)"\.$', line)
 
         if cv_line.new_config:
             level, current = start_cv_config(global_conf)
-        elif new_CV:
+        elif cv_line.new_CV:
             level, current = create_cv(colvars)
-        elif new_bias:
-            level, current = add_bias(biases, new_bias)
-        elif new_key_value:
-            current = add_new_key_value_pair(current, new_key_value)
-        elif new_RFEP_stage:
-            name, stage, L, k = parse_RFEP_stage(new_RFEP_stage)
+        elif cv_line.new_bias:
+            level, current = add_bias(biases, cv_line.new_bias)
+        elif cv_line.new_key_value:
+            current = add_new_key_value_pair(current, cv_line.new_key_value)
+        elif cv_line.new_RFEP_stage:
+            name, stage, L, k = parse_RFEP_stage(cv_line.new_RFEP_stage)
             if not name in TI_traj:
                 TI_traj = start_new_RFEP(TI_traj, name, stage, L, k)
             else:
                 TI_traj = continue_RFEP(TI_traj, name, stage, L, k)
-        elif end_of_RFEP_stage:
-            TI_traj = terminate_RFEP_stage(TI_traj, line, end_of_RFEP_stage)
-        elif cv_traj_file:
-            global_conf['traj_file'] = cv_traj_file.group(1).strip()
-        elif new_component:
-            prev_level, level, new_child, key = add_new_component(level, new_component)
-        elif new_atom_group:
-            prev_level, level, new_child, key = add_new_atom_group(level, new_atom_group)
+        elif cv_line.end_of_RFEP_stage:
+            TI_traj = terminate_RFEP_stage(TI_traj, line, cv_line.end_of_RFEP_stage)
+        elif cv_line.cv_traj_file:
+            global_conf['traj_file'] = cv_line.cv_traj_file.group(1).strip()
+        elif cv_line.new_component:
+            prev_level, level, cv_line.new_child, key = add_new_component(level, cv_line.new_component)
+        elif cv_line.new_atom_group:
+            prev_level, level, cv_line.new_child, key = add_new_atom_group(level, cv_line.new_atom_group)
 
-        if new_child:  # Common to new CVCs and atom groups
+        if cv_line.new_child:  # Common to new CVCs and atom groups
             if level > prev_level:
                 parent = current
             elif level < prev_level:
