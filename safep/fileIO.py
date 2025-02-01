@@ -150,10 +150,6 @@ def parse_Colvars_log(filename):
     colvars[0]['children'][0]['children'][0] is the first atom group of that component
     '''
     global_conf = {}
-    colvars = list()
-    biases = list()
-
-    TI_traj = {}
 
     with open(filename) as file:
         log = file.read()
@@ -164,8 +160,7 @@ def parse_Colvars_log(filename):
     lines = log.split('\n')
     cv_lines = [l for l in lines if l.startswith('colvars:')]
 
-    # Parse rest of file for more config data
-    TI_traj = parse_cv_lines(global_conf, colvars, biases, TI_traj, cv_lines)
+    colvars, biases, TI_traj = parse_cv_lines(global_conf, cv_lines)
 
     return global_conf, colvars, biases, TI_traj
 
@@ -180,7 +175,10 @@ def get_colvars_version(log):
     return version
 
 
-def parse_cv_lines(global_conf, colvars, biases, TI_traj, cv_lines):
+def parse_cv_lines(global_conf, cv_lines):
+    biases = list()
+    TI_traj = {}
+    colvars = list()
     for line in cv_lines:
         new_config = re.match(r'^colvars:\s+Reading new configuration:', line)
         new_CV = re.match(
@@ -233,7 +231,7 @@ def parse_cv_lines(global_conf, colvars, biases, TI_traj, cv_lines):
                 parent = parent['parent']
             parent['children'].append({})
             current = add_child(key, parent)
-    return TI_traj
+    return colvars, biases, TI_traj
 
 
 def add_child(key, parent):
