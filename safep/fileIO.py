@@ -156,16 +156,12 @@ def parse_Colvars_log(filename):
     TI_traj = {}
 
     with open(filename) as file:
-        lines = file.readlines()
+        log = file.read()
 
-    # Header: get version and output prefix, then break
-    for line in lines:
-        match = re.match(
-            r'^colvars: Initializing the collective variables module, version (.*).$', line)
-        if match:
-            global_conf['version'] = match.group(1).strip()
-            break
+    # Header: get version and output prefix
+    global_conf['version'] = get_colvars_version(log)
 
+    lines = log.split('\n')
     for line in lines:
         match = re.match(
             r'^colvars: The final output state file will be "(.+).colvars.state".$', line)
@@ -179,6 +175,11 @@ def parse_Colvars_log(filename):
     TI_traj = parse_cv_lines(global_conf, colvars, biases, TI_traj, cv_lines)
 
     return global_conf, colvars, biases, TI_traj
+
+def get_colvars_version(log):
+    match = re.search(r'\ncolvars: Initializing the collective variables module, version (.*).\n', log)
+    version = match.group(1).strip()
+    return version
 
 
 def parse_cv_lines(global_conf, colvars, biases, TI_traj, cv_lines):
