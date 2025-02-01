@@ -204,28 +204,6 @@ def parse_Colvars_log(filename):
             current['key'] = key
             biases.append(current)
             continue
-        if new_component:
-            prev_level = level
-            level = (len(new_component.group(1))-1) // 2
-            if level == 1: # Top-level CVCs are not indented, fix manually
-                level = 2
-            key = new_component.group(2).strip()
-            new_child = True
-        if new_atom_group:
-            prev_level = level
-            level = (len(new_atom_group.group(1))-1) // 2
-            key = new_atom_group.group(2).strip()
-            new_child = True
-        if new_child: # Common to new CVCs and atom groups
-            if level > prev_level:
-                parent = current
-            elif level < prev_level:
-                parent = parent['parent']
-            parent['children'].append({})
-            current = parent['children'][-1]
-            current['key'] = key
-            current['children'] = list()
-            continue
 
         if new_key_value:
             key = new_key_value.group(1)
@@ -262,6 +240,29 @@ def parse_Colvars_log(filename):
         # Get explicit trajectory file name
         if cv_traj_file:
             global_conf['traj_file'] = cv_traj_file.group(1).strip()
+            continue
+
+        if new_component:
+            prev_level = level
+            level = (len(new_component.group(1))-1) // 2
+            if level == 1: # Top-level CVCs are not indented, fix manually
+                level = 2
+            key = new_component.group(2).strip()
+            new_child = True
+        if new_atom_group:
+            prev_level = level
+            level = (len(new_atom_group.group(1))-1) // 2
+            key = new_atom_group.group(2).strip()
+            new_child = True
+        if new_child: # Common to new CVCs and atom groups
+            if level > prev_level:
+                parent = current
+            elif level < prev_level:
+                parent = parent['parent']
+            parent['children'].append({})
+            current = parent['children'][-1]
+            current['key'] = key
+            current['children'] = list()
             continue
 
     return global_conf, colvars, biases, TI_traj
