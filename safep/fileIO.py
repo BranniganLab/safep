@@ -14,7 +14,7 @@ def guess_lambda(fname):
     Arguments: file name
     Returns: estimated lambda value
     '''
-    L = int(re.findall(r'\d+', fname)[-1])/100
+    L = int(re.findall(r'\d+', fname)[-1]) / 100
     return L
 
 
@@ -53,8 +53,10 @@ def read_FEPOUT(fileName, step=1):
     Arguments: fileName, step (stride)
     Returns: a dataframe containing all the data in a fepout file.
     '''
-    colNames = ["type", 'step', 'Elec_l', 'Elec_ldl', 'vdW_l',
-                'vdW_ldl', 'dE', 'dE_avg', 'Temp', 'dG', 'FromLambda', "ToLambda"]
+    colNames = [
+        "type", 'step', 'Elec_l', 'Elec_ldl', 'vdW_l', 'vdW_ldl', 'dE', 'dE_avg', 'Temp', 'dG',
+        'FromLambda', "ToLambda"
+    ]
 
     data = []
 
@@ -153,7 +155,6 @@ def parse_Colvars_log(filename):
         log = file.read()
 
     global_conf = {}
-
     global_conf['version'] = get_colvars_version(log)
     global_conf['output_prefix'] = get_output_prefix(log)
 
@@ -162,13 +163,17 @@ def parse_Colvars_log(filename):
 
     return global_conf, colvars, biases, TI_traj
 
+
 def get_output_prefix(log):
-    match = re.search(r'\ncolvars: The final output state file will be "(.+).colvars.state".\n', log)
+    match = re.search(r'\ncolvars: The final output state file will be "(.+).colvars.state".\n',
+                      log)
     output_prefix = match.group(1).strip()
     return output_prefix
 
+
 def get_colvars_version(log):
-    match = re.search(r'\ncolvars: Initializing the collective variables module, version (.*).\n', log)
+    match = re.search(r'\ncolvars: Initializing the collective variables module, version (.*).\n',
+                      log)
     version = match.group(1).strip()
     return version
 
@@ -179,17 +184,12 @@ def parse_cv_lines(global_conf, cv_lines):
     colvars = list()
     for line in cv_lines:
         new_config = re.match(r'^colvars:\s+Reading new configuration:', line)
-        new_CV = re.match(
-            r'^colvars:\s+Initializing a new collective variable\.', line)
-        new_bias = re.match(
-            r'^colvars:\s+Initializing a new "(.*)" instance\.$', line)
+        new_CV = re.match(r'^colvars:\s+Initializing a new collective variable\.', line)
+        new_bias = re.match(r'^colvars:\s+Initializing a new "(.*)" instance\.$', line)
         new_child = False
-        new_component = re.match(
-            r'^colvars:(\s+)Initializing a new "(.*)" component\.$', line)
-        new_atom_group = re.match(
-            r'^colvars:(\s+)Initializing atom group "(.*)"\.$', line)
-        new_key_value = re.match(
-            r'^colvars:\s+#\s+(\w+) = (.*?)\s*(?:\[default\])?$', line)
+        new_component = re.match(r'^colvars:(\s+)Initializing a new "(.*)" component\.$', line)
+        new_atom_group = re.match(r'^colvars:(\s+)Initializing atom group "(.*)"\.$', line)
+        new_key_value = re.match(r'^colvars:\s+#\s+(\w+) = (.*?)\s*(?:\[default\])?$', line)
         new_RFEP_stage = re.match(
             r'^colvars:\s+Restraint (\S+), stage (\S+) : lambda = (\S+), k = (\S+)$', line)
         end_of_RFEP_stage = re.match(
@@ -216,11 +216,9 @@ def parse_cv_lines(global_conf, cv_lines):
         elif cv_traj_file:
             global_conf['traj_file'] = cv_traj_file.group(1).strip()
         elif new_component:
-            prev_level, level, new_child, key = add_new_component(
-                level, new_component)
+            prev_level, level, new_child, key = add_new_component(level, new_component)
         elif new_atom_group:
-            prev_level, level, new_child, key = add_new_atom_group(
-                level, new_atom_group)
+            prev_level, level, new_child, key = add_new_atom_group(level, new_atom_group)
 
         if new_child:  # Common to new CVCs and atom groups
             if level > prev_level:
@@ -241,7 +239,7 @@ def add_child(key, parent):
 
 def add_new_atom_group(level, new_atom_group):
     prev_level = level
-    level = (len(new_atom_group.group(1))-1) // 2
+    level = (len(new_atom_group.group(1)) - 1) // 2
     key = new_atom_group.group(2).strip()
     new_child = True
     return prev_level, level, new_child, key
@@ -249,7 +247,7 @@ def add_new_atom_group(level, new_atom_group):
 
 def add_new_component(level, new_component):
     prev_level = level
-    level = (len(new_component.group(1))-1) // 2
+    level = (len(new_component.group(1)) - 1) // 2
     if level == 1:  # Top-level CVCs are not indented, fix manually
         level = 2
     key = new_component.group(2).strip()
