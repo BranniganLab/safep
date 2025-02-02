@@ -231,6 +231,16 @@ class CVLine():
             self.__setattr__(name, matched)
 
 class TITraj(dict):
+
+    def handle_RFEP(self, line, cv_line):
+        if cv_line.new_RFEP_stage:
+            name, stage, L, k = parse_RFEP_stage(cv_line.new_RFEP_stage)
+            if not name in self:
+                self.start_new_RFEP(name, stage, L, k)
+            else:
+                self.continue_RFEP(name, stage, L, k)
+        elif cv_line.end_of_RFEP_stage:
+            self.terminate_RFEP_stage(line, cv_line.end_of_RFEP_stage)
     
     def start_new_RFEP(self, name, stage, L, k):
         self[name] = {'stage': [stage], 'L': [L], 'k': [k], 'dAdL': [None]}
@@ -270,14 +280,8 @@ def parse_cv_lines(global_conf, cv_lines):
             biases.append(current)
         elif cv_line.new_key_value:
             current = add_new_key_value_pair(current, cv_line.new_key_value)
-        elif cv_line.new_RFEP_stage:
-            name, stage, L, k = parse_RFEP_stage(cv_line.new_RFEP_stage)
-            if not name in TI_traj:
-                TI_traj.start_new_RFEP(name, stage, L, k)
-            else:
-                TI_traj.continue_RFEP(name, stage, L, k)
-        elif cv_line.end_of_RFEP_stage:
-            TI_traj.terminate_RFEP_stage(line, cv_line.end_of_RFEP_stage)
+        elif cv_line.new_RFEP_stage or cv_line.end_of_RFEP_stage:
+            TI_traj.handle_RFEP(line, cv_line)
         elif cv_line.new_component or cv_line.new_atom_group:
             if cv_line.new_component:
                 prev_level, current.level, key = add_new_component(current.level, cv_line.new_component)
@@ -291,6 +295,8 @@ def parse_cv_lines(global_conf, cv_lines):
             current = ChildCVC(key, current.level)
             parent['children'].append(current)
     return colvars, biases, TI_traj
+
+
 
 
 def add_new_atom_group(level, new_atom_group):
