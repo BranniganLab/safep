@@ -162,14 +162,14 @@ def parse_Colvars_log(filename):
     return global_conf, colvars, biases, TI_traj
 
 
-class CVC(dict):
+class Colvar(dict):
 
-    def __init__(self, level=0):
-        self.level = level
+    def __init__(self):
+        self.level = 1
         self['children'] = list()
 
 
-class ChildCVC(dict):
+class CVC(dict):
 
     def __init__(self, new_component):
         level = (len(new_component.group(1)) - 1) // 2
@@ -184,9 +184,9 @@ class ChildCVC(dict):
 # QUESTION: should biases have children? If so, that would simplify the class structure.
 class Bias(dict):
 
-    def __init__(self, new_bias, level=0):
+    def __init__(self, new_bias):
         key = new_bias.group(1).strip()
-        self.level = level
+        self.level = 1
         self['key'] = key
 
 
@@ -282,17 +282,17 @@ def parse_cv_lines(global_conf, cv_lines):
             # QUESTION: this doesn't actually depend on new_config line being found. Should we have a different check?
             current = global_conf
         elif cv_line.new_CV:
-            current = CVC(level=1)
+            current = Colvar()
             colvars.append(current)
         elif cv_line.new_bias:
-            current = Bias(cv_line.new_bias, level=1)
+            current = Bias(cv_line.new_bias)
             biases.append(current)
         elif cv_line.new_key_value:
             current = add_new_key_value_pair(current, cv_line.new_key_value)
         elif cv_line.new_RFEP_stage or cv_line.end_of_RFEP_stage:
             TI_traj.handle_RFEP(line, cv_line)
         elif new_component:
-            child = ChildCVC(new_component)
+            child = CVC(new_component)
 
             if child.level > current.level:
                 parent = current
