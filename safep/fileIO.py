@@ -163,10 +163,12 @@ def parse_Colvars_log(filename):
 
 
 class CVDict(dict):
+
     def add_new_key_value_pair(self, new_key_value):
         key = new_key_value.group(1)
         value = new_key_value.group(2).strip(' "')
         self[key] = value
+
 
 class Colvar(CVDict):
 
@@ -244,6 +246,7 @@ class CVLine():
             new_component = None
         return new_component
 
+
 class TITraj(dict):
 
     def handle_RFEP(self, line, cv_line):
@@ -255,7 +258,7 @@ class TITraj(dict):
                 self.continue_RFEP(name, stage, L, k)
         elif cv_line.end_of_RFEP_stage:
             self.terminate_RFEP_stage(line, cv_line.end_of_RFEP_stage)
-    
+
     def start_new_RFEP(self, name, stage, L, k):
         self[name] = {'stage': [stage], 'L': [L], 'k': [k], 'dAdL': [None]}
 
@@ -275,6 +278,7 @@ class TITraj(dict):
             bad_lambda_msg = f'Error: mismatched lambda value in log: expected lambda = {L} and read:\n{line}'
             raise RuntimeError(bad_lambda_msg)
         self[name]['dAdL'][-1] = dAdL
+
 
 def parse_cv_lines(global_conf, cv_lines):
     biases = list()
@@ -304,13 +308,10 @@ def parse_cv_lines(global_conf, cv_lines):
                 parent = current
             elif child.level < current.level:
                 parent = parent['parent']
-            
+
             parent['children'].append(child)
             current = child
     return colvars, biases, TI_traj
-
-
-
 
 
 def parse_RFEP_stage(new_RFEP_stage):
@@ -320,8 +321,3 @@ def parse_RFEP_stage(new_RFEP_stage):
     L = float(new_RFEP_stage.group(3).strip())
     k = float(new_RFEP_stage.group(4).strip())
     return name, stage, L, k
-
-
-
-
-
