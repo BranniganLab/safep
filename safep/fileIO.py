@@ -286,7 +286,7 @@ def parse_cv_lines(global_conf, cv_lines):
             if cv_line.new_component:
                 prev_level, current.level, key = add_new_component(current.level, cv_line.new_component)
             elif cv_line.new_atom_group:
-                prev_level, current.level, key = add_new_atom_group(current.level, cv_line.new_atom_group)
+                prev_level, current.level, key = add_new_component(current.level, cv_line.new_atom_group)
 
             if current.level > prev_level:
                 parent = current
@@ -297,15 +297,6 @@ def parse_cv_lines(global_conf, cv_lines):
     return colvars, biases, TI_traj
 
 
-
-
-def add_new_atom_group(level, new_atom_group):
-    prev_level = level
-    level = (len(new_atom_group.group(1)) - 1) // 2
-    key = new_atom_group.group(2).strip()
-    return prev_level, level, key
-
-
 def add_new_component(level, new_component):
     prev_level = level
     level = (len(new_component.group(1)) - 1) // 2
@@ -313,13 +304,6 @@ def add_new_component(level, new_component):
         level = 2
     key = new_component.group(2).strip()
     return prev_level, level, key
-
-
-
-
-
-
-
 
 
 def parse_RFEP_stage(new_RFEP_stage):
