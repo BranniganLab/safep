@@ -284,26 +284,24 @@ def parse_cv_lines(global_conf, cv_lines):
             TI_traj.handle_RFEP(line, cv_line)
         elif cv_line.new_component or cv_line.new_atom_group:
             if cv_line.new_component:
-                prev_level, current.level, key = add_new_component(current.level, cv_line.new_component)
+                new_component = cv_line.new_component
             elif cv_line.new_atom_group:
-                prev_level, current.level, key = add_new_component(current.level, cv_line.new_atom_group)
+                new_component = cv_line.new_atom_group
+
+            prev_level = current.level
+            current.level = (len(new_component.group(1)) - 1) // 2
+            if current.level == 1:  # Top-level CVCs are not indented, fix manually
+                current.level = 2
 
             if current.level > prev_level:
                 parent = current
             elif current.level < prev_level:
                 parent = parent['parent']
+            key = new_component.group(2).strip()
             current = ChildCVC(key, current.level)
             parent['children'].append(current)
     return colvars, biases, TI_traj
 
-
-def add_new_component(level, new_component):
-    prev_level = level
-    level = (len(new_component.group(1)) - 1) // 2
-    if level == 1:  # Top-level CVCs are not indented, fix manually
-        level = 2
-    key = new_component.group(2).strip()
-    return prev_level, level, key
 
 
 def parse_RFEP_stage(new_RFEP_stage):
