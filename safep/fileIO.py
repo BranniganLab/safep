@@ -175,11 +175,16 @@ class CVC(CVConfig):
         self['children'] = list()
 
 
-class ChildCVC(CVC):
+class ChildCVC(dict):
 
-    def __init__(self, key, level=0):
-        super().__init__(level)
+    def __init__(self, new_component):
+        level = (len(new_component.group(1)) - 1) // 2
+        if level == 1:  # Top-level CVCs are not indented, fix manually
+            level = 2
+        key = new_component.group(2).strip()
         self['key'] = key
+        self.level = level
+        self['children'] = list()
 
 
 # QUESTION: should biases have children? If so, that would simplify the class structure.
@@ -288,11 +293,7 @@ def parse_cv_lines(global_conf, cv_lines):
             elif cv_line.new_atom_group:
                 new_component = cv_line.new_atom_group
 
-            level = (len(new_component.group(1)) - 1) // 2
-            if level == 1:  # Top-level CVCs are not indented, fix manually
-                level = 2
-            key = new_component.group(2).strip()
-            child = ChildCVC(key, level)
+            child = ChildCVC(new_component)
 
             if child.level > current.level:
                 parent = current
@@ -300,7 +301,6 @@ def parse_cv_lines(global_conf, cv_lines):
                 parent = parent['parent']
             
             parent['children'].append(child)
-
             current = child
     return colvars, biases, TI_traj
 
