@@ -110,7 +110,7 @@ def make_harmonicWall_from_Colvars(restraint_conf):
     if 'lambdaExponent' in restraint_conf:
         HW['lambdaExponent'] = int(restraint_conf['lambdaExponent'])
     cleaned = restraint_conf['lambdaSchedule'].strip("{}").replace(",", "")
-    if len(cleaned.split() > 0):
+    if len(cleaned.split()) > 0:
         HW['lambdaSchedule'] = [float(num) for num in cleaned.split()]
     else:
         HW['lambdaSchedule'] = np.linspace(0, 1, HW['targetNumStages'] + 1)
