@@ -288,18 +288,20 @@ def parse_cv_lines(global_conf, cv_lines):
             elif cv_line.new_atom_group:
                 new_component = cv_line.new_atom_group
 
-            prev_level = current.level
-            current.level = (len(new_component.group(1)) - 1) // 2
-            if current.level == 1:  # Top-level CVCs are not indented, fix manually
-                current.level = 2
-
-            if current.level > prev_level:
-                parent = current
-            elif current.level < prev_level:
-                parent = parent['parent']
+            level = (len(new_component.group(1)) - 1) // 2
+            if level == 1:  # Top-level CVCs are not indented, fix manually
+                level = 2
             key = new_component.group(2).strip()
-            current = ChildCVC(key, current.level)
-            parent['children'].append(current)
+            child = ChildCVC(key, level)
+
+            if child.level > current.level:
+                parent = current
+            elif child.level < current.level:
+                parent = parent['parent']
+            
+            parent['children'].append(child)
+
+            current = child
     return colvars, biases, TI_traj
 
 
