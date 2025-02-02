@@ -162,14 +162,20 @@ def parse_Colvars_log(filename):
     return global_conf, colvars, biases, TI_traj
 
 
-class Colvar(dict):
+class CVDict(dict):
+    def add_new_key_value_pair(self, new_key_value):
+        key = new_key_value.group(1)
+        value = new_key_value.group(2).strip(' "')
+        self[key] = value
+
+class Colvar(CVDict):
 
     def __init__(self):
         self.level = 1
         self['children'] = list()
 
 
-class CVC(dict):
+class CVC(CVDict):
 
     def __init__(self, new_component):
         level = (len(new_component.group(1)) - 1) // 2
@@ -182,7 +188,7 @@ class CVC(dict):
 
 
 # QUESTION: should biases have children? If so, that would simplify the class structure.
-class Bias(dict):
+class Bias(CVDict):
 
     def __init__(self, new_bias):
         key = new_bias.group(1).strip()
@@ -190,7 +196,7 @@ class Bias(dict):
         self['key'] = key
 
 
-class GlobalConfig(dict):
+class GlobalConfig(CVDict):
 
     def __init__(self, log):
         self.level = 0
@@ -288,7 +294,7 @@ def parse_cv_lines(global_conf, cv_lines):
             current = Bias(cv_line.new_bias)
             biases.append(current)
         elif cv_line.new_key_value:
-            current = add_new_key_value_pair(current, cv_line.new_key_value)
+            current.add_new_key_value_pair(cv_line.new_key_value)
         elif cv_line.new_RFEP_stage or cv_line.end_of_RFEP_stage:
             TI_traj.handle_RFEP(line, cv_line)
         elif new_component:
@@ -316,12 +322,6 @@ def parse_RFEP_stage(new_RFEP_stage):
     return name, stage, L, k
 
 
-def add_new_key_value_pair(current, new_key_value):
-    key = new_key_value.group(1)
-    # Extract key and value, remove extra spaces
-    value = new_key_value.group(2).strip(' "')
-    # Add to dictionary
-    current[key] = value
 
-    return current
+
 
