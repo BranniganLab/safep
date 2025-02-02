@@ -307,7 +307,7 @@ def parse_cv_lines(global_conf, cv_lines):
             if child.level > current.level:
                 parent = current
             elif child.level < current.level:
-                parent = parent['parent']
+                raise NotImplementedError("This cv structure isn't yet implemented")
 
             parent['children'].append(child)
             current = child
