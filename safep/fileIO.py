@@ -162,16 +162,10 @@ def parse_Colvars_log(filename):
     return global_conf, colvars, biases, TI_traj
 
 
-class CVConfig(dict):
+class CVC(dict):
 
     def __init__(self, level=0):
         self.level = level
-
-
-class CVC(CVConfig):
-
-    def __init__(self, level=0):
-        super().__init__(level)
         self['children'] = list()
 
 
@@ -188,18 +182,18 @@ class ChildCVC(dict):
 
 
 # QUESTION: should biases have children? If so, that would simplify the class structure.
-class Bias(CVConfig):
+class Bias(dict):
 
     def __init__(self, new_bias, level=0):
         key = new_bias.group(1).strip()
-        super().__init__(level)
+        self.level = level
         self['key'] = key
 
 
-class GlobalConfig(CVConfig):
+class GlobalConfig(dict):
 
     def __init__(self, log):
-        super().__init__()
+        self.level = 0
         self.get_colvars_version(log)
         self.get_output_prefix(log)
         self.get_cv_traj_file(log)
