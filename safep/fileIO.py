@@ -232,6 +232,16 @@ class CVLine():
 
 class TITraj(dict):
     
+    def start_new_RFEP(self, name, stage, L, k):
+        self[name] = {'stage': [stage], 'L': [L], 'k': [k], 'dAdL': [None]}
+
+    def continue_RFEP(self, name, stage, L, k):
+        self[name]['stage'].append(stage)
+        self[name]['L'].append(L)
+        self[name]['k'].append(k)
+        # NaN to be replaced by actual value if present
+        self[name]['dAdL'].append(np.nan)
+
     def terminate_RFEP_stage(self, line, end_of_RFEP_stage):
         # Parse free energy derivative estimates - end of stage: add dAdL value
         name = end_of_RFEP_stage.group(1).strip()
@@ -263,9 +273,9 @@ def parse_cv_lines(global_conf, cv_lines):
         elif cv_line.new_RFEP_stage:
             name, stage, L, k = parse_RFEP_stage(cv_line.new_RFEP_stage)
             if not name in TI_traj:
-                TI_traj = start_new_RFEP(TI_traj, name, stage, L, k)
+                TI_traj.start_new_RFEP(name, stage, L, k)
             else:
-                TI_traj = continue_RFEP(TI_traj, name, stage, L, k)
+                TI_traj.continue_RFEP(name, stage, L, k)
         elif cv_line.end_of_RFEP_stage:
             TI_traj.terminate_RFEP_stage(line, cv_line.end_of_RFEP_stage)
         elif cv_line.new_component or cv_line.new_atom_group:
@@ -302,18 +312,8 @@ def add_new_component(level, new_component):
 
 
 
-def continue_RFEP(TI_traj, name, stage, L, k):
-    TI_traj[name]['stage'].append(stage)
-    TI_traj[name]['L'].append(L)
-    TI_traj[name]['k'].append(k)
-    # NaN to be replaced by actual value if present
-    TI_traj[name]['dAdL'].append(np.nan)
-    return TI_traj
 
 
-def start_new_RFEP(TI_traj, name, stage, L, k):
-    TI_traj[name] = {'stage': [stage], 'L': [L], 'k': [k], 'dAdL': [None]}
-    return TI_traj
 
 
 def parse_RFEP_stage(new_RFEP_stage):
