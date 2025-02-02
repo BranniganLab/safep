@@ -230,16 +230,27 @@ class CVLine():
             matched = regex.match(line)
             self.__setattr__(name, matched)
 
+class TITraj(dict):
+    
+    def terminate_RFEP_stage(self, line, end_of_RFEP_stage):
+        # Parse free energy derivative estimates - end of stage: add dAdL value
+        name = end_of_RFEP_stage.group(1).strip()
+        L = float(end_of_RFEP_stage.group(2).strip())
+        dAdL = float(end_of_RFEP_stage.group(3).strip())
+        if self[name]['L'][-1] != L:
+            bad_lambda_msg = f'Error: mismatched lambda value in log: expected lambda = {L} and read:\n{line}'
+            raise RuntimeError(bad_lambda_msg)
+        self[name]['dAdL'][-1] = dAdL
 
 def parse_cv_lines(global_conf, cv_lines):
     biases = list()
-    TI_traj = {}
+    TI_traj = TITraj()
     colvars = list()
     for line in cv_lines:
         cv_line = CVLine(line)
 
         if cv_line.new_config:
-            # QUESTION: start_cv_config doesn't actually depend on new_config line being found. Should we have a different check?
+            # QUESTION: this doesn't actually depend on new_config line being found. Should we have a different check?
             current = global_conf
         elif cv_line.new_CV:
             current = CVC(level=1)
@@ -256,7 +267,7 @@ def parse_cv_lines(global_conf, cv_lines):
             else:
                 TI_traj = continue_RFEP(TI_traj, name, stage, L, k)
         elif cv_line.end_of_RFEP_stage:
-            TI_traj = terminate_RFEP_stage(TI_traj, line, cv_line.end_of_RFEP_stage)
+            TI_traj.terminate_RFEP_stage(line, cv_line.end_of_RFEP_stage)
         elif cv_line.new_component or cv_line.new_atom_group:
             if cv_line.new_component:
                 prev_level, current.level, key = add_new_component(current.level, cv_line.new_component)
@@ -288,17 +299,7 @@ def add_new_component(level, new_component):
     return prev_level, level, key
 
 
-def terminate_RFEP_stage(TI_traj, line, end_of_RFEP_stage):
-    # Parse free energy derivative estimates - end of stage: add dAdL value
-    name = end_of_RFEP_stage.group(1).strip()
-    L = float(end_of_RFEP_stage.group(2).strip())
-    dAdL = float(end_of_RFEP_stage.group(3).strip())
-    if TI_traj[name]['L'][-1] != L:
-        bad_lambda_msg = f'Error: mismatched lambda value in log: expected lambda = {L} and read:\n{line}'
-        raise RuntimeError(bad_lambda_msg)
-    TI_traj[name]['dAdL'][-1] = dAdL
 
-    return TI_traj
 
 
 def continue_RFEP(TI_traj, name, stage, L, k):
