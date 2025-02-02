@@ -235,6 +235,15 @@ class CVLine():
             matched = regex.match(line)
             self.__setattr__(name, matched)
 
+    def get_new_component(self):
+        if self.new_component:
+            new_component = self.new_component
+        elif self.new_atom_group:
+            new_component = self.new_atom_group
+        else:
+            new_component = None
+        return new_component
+
 class TITraj(dict):
 
     def handle_RFEP(self, line, cv_line):
@@ -273,6 +282,7 @@ def parse_cv_lines(global_conf, cv_lines):
     colvars = list()
     for line in cv_lines:
         cv_line = CVLine(line)
+        new_component = cv_line.get_new_component()
 
         if cv_line.new_config:
             # QUESTION: this doesn't actually depend on new_config line being found. Should we have a different check?
@@ -287,12 +297,7 @@ def parse_cv_lines(global_conf, cv_lines):
             current = add_new_key_value_pair(current, cv_line.new_key_value)
         elif cv_line.new_RFEP_stage or cv_line.end_of_RFEP_stage:
             TI_traj.handle_RFEP(line, cv_line)
-        elif cv_line.new_component or cv_line.new_atom_group:
-            if cv_line.new_component:
-                new_component = cv_line.new_component
-            elif cv_line.new_atom_group:
-                new_component = cv_line.new_atom_group
-
+        elif new_component:
             child = ChildCVC(new_component)
 
             if child.level > current.level:
@@ -303,6 +308,8 @@ def parse_cv_lines(global_conf, cv_lines):
             parent['children'].append(child)
             current = child
     return colvars, biases, TI_traj
+
+
 
 
 
