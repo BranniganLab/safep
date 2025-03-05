@@ -29,8 +29,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
 
     parser.add_argument('--path', type=str, help='The absolute path to the directory containing the fepout files', default='.')
-    parser.add_argument('--fepoutre', type=str, help='A regular expression that matches the fepout files of interest.', default='*.fep*')
-    parser.add_argument('--temperature', type=float, help='The temperature at which the FEP was run.')
+    parser.add_argument('--fepoutre', type=str, help='A regular expression that matches the fepout files to be parsed.', default='*.fep*')
+    parser.add_argument('--temperature', type=float, help='The temperature at which the FEP was run.', required=True)
     parser.add_argument('--decorrelate', type=bool, help='Flag to determine whether or not to decorrelate the data. (1=decorrelate, 0=use all data)', default=0)
     parser.add_argument('--detectEQ', type=bool, help='Flag for automated equilibrium detection.', default=0)
     parser.add_argument('--fittingMethod', type=str, help='Method for fitting the forward-backward discrepancies (hysteresis). LS=least squares, ML=maximum likelihood Default: LS', default='LS')

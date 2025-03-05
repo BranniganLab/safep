@@ -2,6 +2,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+import scipy.integrate
 
 
 def process_TI(dataTI, restraint, Lsched):
@@ -15,16 +16,31 @@ def process_TI(dataTI, restraint, Lsched):
     for key, group in dataTI.groupby('L'):
         dUs[key] = harmonicWall_dUdL(restraint, group.DBC, key)
 
-    Lsched = np.sort(list(dUs.keys()))
-    dL = Lsched[1] - Lsched[0]
+    Lsched = np.sort(list(dUs.keys())) # FIXME parameter Lsched is ignored and overwritten
+    dL = Lsched[1] - Lsched[0]         # FIXME assumes that the lambda schedule is uniformly spaced
     TIperWindow = pd.DataFrame(index=Lsched)
-    TIperWindow['dGdL'] = [np.mean(dUs[L])*dL for L in Lsched]
-    TIperWindow['error'] = [np.std(dUs[L])*dL for L in Lsched]
+    TIperWindow['dGdL'] = [np.mean(dUs[L]) for L in Lsched]
+    TIperWindow['error'] = [np.std(dUs[L]) for L in Lsched]
+
+    if Lsched[-1] < 1.0:
+        # TODO test lambdaExponent >= 2
+        lastPoint = pd.DataFrame({
+            "dGdL": pd.Series([0.0], index=[1.0]),
+            'error': pd.Series([0.0], index=[1.0])
+        })
+        TIperWindow = pd.concat([TIperWindow, lastPoint])
+        Lsched = np.concatenate([Lsched, [1.0]])
 
     TIcumulative = pd.DataFrame()
-    TIcumulative['dG'] = np.cumsum(TIperWindow.dGdL)
-    TIcumulative['error'] = np.sqrt(np.divide(np.cumsum(TIperWindow.error**2), np.arange(1,len(TIperWindow)+1)))
-    
+    TIcumulative['dG'] = scipy.integrate.cumulative_trapezoid(TIperWindow.dGdL, x=Lsched, initial=0)
+    TIcumulative.set_index(Lsched, inplace=True)
+
+    # Estimate square error for trapezoid rule by averaging errors in neighboring bins
+    sq_error = np.array(TIperWindow.error**2)
+    sq_error = 0.5 * (sq_error[1:] + sq_error[:-1])
+    error = np.sqrt(np.cumsum(sq_error * dL**2))
+    TIcumulative['error'] = np.concatenate([[0.0], error]) # Include initial 0 error
+
     return TIperWindow, TIcumulative
 
 
@@ -50,8 +66,55 @@ def plot_TI(cumulative, perWindow, width=8, height=4, PDFtype='KDE', hystLim=(-1
     
     return fig, [cumAx,eachAx] 
 
-def make_harmonicWall(FC=10, targetFC=0, targetFE=1, upperWalls=1, schedule=None, numSteps=1000, targetEQ=500, name='HW', lowerWalls=None):
-    HW = {'name':name, 'targetFC':targetFC, 'targetFE':targetFE, 'FC':FC, 'upperWalls':upperWalls, 'schedule':schedule, 'numSteps':numSteps, 'targetEQ':targetEQ, 'lowerWalls':lowerWalls}
+def make_harmonicWall(FC=10, targetFC=0, targetFE=1, upperWalls=1, schedule=None, numSteps=1000, targetEQ=500, name='HW', lowerWalls=None, lambdaExp=1., decoupling=None):
+    '''
+    This method should rarely be used, as long as a log file exists that can be parsed by parse_Colvars_log
+    and the result fed to make_harmonicWall_from_Colvars
+    '''
+
+    # Heuristic to set the default value of the decoupling parameter
+    if decoupling is None:
+        decoupling = (targetFC == 0 and FC != 0)
+
+    HW = {'name':name, 'targetForceConstant':targetFC, 'lambdaExponent':targetFE, 'forceConstant':FC, 'upperWalls':upperWalls, 'schedule':schedule,
+           'targetNumSteps':numSteps, 'targetEquilSteps':targetEQ, 'lowerWalls':lowerWalls, 'lambdaExp':lambdaExp, 'decoupling':decoupling}
+
+    return HW
+
+def make_harmonicWall_from_Colvars(restraint_conf):
+    '''
+    Input: a restraint configuration as a dict produced by parse_Colvars_log
+    '''
+
+    if (restraint_conf['key'] != 'harmonicwalls'):
+        keyword = restraint_conf['key']
+        print(f'Error: bias is not a harmonic wall (keyword: {keyword})')
+        return None
+
+    CVs = restraint_conf['colvars'].strip("{}").replace(",", "").split()
+    if len(CVs) != 1:
+        raise RuntimeError (f'Error: bias does not act on exactly one colvar (cvs: {CVs})')
+
+    HW = {  'name': restraint_conf['name'],
+            'colvar': CVs[0],
+            'forceConstant': float(restraint_conf['forceConstant']),
+            'targetForceConstant': float(restraint_conf['targetForceConstant']),
+            'lowerWalls': float(restraint_conf['lowerWalls'].strip('{ }')),
+            'upperWalls': float(restraint_conf['upperWalls'].strip('{ }')),
+            'targetNumSteps': int(restraint_conf['targetNumSteps']),
+            'targetNumStages': int(restraint_conf['targetNumStages']),
+            'targetEquilSteps': int(restraint_conf['targetEquilSteps']),
+            'decoupling': restraint_conf['decoupling'] in ['on', 'true', 'yes']} # interpret as Boolean
+    # Support legacy keyword
+    if 'targetForceExponent' in restraint_conf:
+        HW['lambdaExponent'] = int(restraint_conf['targetForceExponent'])
+    if 'lambdaExponent' in restraint_conf:
+        HW['lambdaExponent'] = int(restraint_conf['lambdaExponent'])
+    cleaned = restraint_conf['lambdaSchedule'].strip("{}").replace(",", "")
+    if len(cleaned.split()) > 0:
+        HW['lambdaSchedule'] = [float(num) for num in cleaned.split()]
+    else:
+        HW['lambdaSchedule'] = np.linspace(0, 1, HW['targetNumStages'] + 1)
     return HW
 
 def harmonicWall_U(HW, coord, L):
@@ -62,9 +125,14 @@ def harmonicWall_U(HW, coord, L):
         d = coord-HW['lowerWalls']
     
     if d!=0:
-        dk = HW['targetFC']-HW['FC']
-        la = L**HW['targetFE']
-        kL = HW['FC']+la*dk
+        alpha = HW['lambdaExponent']
+        if HW['decoupling']:
+            kL = (1.-L)**alpha * HW['forceConstant']
+        else:
+            dk = HW['targetForceConstant']-HW['forceConstant']
+            la = L**alpha
+            kL = HW['forceConstant']+la*dk
+
         U = 0.5*kL*(d**2)
     else:
         U=0
@@ -95,30 +163,17 @@ def harmonicWall_dUdL_serial(HW, coord, L):
         d = coord-HW['upperWalls']
     elif HW['lowerWalls'] and coord<HW['lowerWalls']:
         d = coord-HW['lowerWalls']
-    
+
     if d!=0:
-        dk = HW['targetFC']-HW['FC']
-        dla = HW['targetFE']*L**(HW['targetFE']-1)
-        kL = HW['FC']+dla*dk
-        dU = 0.5*kL*(d**2)
+        alpha = HW['lambdaExponent']
+        if HW['decoupling']:
+            dkL = -alpha * (1.-L)**(alpha-1) * HW['forceConstant']
+        else:
+            dk = HW['targetForceConstant']-HW['forceConstant']
+            dla = alpha*L**(alpha-1)
+            dkL = dla*dk
+
+        dU = 0.5*dkL*(d**2)
     else:
         dU=0
     return dU
-
-
-# Probably not relevant for the tutorial
-
-#if np.isnan(dataTI.E_dist.iloc[0]):
-#    dataTI.loc[:,'E_dist'] = [HW_U(Dist, coord, 0) for coord in dataTI.distance]
-#if np.isnan(dataTI.E_DBC.iloc[0]):
-#    dataTI.loc[:,'E_DBC'] = [HW_U(DBC, coord, L) for coord, L in zip(dataTI.DBC, dataTI.L)]
-
-#plt.plot(dataTI.E_dist, label='spherical restraint', alpha=0.5)
-#plt.plot(dataTI.E_DBC, label='DBC restraint', alpha=0.5)
-#plt.legend()
-#plt.savefig(f'{path}_restraint_overlap.pdf')
-
-#plt.plot(RFEPdat, label='colvars estimate', color='red')
-#plt.errorbar(Lsched, TIperWindow['dGdL'], yerr=TIperWindow['error'], label='Notebook Estimate', linestyle='-.', color='black')
-#plt.savefig(f'{path}_TI_vs_colvarEst.pdf')
-#plt.legend()
