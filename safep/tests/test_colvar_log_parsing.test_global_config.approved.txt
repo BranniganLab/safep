@@ -1,0 +1,1 @@
+{'colvarsRestartFrequency': '20000', 'colvarsTrajFrequency': '20', 'output_prefix': 'RFEP_decouple', 'scriptedColvarForces': 'off', 'scriptingAfterBiases': 'off', 'smp': 'on', 'sourceTclFile': '', 'traj_file': 'RFEP_decouple.colvars.traj', 'units': '', 'version': '2024-11-18'}
