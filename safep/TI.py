@@ -11,8 +11,9 @@ def process_TI(dataTI, restraint, Lsched):
     Returns: The free energies and associated errors as functions of lambda. Both per window and cumulative.
     '''
     dUs = {}
+    # Iterate over lambdas
     for key, group in dataTI.groupby('L'):
-        dUs[key] = [harmonicWall_dUdL(restraint, coord, key) for coord in group.DBC]
+        dUs[key] = harmonicWall_dUdL(restraint, group.DBC, key)
 
     Lsched = np.sort(list(dUs.keys()))
     dL = Lsched[1] - Lsched[0]
@@ -69,7 +70,26 @@ def harmonicWall_U(HW, coord, L):
         U=0
     return U
 
-def harmonicWall_dUdL(HW, coord, L):
+
+# Calculate dUdL but using matrix primitives
+def harmonicWall_dUdL(HW, coords, L):
+    d = np.zeros_like(coords)
+    if HW['upperWalls']:
+        keep_mask = coords > HW['upperWalls']
+        d[keep_mask] = (coords - HW['upperWalls'])[keep_mask]
+    elif HW['lowerWalls']:
+        keep_mask = coords < HW['lowerWalls']
+        d[keep_mask] = (coords - HW['lowerWalls'])[keep_mask]
+    
+    dk = HW['targetFC'] - HW['FC']
+    dla = HW['targetFE']*L**(HW['targetFE']-1)
+    kL = HW['FC']+ dla*dk
+    # In the old, serial version of this code we checked whether d was 0.
+    # It doesn't actually matter since pow(d, 2) == 0 so we don't bother with an elementwise check.
+    return 0.5*kL*np.pow(d, 2)
+
+
+def harmonicWall_dUdL_serial(HW, coord, L):
     d=0
     if HW['upperWalls'] and coord>HW['upperWalls']:
         d = coord-HW['upperWalls']
