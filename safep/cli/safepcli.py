@@ -3,6 +3,7 @@ import argparse
 import configparser
 import glob
 import re
+import sys
 from collections import defaultdict
 from multiprocessing import Pool
 from pathlib import Path
@@ -10,6 +11,7 @@ from pathlib import Path
 import matplotlib
 import pandas as pd
 import scipy
+import scipy.constants
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -87,6 +89,15 @@ def main():
             prev_calc_name = bulk_calc_cache[str(config[calc_name]['bulk'])]
             bulk_pointers[calc_name] = prev_calc_name
 
+    # DEBUG: TI
+    # for calc_name in config.sections():
+    #     # Process the DBC TI RFEP for each calc_name. We don't use worker processes for this because it's typically
+    #     # a relatively small amount of computation, but there's no fundamental reason not to if we choose.
+    #     ti_per_window, ti_cumulative = process_dbc_ti(config[calc_name])
+    #     print(ti_cumulative)
+    #     sys.exit(1)
+
+
     # Actually run the FEP estimations in parallel. The Pool.map function returns an array of results
     # that were returned by the individual invocations of fep_worker().
     with Pool() as p:
@@ -95,14 +106,18 @@ def main():
     # Gather and organize results, according to calc_name and leg_name for each
     final_results = defaultdict(dict)
     for i in range(len(worker_results)):
-        params_i, _ = worker_params[i]
-        cumulative, per_window, u_nk = worker_results[i]
+        params_i, cumulative, per_window, u_nk = worker_results[i]
+        if params_i is None:
+            print(f'Error: no results from worker for {params_i}, but continuing to process anyway')
+            continue
         calc_name, leg_name = params_i['calc_name'], params_i['leg_name']
         final_results[calc_name][f'{leg_name} cumulative'] = cumulative
         final_results[calc_name][f'{leg_name} per_window'] = per_window
         final_results[calc_name][f'{leg_name} u_nk'] = u_nk
 
     # Postprocess (and also process TI)
+    combined_fig = None
+
     for calc_name in config.sections():
         # Look in our bulk calculation cache as necessary. We stored the e
         if 'bulk cumulative' not in final_results[calc_name]:
@@ -120,7 +135,7 @@ def main():
 
         # Volumetric restraint contribution
         molar = 1660  # cubic angstroms per particle in a one molar solution
-        dG_V = np.round(-float(RT) * np.log(4 / 3 * scipy.pi * float(config[calc_name]['comradius']) ** 3 / molar), 1)
+        dG_V = np.round(-float(RT) * np.log(4 / 3 * scipy.constants.pi * float(config[calc_name]['comradius']) ** 3 / molar), 1)
         error_V = 0.0
 
         # Process the DBC TI RFEP for each calc_name. We don't use worker processes for this because it's typically
@@ -160,20 +175,40 @@ def main():
         print(calc_name, f'dG_site = {dG_site:.2f} (err: {error_site:.2f} kcal/mol)')
         print(calc_name, f'dG_binding = {dG_binding:.2f} (err: {error_binding:.2f} kcal/mol)')
 
-        plot_titration_curve(config[calc_name]['outputdir'],
-                             calc_name,
+        fig = plot_titration_curve(calc_name,
                              global_params['RT'],
                              dG_binding,
                              error_binding)
+        fig.savefig(Path(config[calc_name]['outputdir']) / f'{calc_name}_titration_curve.pdf')
+
+    # Handle combined_titration_curves keyword if present
+        if 'combined_titration_curves' in config['DEFAULT']:
+            ligand_name = 'ligand'
+            if 'ligand_name' in config['DEFAULT']:
+                ligand_name = config['DEFAULT']['ligand_name']
+            combined_fig = plot_titration_curve(calc_name,
+                                global_params['RT'],
+                                dG_binding,
+                                error_binding,
+                                ligand_name=ligand_name,
+                                fig=combined_fig)
+            combined_fig.tight_layout()
+ 
+    if 'combined_titration_curves' in config['DEFAULT']:
+        out_prefix = ','.join([x.strip() for x in config['DEFAULT']['combined_titration_curves'].split(',')])
+        combined_fig.savefig(Path(config[calc_name]['outputdir']) / f'{out_prefix}_titration_curves.pdf')
+
 
 def process_dbc_ti(params):
     """Process the DBC TI output and return per-window and cumulative energy curves."""
     with open(params['rfep']) as f:
         first_line = f.readline()
     columns = re.split(' +', first_line)[1:-1]
-    data_ti = pd.read_csv(params['rfep'], delim_whitespace=True, names=columns, comment='#', index_col=0)
-    data_ti = data_ti[data_ti.index >= 1000][1:]
-    data_ti.index = data_ti.index - 1000
+    data_ti = pd.read_csv(params['rfep'], sep='\s+', names=columns, comment='#', index_col=0)
+    # Get rid of first 1000 samples...?
+    minimize_num_steps = int(params['rfep_minimize_num_steps'])
+    data_ti = data_ti[data_ti.index >= minimize_num_steps][1:]
+    data_ti.index = data_ti.index - minimize_num_steps
 
     n_lambdas = int(params['rfep_n'])
 
@@ -187,13 +222,16 @@ def process_dbc_ti(params):
                                   targetFE=6,
                                   upperWalls=float(params['dbcwidth']),
                                   targetEQ=500,
-                                  numSteps=300000,
+                                  numSteps=int(params['rfep_total_num_steps']) // n_lambdas, # This is apparently on a per-lambda basis
                                   name='harmonicwalls2',
                                   schedule=lambda_schedule)
+
     Ls = (data_ti.index.values - 1) // dbc['numSteps']
     Ls[0] = 0
     Ls[Ls == n_lambdas] = n_lambdas - 1  # This is a small hack in case there are extra samples for the last window
 
+    print('dbc schedule', dbc['schedule'])
+    print('Ls', Ls)
     data_ls = np.round([dbc['schedule'][i] for i in Ls], 3)
     data_ti.loc[:, 'L'] = data_ls
     data_ti = data_ti.iloc[1:]
@@ -206,10 +244,15 @@ def fep_worker(args):
     """Worker function, invoked by Pool, to do a single FEP estimation."""
     params, fepouts = args
     fepouts = glob_as_necessary(fepouts)
+    if len(fepouts) == 0:
+        print(f"Error: No fepout files found for {params['calc_name']} {params['leg_name']}", file=sys.stderr)
+        # TODO: Return something even in error case so that postprocessing can skip this worker
+        #       Returning a lone None just causes the entry not to be included in the output, apparently
+        return None, None, None, None
     u_nk = safep.read_and_process(fepouts, params['temperature'], decorrelate=params['decorrelate'],
                                   detectEQ=params['detectEQ'])
     per_window, cumulative = safep.do_estimation(u_nk)
-    return cumulative, per_window, u_nk
+    return params, cumulative, per_window, u_nk
 
 
 def plot_general(out_path, out_prefix: str, cumulative, per_window, u_nk, RT: float, figsize=(6, 3), pdf_type='KDE',
@@ -296,33 +339,36 @@ def plot_general(out_path, out_prefix: str, cumulative, per_window, u_nk, RT: fl
     plt.close(tc_fig)
 
 
-def plot_titration_curve(out_path, out_prefix: str, RT: float, dG_binding: float, error_binding: float):
+def plot_titration_curve(out_prefix: str, RT: float, dG_binding: float, error_binding: float, ligand_name='ligand', fig=None):
     def P_bind(K, L):
         return L / (K + L)
 
     def Kd(dG):
         return np.exp(dG / RT) * 1e6
 
-    concentrations = np.logspace(-1, 4, 100)
+    concentrations = np.logspace(1, 4, 100)
     K = Kd(dG_binding)
     matplotlib.rc('xtick', labelsize=16)
     matplotlib.rc('ytick', labelsize=16)
-    fig, ax = plt.subplots(figsize=(10, 6.1))
-    ax.plot(concentrations, P_bind(K, concentrations), label='Binding Curve')
+    if fig is None:
+        fig, ax = plt.subplots(figsize=(10, 6.1))
+    else:
+        ax = fig.gca()
+    p = ax.plot(concentrations, P_bind(K, concentrations), label=out_prefix)
+    current_color = p[-1].get_color()
     ax.fill_between(concentrations, P_bind(Kd(dG_binding - error_binding * 1.96), concentrations),
-                    P_bind(Kd(dG_binding + error_binding * 1.96), concentrations), alpha=0.25,
-                    label='95% Confidence Interval')
-    plt.xscale('log')
-    ax.set_xlabel('Concentration of propofol ' + r'($\mathrm{µ}$M)', fontsize=20)
+                    P_bind(Kd(dG_binding + error_binding * 1.96), concentrations), alpha=0.25)
+                    # label='95% Confidence Interval')
+    ax.set_xscale('log')
+    ax.axvline(x=K, linestyle='--', color=current_color) #, color='black', label='Dissociation Constant')
+    ax.set_xlim(np.min(concentrations), np.max(concentrations))
+    ax.set_xlabel(f'Concentration of {ligand_name} ' + r'($\mathrm{µ}$M)', fontsize=20)
     ax.set_ylabel('Fraction of sites occupied', fontsize=20)
-    ax.vlines(K, 0, 1, linestyles='dashed', color='black', label='Dissociation Constant')
-    ax.legend(loc='lower right', fontsize=20 * 0.75)
-
-    plt.savefig(Path(out_path) / f'{out_prefix}_titration_curve.pdf')
-    plt.close(fig)
+    ax.legend(fontsize=20 * 0.75)
 
     K_lo, K_hi = Kd(dG_binding - error_binding * 1.96), Kd(dG_binding + error_binding * 1.96)
     print(f'{out_prefix} Kd = {K:.1f} uM (95% CI: {K_lo:.1f}–{K_hi:.1f})')
+    return fig
 
 
 def glob_as_necessary(path):
