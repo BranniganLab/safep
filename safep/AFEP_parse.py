@@ -154,7 +154,7 @@ def initialize_general_figure(RT_kcal_per_mol, key, feprun):
         None,
         feprun.perWindow,
         None,
-        args.RT_kcal_per_mol,
+        RT_kcal_per_mol,
         hysttype="lines",
         label=key,
         color=feprun.color,
@@ -162,7 +162,6 @@ def initialize_general_figure(RT_kcal_per_mol, key, feprun):
     axes[1].legend()
 
     return fig, axes
-
 
 def report_number_and_size_of_fepout_files(fepoutFiles):
     total_size = 0
@@ -242,6 +241,29 @@ def process_replicas(args, itcolors):
     return fepruns
 
 
+def add_to_general_figure(fig, axes, args, key, feprun):
+    fig, axes = safep.plot_general(
+                    feprun.cumulative,
+                    None,
+                    feprun.perWindow,
+                    None,
+                    args.RT_kcal_per_mol,
+                    fig=fig,
+                    axes=axes,
+                    hysttype="lines",
+                    label=key,
+                    color=feprun.color,
+                )
+    
+    return fig, axes
+
+def add_summary_stats(do_agg_data, mean, sterr, axes):
+    axes[3] = do_agg_data(axes[2], axes[3])
+
+    axes[0].set_title(str(mean) + r"$\pm$" + str(sterr) + " kcal/mol")
+    axes[0].legend()
+    return axes
+
 if __name__ == "__main__":
     parser = AFEPArgumentParser()
     args = AFEPArguments.from_AFEPArgumentParser(parser)
@@ -251,8 +273,6 @@ if __name__ == "__main__":
     # # Extract key features from the MBAR fitting and get ΔG
     # Note: alchemlyb operates in units of kT by default.
     # We multiply by RT to convert to units of kcal/mol.
-
-    # # Read and plot number of samples after detecting EQ
 
     fepruns = process_replicas(args, itcolors)
 
@@ -282,32 +302,15 @@ if __name__ == "__main__":
     print(toprint)
 
     if args.makeFigures == 1:
-        # # Plot data
-
         fig = None
         for key, feprun in fepruns.items():
             if fig is None:
                 fig, axes = initialize_general_figure(args.RT_kcal_per_mol, key, feprun)
             else:
-                fig, axes = safep.plot_general(
-                    feprun.cumulative,
-                    None,
-                    feprun.perWindow,
-                    None,
-                    args.RT_kcal_per_mol,
-                    fig=fig,
-                    axes=axes,
-                    hysttype="lines",
-                    label=key,
-                    color=feprun.color,
-                )
-            # fig.suptitle(changeAndError)
+                fig, axes = add_to_general_figure(fig, axes, args, key, feprun)
 
         # hack to get aggregate data:
-        axes[3] = do_agg_data(axes[2], axes[3])
-
-        axes[0].set_title(str(mean) + r"$\pm$" + str(sterr) + " kcal/mol")
-        axes[0].legend()
+        axes = add_summary_stats(do_agg_data, mean, sterr, axes)
         plt.savefig(args.dataroot.joinpath("FEP_general_figures.pdf"))
 
         # # Plot the estimated total change in free energy as a function of simulation time;
@@ -345,16 +348,7 @@ if __name__ == "__main__":
         genfig = None
         for key, feprun in fepruns.items():
             if genfig is None:
-                genfig, genaxes = safep.plot_general(
-                    feprun.cumulative,
-                    None,
-                    feprun.perWindow,
-                    None,
-                    args.RT_kcal_per_mol,
-                    hysttype="lines",
-                    label=key,
-                    color=feprun.color,
-                )
+                genfig, genaxes = initialize_general_figure(args.RT_kcal_per_mol, key, feprun)
             else:
                 genfig, genaxes = safep.plot_general(
                     feprun.cumulative,
