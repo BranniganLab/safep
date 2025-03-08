@@ -133,6 +133,7 @@ class AFEPArgumentParser(argparse.ArgumentParser):
         )
 
 KILO = 1000
+COLORS = ["blue", "red", "green", "purple", "orange", "violet", "cyan"]
 
 if __name__ == "__main__":
     parser = AFEPArgumentParser()
@@ -147,8 +148,7 @@ if __name__ == "__main__":
     RT_kcal_per_mol = R/(KILO*calorie) * temperature
     detectEQ = args.detectEQ
 
-    colors = ["blue", "red", "green", "purple", "orange", "violet", "cyan"]
-    itcolors = iter(colors)
+    itcolors = iter(COLORS)
 
 
 
