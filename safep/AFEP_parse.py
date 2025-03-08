@@ -18,6 +18,64 @@ import safep
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
+@dataclass
+class FepRun:
+    u_nk: pd.DataFrame
+    perWindow: pd.DataFrame
+    cumulative: pd.DataFrame
+    forward: pd.DataFrame
+    forward_error: pd.DataFrame
+    backward: pd.DataFrame
+    backward_error: pd.DataFrame
+    per_lambda_convergence: pd.DataFrame
+    color: str
+
+def do_agg_data(dataax, plotax):
+    """
+    Aggregates data from a given matplotlib axis, computes statistical measures,
+    and displays them on another axis.
+
+    Parameters:
+    dataax (matplotlib.axes.Axes): The axis containing lines with data to be aggregated.
+    plotax (matplotlib.axes.Axes): The axis where the statistical summary will be displayed.
+
+    Returns:
+    matplotlib.axes.Axes: The plot axis with the statistical summary text added.
+    """
+    agg_data = []
+    lines = dataax.lines
+    for line in lines:
+        agg_data.append(line.get_ydata())
+    flat = np.array(agg_data).flatten()
+    kernel = sp.stats.gaussian_kde(flat)
+    pdf_x = np.linspace(-1, 1, 1000)
+    pdf_y = kernel(pdf_x)
+    std = np.std(flat)
+    average = np.average(flat)
+    temp = pd.Series(pdf_y, index=pdf_x)
+    mode = temp.idxmax()
+
+    textstr = (
+        r"$\rm mode=$"
+        + f"{np.round(mode,2)}"
+        + "\n"
+        + fr"$\mu$={np.round(average,2)}"
+        + "\n"
+        + fr"$\sigma$={np.round(std,2)}"
+    )
+    props = {"boxstyle": 'square', "facecolor": 'white', "alpha": 1}
+    plotax.text(
+        0.175,
+        0.95,
+        textstr,
+        transform=plotax.transAxes,
+        fontsize=14,
+        verticalalignment="top",
+        bbox=props,
+    )
+
+    return plotax
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="")
 
@@ -86,17 +144,7 @@ if __name__ == "__main__":
     colors = ["blue", "red", "green", "purple", "orange", "violet", "cyan"]
     itcolors = iter(colors)
 
-    @dataclass
-    class FepRun:
-        u_nk: pd.DataFrame
-        perWindow: pd.DataFrame
-        cumulative: pd.DataFrame
-        forward: pd.DataFrame
-        forward_error: pd.DataFrame
-        backward: pd.DataFrame
-        backward_error: pd.DataFrame
-        per_lambda_convergence: pd.DataFrame
-        color: str
+
 
     # # Extract key features from the MBAR fitting and get ΔG
     # Note: alchemlyb operates in units of kT by default.
@@ -192,51 +240,7 @@ if __name__ == "__main__":
 
     if args.makeFigures == 1:
         # # Plot data
-        def do_agg_data(dataax, plotax):
-            """
-            Aggregates data from a given matplotlib axis, computes statistical measures,
-            and displays them on another axis.
-
-            Parameters:
-            dataax (matplotlib.axes.Axes): The axis containing lines with data to be aggregated.
-            plotax (matplotlib.axes.Axes): The axis where the statistical summary will be displayed.
-
-            Returns:
-            matplotlib.axes.Axes: The plot axis with the statistical summary text added.
-            """
-            agg_data = []
-            lines = dataax.lines
-            for line in lines:
-                agg_data.append(line.get_ydata())
-            flat = np.array(agg_data).flatten()
-            kernel = sp.stats.gaussian_kde(flat)
-            pdf_x = np.linspace(-1, 1, 1000)
-            pdf_y = kernel(pdf_x)
-            std = np.std(flat)
-            average = np.average(flat)
-            temp = pd.Series(pdf_y, index=pdf_x)
-            mode = temp.idxmax()
-
-            textstr = (
-                r"$\rm mode=$"
-                + f"{np.round(mode,2)}"
-                + "\n"
-                + fr"$\mu$={np.round(average,2)}"
-                + "\n"
-                + fr"$\sigma$={np.round(std,2)}"
-            )
-            props = dict(boxstyle="square", facecolor="white", alpha=1)
-            plotax.text(
-                0.175,
-                0.95,
-                textstr,
-                transform=plotax.transAxes,
-                fontsize=14,
-                verticalalignment="top",
-                bbox=props,
-            )
-
-            return plotax
+        
 
         fig = None
         for key, feprun in fepruns.items():
