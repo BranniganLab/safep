@@ -60,14 +60,8 @@ def do_agg_data(dataax, plotax):
     temp = pd.Series(pdf_y, index=pdf_x)
     mode = temp.idxmax()
 
-    textstr = (
-        r"$\rm mode=$"
-        + f"{np.round(mode,2)}"
-        + "\n"
-        + fr"$\mu$={np.round(average,2)}"
-        + "\n"
-        + fr"$\sigma$={np.round(std,2)}"
-    )
+    textstr = (r"$\rm mode=$" + f"{np.round(mode,2)}" + "\n" + fr"$\mu$={np.round(average,2)}" +
+               "\n" + fr"$\sigma$={np.round(std,2)}")
     props = {"boxstyle": 'square', "facecolor": 'white', "alpha": 1}
     plotax.text(
         0.175,
@@ -83,6 +77,7 @@ def do_agg_data(dataax, plotax):
 
 
 class AFEPArgumentParser(argparse.ArgumentParser):
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.add_argument(
@@ -119,14 +114,15 @@ class AFEPArgumentParser(argparse.ArgumentParser):
         self.add_argument(
             "--fittingMethod",
             type=str,
-            help="Method for fitting the forward-backward discrepancies (hysteresis)."
-            + "LS=least squares, ML=maximum likelihood Default: LS",
+            help="Method for fitting the forward-backward discrepancies (hysteresis)." +
+            "LS=least squares, ML=maximum likelihood Default: LS",
             default="LS",
         )
         self.add_argument(
             "--maxSize",
             type=float,
-            help="Maximum total file size in GB. This is MUCH less than the required RAM. Default: 1",
+            help="Maximum total file size in GB." +
+            "This is MUCH less than the required RAM. Default: 1",
             default=1,
         )
         self.add_argument(
@@ -161,10 +157,8 @@ def report_number_and_size_of_fepout_files(fepoutFiles):
     total_size = 0
     for file in fepoutFiles:
         total_size += os.path.getsize(file)
-    print(
-        f"Will process {len(fepoutFiles)} fepout files."
-        + f"\nTotal size:{np.round(total_size/10**9, 2)}GB"
-    )
+    print(f"Will process {len(fepoutFiles)} fepout files." +
+          f"\nTotal size:{np.round(total_size/10**9, 2)}GB")
 
 
 class AFEPArguments(NamedTuple):
@@ -187,10 +181,11 @@ class AFEPArguments(NamedTuple):
         filename_pattern = args.fepoutre
 
         temperature = args.temperature
-        args.RT_kcal_per_mol = R/(KILO*calorie) * temperature
+        args.RT_kcal_per_mol = R / (KILO * calorie) * temperature
         detectEQ = args.detectEQ
 
-        return cls(dataroot, replica_pattern, replicas, filename_pattern, temperature, args.RT_kcal_per_mol, detectEQ, args.makeFigures)
+        return cls(dataroot, replica_pattern, replicas, filename_pattern, temperature,
+                   args.RT_kcal_per_mol, detectEQ, args.makeFigures)
 
 
 def read_and_decorrelate(args, replica, unkpath, fepoutFiles):
@@ -203,12 +198,9 @@ def read_and_decorrelate(args, replica, unkpath, fepoutFiles):
     if args.detectEQ:
         print("Detecting equilibrium")
         u_nk = safep.detect_equilibrium_u_nk(u_nk)
-        safep.plot_samples(
-            ax, u_nk, color="orange", label="Equilibrium-Detected"
-        )
+        safep.plot_samples(ax, u_nk, color="orange", label="Equilibrium-Detected")
 
-    plt.savefig(args.dataroot.joinpath(
-        f"{str(replica)}_FEP_number_of_samples.pdf"))
+    plt.savefig(args.dataroot.joinpath(f"{str(replica)}_FEP_number_of_samples.pdf"))
     safep.save_UNK(u_nk, unkpath)
     return u_nk
 
@@ -234,9 +226,7 @@ if __name__ == "__main__":
             print("Found existing dataframe. Reading.")
             u_nk = safep.read_UNK(unkpath)
         else:
-            print(
-                f"Didn't find existing dataframe at {unkpath}. Checking for raw fepout files."
-            )
+            print(f"Didn't find existing dataframe at {unkpath}. Checking for raw fepout files.")
             fepoutFiles = list(replica.glob(args.filename_pattern))
             report_number_and_size_of_fepout_files(fepoutFiles)
 
@@ -244,27 +234,22 @@ if __name__ == "__main__":
                 print("Reading fepout files")
                 u_nk = read_and_decorrelate(args, replica, unkpath, fepoutFiles)
             else:
-                print(
-                    f"WARNING: no fepout files found for {replica}. Skipping.")
+                print(f"WARNING: no fepout files found for {replica}. Skipping.")
 
         if u_nk is not None:
-            fepruns[str(replica)] = FepRun(
-                u_nk, None, None, None, None, None, None, None, next(itcolors)
-            )
+            fepruns[str(replica)] = FepRun(u_nk, None, None, None, None, None, None, None,
+                                           next(itcolors))
 
     for key, feprun in fepruns.items():
         u_nk = feprun.u_nk
-        feprun.perWindow, feprun.cumulative = safep.do_estimation(
-            u_nk
-        )  # Run the BAR estimator on the fep data
+        # Run the BAR estimator on the fep data
+        feprun.perWindow, feprun.cumulative = safep.do_estimation(u_nk)
         (
             feprun.forward,
             feprun.forward_error,
             feprun.backward,
             feprun.backward_error,
-        ) = safep.do_convergence(
-            u_nk
-        )  # Used later in the convergence plot'
+        ) = safep.do_convergence(u_nk)  # Used later in the convergence plot'
         feprun.per_lambda_convergence = safep.do_per_lambda_convergence(u_nk)
 
     toprint = ""
@@ -273,8 +258,7 @@ if __name__ == "__main__":
     for key, feprun in fepruns.items():
         cumulative = feprun.cumulative
         dG = np.round(cumulative.BAR.f.iloc[-1] * args.RT_kcal_per_mol, 1)
-        error = np.round(
-            cumulative.BAR.errors.iloc[-1] * args.RT_kcal_per_mol, 1)
+        error = np.round(cumulative.BAR.errors.iloc[-1] * args.RT_kcal_per_mol, 1)
         dGs.append(dG)
         errors.append(error)
 
@@ -299,8 +283,7 @@ if __name__ == "__main__":
         fig = None
         for key, feprun in fepruns.items():
             if fig is None:
-                fig, axes = initialize_general_figure(
-                    args.RT_kcal_per_mol, key, feprun)
+                fig, axes = initialize_general_figure(args.RT_kcal_per_mol, key, feprun)
             else:
                 fig, axes = safep.plot_general(
                     feprun.cumulative,
@@ -341,12 +324,14 @@ if __name__ == "__main__":
             )
             convAx.get_legend().remove()
 
-        (forward_line,) = convAx.plot(
-            [], [], linestyle="-", color="black", label="Forward Time Sampling"
-        )
-        (backward_line,) = convAx.plot(
-            [], [], linestyle="--", color="black", label="Backward Time Sampling"
-        )
+        (forward_line,) = convAx.plot([], [],
+                                      linestyle="-",
+                                      color="black",
+                                      label="Forward Time Sampling")
+        (backward_line,) = convAx.plot([], [],
+                                       linestyle="--",
+                                       color="black",
+                                       label="Backward Time Sampling")
         convAx.legend(handles=[forward_line, backward_line])
         ymin = np.min(dGs) - 1
         ymax = np.max(dGs) + 1
