@@ -193,6 +193,26 @@ class AFEPArguments(NamedTuple):
         return cls(dataroot, replica_pattern, replicas, filename_pattern, temperature, args.RT_kcal_per_mol, detectEQ, args.makeFigures)
 
 
+def read_and_decorrelate(args, replica, unkpath, fepoutFiles):
+    fig, ax = plt.subplots()
+
+    u_nk = namd.extract_u_nk(fepoutFiles, args.temperature)
+    u_nk = u_nk.sort_index(axis=0, level=1).sort_index(axis=1)
+    safep.plot_samples(ax, u_nk, color="blue", label="Raw Data")
+
+    if args.detectEQ:
+        print("Detecting equilibrium")
+        u_nk = safep.detect_equilibrium_u_nk(u_nk)
+        safep.plot_samples(
+            ax, u_nk, color="orange", label="Equilibrium-Detected"
+        )
+
+    plt.savefig(args.dataroot.joinpath(
+        f"{str(replica)}_FEP_number_of_samples.pdf"))
+    safep.save_UNK(u_nk, unkpath)
+    return u_nk
+
+
 if __name__ == "__main__":
     parser = AFEPArgumentParser()
     args = AFEPArguments.from_AFEPArgumentParser(parser)
@@ -222,22 +242,7 @@ if __name__ == "__main__":
 
             if len(list(fepoutFiles)) > 0:
                 print("Reading fepout files")
-                fig, ax = plt.subplots()
-
-                u_nk = namd.extract_u_nk(fepoutFiles, args.temperature)
-                u_nk = u_nk.sort_index(axis=0, level=1).sort_index(axis=1)
-                safep.plot_samples(ax, u_nk, color="blue", label="Raw Data")
-
-                if args.detectEQ:
-                    print("Detecting equilibrium")
-                    u_nk = safep.detect_equilibrium_u_nk(u_nk)
-                    safep.plot_samples(
-                        ax, u_nk, color="orange", label="Equilibrium-Detected"
-                    )
-
-                plt.savefig(args.dataroot.joinpath(
-                    f"{str(replica)}_FEP_number_of_samples.pdf"))
-                safep.save_UNK(u_nk, unkpath)
+                u_nk = read_and_decorrelate(args, replica, unkpath, fepoutFiles)
             else:
                 print(
                     f"WARNING: no fepout files found for {replica}. Skipping.")
