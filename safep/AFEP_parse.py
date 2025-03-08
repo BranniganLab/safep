@@ -326,6 +326,29 @@ def do_per_lambda_convergence_shared_axes(do_agg_data, initialize_general_figure
 
     return genfig, genaxes
 
+def make_figures(args, fepruns, dGs, mean, sterr):
+    fig = None
+    for key, feprun in fepruns.items():
+        if fig is None:
+            fig, axes = initialize_general_figure(args.RT_kcal_per_mol, key, feprun)
+        else:
+            fig, axes = add_to_general_figure(fig, axes, args, key, feprun)
+
+        # hack to get aggregate data:
+    axes = add_summary_stats(do_agg_data, mean, sterr, axes)
+    fig.savefig(args.dataroot.joinpath("FEP_general_figures.pdf"))
+
+        # # Plot the estimated total change in free energy as a function of simulation time;
+        # contiguous subsets starting at t=0 ("Forward") and t=end ("Reverse")
+
+    fig, convAx = do_shared_convergence_plot(args, fepruns, dGs)
+    fig.savefig(args.dataroot.joinpath("FEP_convergence.pdf"))
+
+    fig, axes = do_per_lambda_convergence_shared_axes(do_agg_data, initialize_general_figure, args, fepruns, mean, sterr, axes)
+    fig.savefig(args.dataroot.joinpath("FEP_perLambda_convergence.pdf"))
+
+    plt.show()
+
 if __name__ == "__main__":
     parser = AFEPArgumentParser()
     args = AFEPArguments.from_AFEPArgumentParser(parser)
@@ -364,24 +387,4 @@ if __name__ == "__main__":
     print(toprint)
 
     if args.makeFigures == 1:
-        fig = None
-        for key, feprun in fepruns.items():
-            if fig is None:
-                fig, axes = initialize_general_figure(args.RT_kcal_per_mol, key, feprun)
-            else:
-                fig, axes = add_to_general_figure(fig, axes, args, key, feprun)
-
-        # hack to get aggregate data:
-        axes = add_summary_stats(do_agg_data, mean, sterr, axes)
-        fig.savefig(args.dataroot.joinpath("FEP_general_figures.pdf"))
-
-        # # Plot the estimated total change in free energy as a function of simulation time;
-        # contiguous subsets starting at t=0 ("Forward") and t=end ("Reverse")
-
-        fig, convAx = do_shared_convergence_plot(args, fepruns, dGs)
-        fig.savefig(args.dataroot.joinpath("FEP_convergence.pdf"))
-
-        fig, axes = do_per_lambda_convergence_shared_axes(do_agg_data, initialize_general_figure, args, fepruns, mean, sterr, axes)
-        fig.savefig(args.dataroot.joinpath("FEP_perLambda_convergence.pdf"))
-
-        plt.show()
+        make_figures(args, fepruns, dGs, mean, sterr)
