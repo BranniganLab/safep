@@ -264,6 +264,68 @@ def add_summary_stats(do_agg_data, mean, sterr, axes):
     axes[0].legend()
     return axes
 
+def do_shared_convergence_plot(args, fepruns, dGs):
+    fig, convAx = plt.subplots(1, 1)
+
+    for key, feprun in fepruns.items():
+        convAx = safep.convergence_plot(
+                convAx,
+                feprun.forward * args.RT_kcal_per_mol,
+                feprun.forward_error * args.RT_kcal_per_mol,
+                feprun.backward * args.RT_kcal_per_mol,
+                feprun.backward_error * args.RT_kcal_per_mol,
+                fwd_color=feprun.color,
+                bwd_color=feprun.color,
+                errorbars=False,
+            )
+        convAx.get_legend().remove()
+
+    (forward_line,) = convAx.plot([], [],
+                                      linestyle="-",
+                                      color="black",
+                                      label="Forward Time Sampling")
+    (backward_line,) = convAx.plot([], [],
+                                       linestyle="--",
+                                       color="black",
+                                       label="Backward Time Sampling")
+    convAx.legend(handles=[forward_line, backward_line])
+    ymin = np.min(dGs) - 1
+    ymax = np.max(dGs) + 1
+    convAx.set_ylim((ymin, ymax))
+
+    return fig, convAx
+
+def do_per_lambda_convergence_shared_axes(do_agg_data, initialize_general_figure, args, fepruns, mean, sterr, axes):
+    genfig = None
+    for key, feprun in fepruns.items():
+        if genfig is None:
+            genfig, genaxes = initialize_general_figure(args.RT_kcal_per_mol, key, feprun)
+        else:
+            genfig, genaxes = safep.plot_general(
+                    feprun.cumulative,
+                    None,
+                    feprun.perWindow,
+                    None,
+                    args.RT_kcal_per_mol,
+                    fig=genfig,
+                    axes=genaxes,
+                    hysttype="lines",
+                    label=key,
+                    color=feprun.color,
+                )
+    plt.delaxes(genaxes[0])
+    plt.delaxes(genaxes[1])
+
+    genaxes[3] = do_agg_data(axes[2], axes[3])
+    genaxes[2].set_title(str(mean) + r"$\pm$" + str(sterr) + " kcal/mol")
+
+    for txt in genfig.texts:
+        print(1)
+        txt.set_visible(False)
+        txt.set_text("")
+
+    return genfig, genaxes
+
 if __name__ == "__main__":
     parser = AFEPArgumentParser()
     args = AFEPArguments.from_AFEPArgumentParser(parser)
@@ -311,66 +373,15 @@ if __name__ == "__main__":
 
         # hack to get aggregate data:
         axes = add_summary_stats(do_agg_data, mean, sterr, axes)
-        plt.savefig(args.dataroot.joinpath("FEP_general_figures.pdf"))
+        fig.savefig(args.dataroot.joinpath("FEP_general_figures.pdf"))
 
         # # Plot the estimated total change in free energy as a function of simulation time;
         # contiguous subsets starting at t=0 ("Forward") and t=end ("Reverse")
 
-        fig, convAx = plt.subplots(1, 1)
+        fig, convAx = do_shared_convergence_plot(args, fepruns, dGs)
+        fig.savefig(args.dataroot.joinpath("FEP_convergence.pdf"))
 
-        for key, feprun in fepruns.items():
-            convAx = safep.convergence_plot(
-                convAx,
-                feprun.forward * args.RT_kcal_per_mol,
-                feprun.forward_error * args.RT_kcal_per_mol,
-                feprun.backward * args.RT_kcal_per_mol,
-                feprun.backward_error * args.RT_kcal_per_mol,
-                fwd_color=feprun.color,
-                bwd_color=feprun.color,
-                errorbars=False,
-            )
-            convAx.get_legend().remove()
+        fig, axes = do_per_lambda_convergence_shared_axes(do_agg_data, initialize_general_figure, args, fepruns, mean, sterr, axes)
+        fig.savefig(args.dataroot.joinpath("FEP_perLambda_convergence.pdf"))
 
-        (forward_line,) = convAx.plot([], [],
-                                      linestyle="-",
-                                      color="black",
-                                      label="Forward Time Sampling")
-        (backward_line,) = convAx.plot([], [],
-                                       linestyle="--",
-                                       color="black",
-                                       label="Backward Time Sampling")
-        convAx.legend(handles=[forward_line, backward_line])
-        ymin = np.min(dGs) - 1
-        ymax = np.max(dGs) + 1
-        convAx.set_ylim((ymin, ymax))
-        plt.savefig(args.dataroot.joinpath("FEP_convergence.pdf"))
-
-        genfig = None
-        for key, feprun in fepruns.items():
-            if genfig is None:
-                genfig, genaxes = initialize_general_figure(args.RT_kcal_per_mol, key, feprun)
-            else:
-                genfig, genaxes = safep.plot_general(
-                    feprun.cumulative,
-                    None,
-                    feprun.perWindow,
-                    None,
-                    args.RT_kcal_per_mol,
-                    fig=genfig,
-                    axes=genaxes,
-                    hysttype="lines",
-                    label=key,
-                    color=feprun.color,
-                )
-        plt.delaxes(genaxes[0])
-        plt.delaxes(genaxes[1])
-
-        genaxes[3] = do_agg_data(axes[2], axes[3])
-        genaxes[2].set_title(str(mean) + r"$\pm$" + str(sterr) + " kcal/mol")
-
-        for txt in genfig.texts:
-            print(1)
-            txt.set_visible(False)
-            txt.set_text("")
         plt.show()
-        plt.savefig(args.dataroot.joinpath("FEP_perLambda_convergence.pdf"))
