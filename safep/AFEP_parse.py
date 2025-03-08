@@ -205,18 +205,7 @@ def read_and_decorrelate(args, replica, unkpath, fepoutFiles):
     return u_nk
 
 
-if __name__ == "__main__":
-    parser = AFEPArgumentParser()
-    args = AFEPArguments.from_AFEPArgumentParser(parser)
-
-    itcolors = iter(COLORS)
-
-    # # Extract key features from the MBAR fitting and get ΔG
-    # Note: alchemlyb operates in units of kT by default.
-    # We multiply by RT to convert to units of kcal/mol.
-
-    # # Read and plot number of samples after detecting EQ
-
+def process_replicas(args, itcolors):
     fepruns = {}
     for replica in args.replicas:
         print(f"Reading {replica}")
@@ -239,6 +228,22 @@ if __name__ == "__main__":
         if u_nk is not None:
             fepruns[str(replica)] = FepRun(u_nk, None, None, None, None, None, None, None,
                                            next(itcolors))
+    return fepruns
+
+
+if __name__ == "__main__":
+    parser = AFEPArgumentParser()
+    args = AFEPArguments.from_AFEPArgumentParser(parser)
+
+    itcolors = iter(COLORS)
+
+    # # Extract key features from the MBAR fitting and get ΔG
+    # Note: alchemlyb operates in units of kT by default.
+    # We multiply by RT to convert to units of kcal/mol.
+
+    # # Read and plot number of samples after detecting EQ
+
+    fepruns = process_replicas(args, itcolors)
 
     for key, feprun in fepruns.items():
         u_nk = feprun.u_nk
