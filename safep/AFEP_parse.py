@@ -34,6 +34,17 @@ class FepRun:
     per_lambda_convergence: pd.DataFrame
     color: str
 
+    def __post_init__(self):
+        # Run the BAR estimator on the fep data
+        self.perWindow, self.cumulative = safep.do_estimation(self.u_nk)
+        (
+            self.forward,
+            self.forward_error,
+            self.backward,
+            self.backward_error,
+        ) = safep.do_convergence(self.u_nk)  # Used later in the convergence plot
+        self.per_lambda_convergence = safep.do_per_lambda_convergence(self.u_nk)
+
 
 def do_agg_data(dataax, plotax):
     """
@@ -244,18 +255,6 @@ if __name__ == "__main__":
     # # Read and plot number of samples after detecting EQ
 
     fepruns = process_replicas(args, itcolors)
-
-    for key, feprun in fepruns.items():
-        u_nk = feprun.u_nk
-        # Run the BAR estimator on the fep data
-        feprun.perWindow, feprun.cumulative = safep.do_estimation(u_nk)
-        (
-            feprun.forward,
-            feprun.forward_error,
-            feprun.backward,
-            feprun.backward_error,
-        ) = safep.do_convergence(u_nk)  # Used later in the convergence plot'
-        feprun.per_lambda_convergence = safep.do_per_lambda_convergence(u_nk)
 
     toprint = ""
     dGs = []
