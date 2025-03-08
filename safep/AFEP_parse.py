@@ -76,60 +76,62 @@ def do_agg_data(dataax, plotax):
 
     return plotax
 
+class AFEPArgumentParser(argparse.ArgumentParser):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.add_argument(
+            "--path",
+            type=str,
+            help="The absolute path to the directory containing the fepout files",
+            default=".",
+        )
+        self.add_argument(
+            "--fepoutre",
+            type=str,
+            help="A regular expression that matches the fepout files to be parsed.",
+            default="*.fep*",
+        )
+        self.add_argument(
+            "--replicare",
+            type=str,
+            help="A regular expression that matches the replica directories",
+            default="Replica?",
+            required=True,
+        )
+        self.add_argument(
+            "--temperature",
+            type=float,
+            help="The temperature at which the FEP was run.",
+            default=303.15,
+        )
+        self.add_argument(
+            "--detectEQ",
+            type=bool,
+            help="Flag for automated equilibrium detection.",
+            default=True,
+        )
+        self.add_argument(
+            "--fittingMethod",
+            type=str,
+            help="Method for fitting the forward-backward discrepancies (hysteresis)."
+            + "LS=least squares, ML=maximum likelihood Default: LS",
+            default="LS",
+        )
+        self.add_argument(
+            "--maxSize",
+            type=float,
+            help="Maximum total file size in GB. This is MUCH less than the required RAM. Default: 1",
+            default=1,
+        )
+        self.add_argument(
+            "--makeFigures",
+            type=bool,
+            help="Run additional diagnostics and save figures to the directory. default: False",
+            default=0,
+        )
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="")
-
-    parser.add_argument(
-        "--path",
-        type=str,
-        help="The absolute path to the directory containing the fepout files",
-        default=".",
-    )
-    parser.add_argument(
-        "--fepoutre",
-        type=str,
-        help="A regular expression that matches the fepout files to be parsed.",
-        default="*.fep*",
-    )
-    parser.add_argument(
-        "--replicare",
-        type=str,
-        help="A regular expression that matches the replica directories",
-        default="Replica?",
-        required=True,
-    )
-    parser.add_argument(
-        "--temperature",
-        type=float,
-        help="The temperature at which the FEP was run.",
-        default=303.15,
-    )
-    parser.add_argument(
-        "--detectEQ",
-        type=bool,
-        help="Flag for automated equilibrium detection.",
-        default=True,
-    )
-    parser.add_argument(
-        "--fittingMethod",
-        type=str,
-        help="Method for fitting the forward-backward discrepancies (hysteresis)."
-        + "LS=least squares, ML=maximum likelihood Default: LS",
-        default="LS",
-    )
-    parser.add_argument(
-        "--maxSize",
-        type=float,
-        help="Maximum total file size in GB. This is MUCH less than the required RAM. Default: 1",
-        default=1,
-    )
-    parser.add_argument(
-        "--makeFigures",
-        type=bool,
-        help="Run additional diagnostics and save figures to the directory. default: False",
-        default=0,
-    )
-
+    parser = AFEPArgumentParser()
     args = parser.parse_args()
 
     dataroot = Path(args.path)
