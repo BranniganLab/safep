@@ -14,6 +14,8 @@ import pandas as pd
 import scipy as sp
 from alchemlyb.parsing import namd
 
+from scipy.constants import R, calorie
+
 import safep
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -130,6 +132,8 @@ class AFEPArgumentParser(argparse.ArgumentParser):
             default=0,
         )
 
+KILO = 1000
+
 if __name__ == "__main__":
     parser = AFEPArgumentParser()
     args = parser.parse_args()
@@ -140,7 +144,7 @@ if __name__ == "__main__":
     filename_pattern = args.fepoutre
 
     temperature = args.temperature
-    RT = 0.00198720650096 * temperature
+    RT_kcal_per_mol = R/(KILO*calorie) * temperature
     detectEQ = args.detectEQ
 
     colors = ["blue", "red", "green", "purple", "orange", "violet", "cyan"]
@@ -220,8 +224,8 @@ if __name__ == "__main__":
     errors = []
     for key, feprun in fepruns.items():
         cumulative = feprun.cumulative
-        dG = np.round(cumulative.BAR.f.iloc[-1] * RT, 1)
-        error = np.round(cumulative.BAR.errors.iloc[-1] * RT, 1)
+        dG = np.round(cumulative.BAR.f.iloc[-1] * RT_kcal_per_mol, 1)
+        error = np.round(cumulative.BAR.errors.iloc[-1] * RT_kcal_per_mol, 1)
         dGs.append(dG)
         errors.append(error)
 
@@ -252,7 +256,7 @@ if __name__ == "__main__":
                     None,
                     feprun.perWindow,
                     None,
-                    RT,
+                    RT_kcal_per_mol,
                     hysttype="lines",
                     label=key,
                     color=feprun.color,
@@ -264,7 +268,7 @@ if __name__ == "__main__":
                     None,
                     feprun.perWindow,
                     None,
-                    RT,
+                    RT_kcal_per_mol,
                     fig=fig,
                     axes=axes,
                     hysttype="lines",
@@ -288,10 +292,10 @@ if __name__ == "__main__":
         for key, feprun in fepruns.items():
             convAx = safep.convergence_plot(
                 convAx,
-                feprun.forward * RT,
-                feprun.forward_error * RT,
-                feprun.backward * RT,
-                feprun.backward_error * RT,
+                feprun.forward * RT_kcal_per_mol,
+                feprun.forward_error * RT_kcal_per_mol,
+                feprun.backward * RT_kcal_per_mol,
+                feprun.backward_error * RT_kcal_per_mol,
                 fwd_color=feprun.color,
                 bwd_color=feprun.color,
                 errorbars=False,
@@ -318,7 +322,7 @@ if __name__ == "__main__":
                     None,
                     feprun.perWindow,
                     None,
-                    RT,
+                    RT_kcal_per_mol,
                     hysttype="lines",
                     label=key,
                     color=feprun.color,
@@ -329,7 +333,7 @@ if __name__ == "__main__":
                     None,
                     feprun.perWindow,
                     None,
-                    RT,
+                    RT_kcal_per_mol,
                     fig=genfig,
                     axes=genaxes,
                     hysttype="lines",
