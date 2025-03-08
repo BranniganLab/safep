@@ -6,6 +6,7 @@ import argparse
 import os
 import warnings
 from dataclasses import dataclass
+from typing import NamedTuple
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -20,6 +21,7 @@ import safep
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
+
 @dataclass
 class FepRun:
     u_nk: pd.DataFrame
@@ -31,6 +33,7 @@ class FepRun:
     backward_error: pd.DataFrame
     per_lambda_convergence: pd.DataFrame
     color: str
+
 
 def do_agg_data(dataax, plotax):
     """
@@ -77,6 +80,7 @@ def do_agg_data(dataax, plotax):
     )
 
     return plotax
+
 
 class AFEPArgumentParser(argparse.ArgumentParser):
     def __init__(self, *args, **kwargs):
@@ -132,40 +136,68 @@ class AFEPArgumentParser(argparse.ArgumentParser):
             default=0,
         )
 
+
 KILO = 1000
 COLORS = ["blue", "red", "green", "purple", "orange", "violet", "cyan"]
 
+
 def initialize_general_figure(RT_kcal_per_mol, key, feprun):
     fig, axes = safep.plot_general(
-                    feprun.cumulative,
-                    None,
-                    feprun.perWindow,
-                    None,
-                    RT_kcal_per_mol,
-                    hysttype="lines",
-                    label=key,
-                    color=feprun.color,
-                )
+        feprun.cumulative,
+        None,
+        feprun.perWindow,
+        None,
+        args.RT_kcal_per_mol,
+        hysttype="lines",
+        label=key,
+        color=feprun.color,
+    )
     axes[1].legend()
 
     return fig, axes
 
+
+def report_number_and_size_of_fepout_files(fepoutFiles):
+    total_size = 0
+    for file in fepoutFiles:
+        total_size += os.path.getsize(file)
+    print(
+        f"Will process {len(fepoutFiles)} fepout files."
+        + f"\nTotal size:{np.round(total_size/10**9, 2)}GB"
+    )
+
+
+class AFEPArguments(NamedTuple):
+    dataroot: Path
+    replica_pattern: str
+    replicas: list[Path]
+    filename_pattern: str
+    temperature: float
+    RT_kcal_per_mol: float
+    detectEQ: bool
+    makeFigures: bool
+
+    @classmethod
+    def from_AFEPArgumentParser(cls, parser: AFEPArgumentParser) -> AFEPArgumentParser:
+        args = parser.parse_args()
+
+        dataroot = Path(args.path)
+        replica_pattern = args.replicare
+        replicas = dataroot.glob(replica_pattern)
+        filename_pattern = args.fepoutre
+
+        temperature = args.temperature
+        args.RT_kcal_per_mol = R/(KILO*calorie) * temperature
+        detectEQ = args.detectEQ
+
+        return cls(dataroot, replica_pattern, replicas, filename_pattern, temperature, args.RT_kcal_per_mol, detectEQ, args.makeFigures)
+
+
 if __name__ == "__main__":
     parser = AFEPArgumentParser()
-    args = parser.parse_args()
-
-    dataroot = Path(args.path)
-    replica_pattern = args.replicare
-    replicas = dataroot.glob(replica_pattern)
-    filename_pattern = args.fepoutre
-
-    temperature = args.temperature
-    RT_kcal_per_mol = R/(KILO*calorie) * temperature
-    detectEQ = args.detectEQ
+    args = AFEPArguments.from_AFEPArgumentParser(parser)
 
     itcolors = iter(COLORS)
-
-
 
     # # Extract key features from the MBAR fitting and get ΔG
     # Note: alchemlyb operates in units of kT by default.
@@ -174,7 +206,7 @@ if __name__ == "__main__":
     # # Read and plot number of samples after detecting EQ
 
     fepruns = {}
-    for replica in replicas:
+    for replica in args.replicas:
         print(f"Reading {replica}")
         unkpath = replica.joinpath("decorrelated.csv")
         u_nk = None
@@ -185,34 +217,30 @@ if __name__ == "__main__":
             print(
                 f"Didn't find existing dataframe at {unkpath}. Checking for raw fepout files."
             )
-            fepoutFiles = list(replica.glob(filename_pattern))
-            total_size = 0
-            for file in fepoutFiles:
-                total_size += os.path.getsize(file)
-            print(
-                f"Will process {len(fepoutFiles)} fepout files."
-                + f"\nTotal size:{np.round(total_size/10**9, 2)}GB"
-            )
+            fepoutFiles = list(replica.glob(args.filename_pattern))
+            report_number_and_size_of_fepout_files(fepoutFiles)
 
             if len(list(fepoutFiles)) > 0:
                 print("Reading fepout files")
                 fig, ax = plt.subplots()
 
-                u_nk = namd.extract_u_nk(fepoutFiles, temperature)
+                u_nk = namd.extract_u_nk(fepoutFiles, args.temperature)
                 u_nk = u_nk.sort_index(axis=0, level=1).sort_index(axis=1)
                 safep.plot_samples(ax, u_nk, color="blue", label="Raw Data")
 
-                if detectEQ:
+                if args.detectEQ:
                     print("Detecting equilibrium")
                     u_nk = safep.detect_equilibrium_u_nk(u_nk)
                     safep.plot_samples(
                         ax, u_nk, color="orange", label="Equilibrium-Detected"
                     )
 
-                plt.savefig(dataroot.joinpath(f"{str(replica)}_FEP_number_of_samples.pdf"))
+                plt.savefig(args.dataroot.joinpath(
+                    f"{str(replica)}_FEP_number_of_samples.pdf"))
                 safep.save_UNK(u_nk, unkpath)
             else:
-                print(f"WARNING: no fepout files found for {replica}. Skipping.")
+                print(
+                    f"WARNING: no fepout files found for {replica}. Skipping.")
 
         if u_nk is not None:
             fepruns[str(replica)] = FepRun(
@@ -239,8 +267,9 @@ if __name__ == "__main__":
     errors = []
     for key, feprun in fepruns.items():
         cumulative = feprun.cumulative
-        dG = np.round(cumulative.BAR.f.iloc[-1] * RT_kcal_per_mol, 1)
-        error = np.round(cumulative.BAR.errors.iloc[-1] * RT_kcal_per_mol, 1)
+        dG = np.round(cumulative.BAR.f.iloc[-1] * args.RT_kcal_per_mol, 1)
+        error = np.round(
+            cumulative.BAR.errors.iloc[-1] * args.RT_kcal_per_mol, 1)
         dGs.append(dG)
         errors.append(error)
 
@@ -261,19 +290,19 @@ if __name__ == "__main__":
 
     if args.makeFigures == 1:
         # # Plot data
-        
 
         fig = None
         for key, feprun in fepruns.items():
             if fig is None:
-                fig, axes =initialize_general_figure(RT_kcal_per_mol, key, feprun)
+                fig, axes = initialize_general_figure(
+                    args.RT_kcal_per_mol, key, feprun)
             else:
                 fig, axes = safep.plot_general(
                     feprun.cumulative,
                     None,
                     feprun.perWindow,
                     None,
-                    RT_kcal_per_mol,
+                    args.RT_kcal_per_mol,
                     fig=fig,
                     axes=axes,
                     hysttype="lines",
@@ -287,7 +316,7 @@ if __name__ == "__main__":
 
         axes[0].set_title(str(mean) + r"$\pm$" + str(sterr) + " kcal/mol")
         axes[0].legend()
-        plt.savefig(dataroot.joinpath("FEP_general_figures.pdf"))
+        plt.savefig(args.dataroot.joinpath("FEP_general_figures.pdf"))
 
         # # Plot the estimated total change in free energy as a function of simulation time;
         # contiguous subsets starting at t=0 ("Forward") and t=end ("Reverse")
@@ -297,10 +326,10 @@ if __name__ == "__main__":
         for key, feprun in fepruns.items():
             convAx = safep.convergence_plot(
                 convAx,
-                feprun.forward * RT_kcal_per_mol,
-                feprun.forward_error * RT_kcal_per_mol,
-                feprun.backward * RT_kcal_per_mol,
-                feprun.backward_error * RT_kcal_per_mol,
+                feprun.forward * args.RT_kcal_per_mol,
+                feprun.forward_error * args.RT_kcal_per_mol,
+                feprun.backward * args.RT_kcal_per_mol,
+                feprun.backward_error * args.RT_kcal_per_mol,
                 fwd_color=feprun.color,
                 bwd_color=feprun.color,
                 errorbars=False,
@@ -317,7 +346,7 @@ if __name__ == "__main__":
         ymin = np.min(dGs) - 1
         ymax = np.max(dGs) + 1
         convAx.set_ylim((ymin, ymax))
-        plt.savefig(dataroot.joinpath("FEP_convergence.pdf"))
+        plt.savefig(args.dataroot.joinpath("FEP_convergence.pdf"))
 
         genfig = None
         for key, feprun in fepruns.items():
@@ -327,7 +356,7 @@ if __name__ == "__main__":
                     None,
                     feprun.perWindow,
                     None,
-                    RT_kcal_per_mol,
+                    args.RT_kcal_per_mol,
                     hysttype="lines",
                     label=key,
                     color=feprun.color,
@@ -338,7 +367,7 @@ if __name__ == "__main__":
                     None,
                     feprun.perWindow,
                     None,
-                    RT_kcal_per_mol,
+                    args.RT_kcal_per_mol,
                     fig=genfig,
                     axes=genaxes,
                     hysttype="lines",
@@ -356,4 +385,4 @@ if __name__ == "__main__":
             txt.set_visible(False)
             txt.set_text("")
         plt.show()
-        plt.savefig(dataroot.joinpath("FEP_perLambda_convergence.pdf"))
+        plt.savefig(args.dataroot.joinpath("FEP_perLambda_convergence.pdf"))
