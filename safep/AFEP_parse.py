@@ -135,6 +135,21 @@ class AFEPArgumentParser(argparse.ArgumentParser):
 KILO = 1000
 COLORS = ["blue", "red", "green", "purple", "orange", "violet", "cyan"]
 
+def initialize_general_figure(RT_kcal_per_mol, key, feprun):
+    fig, axes = safep.plot_general(
+                    feprun.cumulative,
+                    None,
+                    feprun.perWindow,
+                    None,
+                    RT_kcal_per_mol,
+                    hysttype="lines",
+                    label=key,
+                    color=feprun.color,
+                )
+    axes[1].legend()
+
+    return fig, axes
+
 if __name__ == "__main__":
     parser = AFEPArgumentParser()
     args = parser.parse_args()
@@ -251,17 +266,7 @@ if __name__ == "__main__":
         fig = None
         for key, feprun in fepruns.items():
             if fig is None:
-                fig, axes = safep.plot_general(
-                    feprun.cumulative,
-                    None,
-                    feprun.perWindow,
-                    None,
-                    RT_kcal_per_mol,
-                    hysttype="lines",
-                    label=key,
-                    color=feprun.color,
-                )
-                axes[1].legend()
+                fig, axes =initialize_general_figure(RT_kcal_per_mol, key, feprun)
             else:
                 fig, axes = safep.plot_general(
                     feprun.cumulative,
