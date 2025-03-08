@@ -30,7 +30,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--fepoutre",
         type=str,
-        help="A regular expression that matches the fepout files of interest.",
+        help="A regular expression that matches the fepout files to be parsed.",
         default="*.fep*",
     )
     parser.add_argument(
@@ -38,6 +38,7 @@ if __name__ == "__main__":
         type=str,
         help="A regular expression that matches the replica directories",
         default="Replica?",
+        required=True,
     )
     parser.add_argument(
         "--temperature",
