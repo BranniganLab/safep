@@ -9,3 +9,4 @@ safep.egg-info*
 *.pdf
 .DS_Store
 .vscode
+.qodo
