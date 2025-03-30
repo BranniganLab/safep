@@ -162,17 +162,16 @@ def parse_Colvars_log(filename):
                 global_conf['version'] = match.group(1).strip()
                 break
 
-        for line in file:
-            match = re.match(r'^colvars: The final output state file will be "(.+).colvars.state".$', line)
-            if match:
-                global_conf['output_prefix'] = match.group(1).strip()
-                break
-
         # Parse rest of file for more config data
         for line in file:
             if re.match(r'^colvars:\s+Reading new configuration:', line):
                 level = 0
                 current = global_conf
+                continue
+
+            match = re.match(r'^colvars: The final output state file will be "(.+).colvars.state".$', line)
+            if match:
+                global_conf['output_prefix'] = match.group(1).strip()
                 continue
 
             if re.match(r'^colvars:\s+Initializing a new collective variable\.', line): # colvar
