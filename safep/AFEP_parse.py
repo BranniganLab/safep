@@ -279,7 +279,7 @@ def add_summary_stats(do_agg_data, mean, sterr, axes):
 def do_shared_convergence_plot(args, fepruns, dGs):
     fig, convAx = plt.subplots(1, 1)
 
-    for key, feprun in fepruns.items():
+    for _, feprun in fepruns.items():
         convAx = safep.convergence_plot(
             convAx,
             feprun.forward * args.RT_kcal_per_mol,
