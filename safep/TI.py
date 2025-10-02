@@ -20,6 +20,7 @@ def process_TI(dataTI, restraint, Lsched):
     dL = Lsched[1] - Lsched[0]         # FIXME assumes that the lambda schedule is uniformly spaced
     TIperWindow = pd.DataFrame(index=Lsched)
     TIperWindow['dGdL'] = [np.mean(dUs[L]) for L in Lsched]
+    print(dUs[0.850][0:100]) # DEBUG
     TIperWindow['error'] = [np.std(dUs[L]) for L in Lsched]
 
     if Lsched[-1] < 1.0:
@@ -149,9 +150,9 @@ def harmonicWall_dUdL(HW, coords, L):
         keep_mask = coords < HW['lowerWalls']
         d[keep_mask] = (coords - HW['lowerWalls'])[keep_mask]
     
-    dk = HW['targetFC'] - HW['FC']
-    dla = HW['targetFE']*L**(HW['targetFE']-1)
-    kL = HW['FC']+ dla*dk
+    dk = HW['targetForceConstant'] - HW['forceConstant']
+    dla = HW['lambdaExponent']*L**(HW['lambdaExponent']-1)
+    kL = HW['forceConstant']+ dla*dk
     # In the old, serial version of this code we checked whether d was 0.
     # It doesn't actually matter since pow(d, 2) == 0 so we don't bother with an elementwise check.
     return 0.5*kL*np.pow(d, 2)

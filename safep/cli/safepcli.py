@@ -90,12 +90,12 @@ def main():
             bulk_pointers[calc_name] = prev_calc_name
 
     # DEBUG: TI
-    # for calc_name in config.sections():
-    #     # Process the DBC TI RFEP for each calc_name. We don't use worker processes for this because it's typically
-    #     # a relatively small amount of computation, but there's no fundamental reason not to if we choose.
-    #     ti_per_window, ti_cumulative = process_dbc_ti(config[calc_name])
-    #     print(ti_cumulative)
-    #     sys.exit(1)
+    for calc_name in config.sections():
+        # Process the DBC TI RFEP for each calc_name. We don't use worker processes for this because it's typically
+        # a relatively small amount of computation, but there's no fundamental reason not to if we choose.
+        ti_per_window, ti_cumulative = process_dbc_ti(config[calc_name])
+        print(ti_cumulative)
+        sys.exit(1)
 
 
     # Actually run the FEP estimations in parallel. The Pool.map function returns an array of results
@@ -226,7 +226,7 @@ def process_dbc_ti(params):
                                   name='harmonicwalls2',
                                   schedule=lambda_schedule)
 
-    Ls = (data_ti.index.values - 1) // dbc['numSteps']
+    Ls = (data_ti.index.values - 1) // dbc['targetNumSteps']
     Ls[0] = 0
     Ls[Ls == n_lambdas] = n_lambdas - 1  # This is a small hack in case there are extra samples for the last window
 
