@@ -172,19 +172,19 @@ def report_number_and_size_of_fepout_files(fepoutFiles):
     print(f"Will process {len(fepoutFiles)} fepout files." +
           f"\nTotal size:{np.round(total_size/10**9, 2)}GB")
 
-
-class AFEPArguments(NamedTuple):
+@dataclass(slots=True)
+class AFEPArguments():
     dataroot: Path
     replica_pattern: str
     replicas: list[Path]
     filename_pattern: str
     temperature: float
-    RT_kcal_per_mol: float
     detectEQ: bool
     makeFigures: bool
+    RT_kcal_per_mol: float=None
 
     @classmethod
-    def from_AFEPArgumentParser(cls, parser: AFEPArgumentParser) -> AFEPArguments:
+    def from_AFEPArgumentParser(cls, parser: AFEPArgumentParser):
         args = parser.parse_args()
 
         dataroot = Path(args.path)
@@ -192,12 +192,12 @@ class AFEPArguments(NamedTuple):
         replicas = list(dataroot.glob(replica_pattern))
         filename_pattern = args.fepoutre
 
-        temperature = args.temperature
-        args.RT_kcal_per_mol = R / (KILO * calorie) * temperature
         detectEQ = args.detectEQ
 
-        return cls(dataroot, replica_pattern, replicas, filename_pattern, temperature,
-                   args.RT_kcal_per_mol, detectEQ, args.makeFigures)
+        return cls(dataroot, replica_pattern, replicas, filename_pattern, args.temperature, detectEQ, args.makeFigures)
+
+    def __post_init__(self) -> None:
+        self.RT_kcal_per_mol = R / (KILO * calorie) * self.temperature
 
 
 def read_and_decorrelate(args, replica, unkpath, fepoutFiles):
