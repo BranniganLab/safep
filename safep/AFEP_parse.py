@@ -184,12 +184,12 @@ class AFEPArguments(NamedTuple):
     makeFigures: bool
 
     @classmethod
-    def from_AFEPArgumentParser(cls, parser: AFEPArgumentParser) -> AFEPArgumentParser:
+    def from_AFEPArgumentParser(cls, parser: AFEPArgumentParser) -> AFEPArguments:
         args = parser.parse_args()
 
         dataroot = Path(args.path)
         replica_pattern = args.replicare
-        replicas = dataroot.glob(replica_pattern)
+        replicas = list(dataroot.glob(replica_pattern))
         filename_pattern = args.fepoutre
 
         temperature = args.temperature
