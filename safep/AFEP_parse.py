@@ -189,7 +189,6 @@ class AFEPArguments():
 
         dataroot = Path(args.path)
         replica_pattern = args.replicare
-        replicas = list(dataroot.glob(replica_pattern))
         filename_pattern = args.fepoutre
 
         detectEQ = args.detectEQ
@@ -198,6 +197,7 @@ class AFEPArguments():
 
     def __post_init__(self) -> None:
         self.RT_kcal_per_mol = R / (KILO * calorie) * self.temperature
+        self.replicas = list(self.dataroot.glob(self.replica_pattern))
 
 
 def read_and_decorrelate(args, replica, unkpath, fepoutFiles):
