@@ -392,6 +392,8 @@ def get_summary_statistics(args, fepruns):
     else:
         sterr = np.round(np.std(dGs), 1)
     toprint += f"mean: {mean} kcal/mol\n" + f"sterr: {sterr} kcal/mol"
+    if np.isnan(mean):
+        raise RuntimeError("Free energy average is NaN")
     return toprint, dGs, mean, sterr
 
 
