@@ -279,8 +279,6 @@ def make_figures(args, fepruns, dGs, mean, sterr):
         args, fepruns, mean, sterr, axes)
     fig.savefig(args.dataroot.joinpath("FEP_perLambda_convergence.pdf"))
 
-    plt.show()
-
 
 def get_summary_statistics(args, fepruns):
     toprint = ""
@@ -325,3 +323,4 @@ if __name__ == "__main__":
 
     if args.makeFigures == 1:
         make_figures(args, fepruns, dGs, mean, sterr)
+        plt.show()
