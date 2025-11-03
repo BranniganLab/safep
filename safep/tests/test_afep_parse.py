@@ -1,5 +1,6 @@
 from approvaltests import verify
-from safep.AFEP_parse import  COLORS, process_replicas, get_summary_statistics, AFEPArguments
+from safep.AFEP_parse import  COLORS, get_summary_statistics, AFEPArguments
+from safep.fepruns import process_replicas
 import pytest
 from pathlib import Path
 
