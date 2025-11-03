@@ -176,12 +176,12 @@ def report_number_and_size_of_fepout_files(fepoutFiles):
 class AFEPArguments():
     dataroot: Path
     replica_pattern: str
-    replicas: list[Path]
     filename_pattern: str
     temperature: float
     detectEQ: bool
     makeFigures: bool
     RT_kcal_per_mol: float=None
+    replicas: list[Path]=None
 
     @classmethod
     def from_AFEPArgumentParser(cls, parser: AFEPArgumentParser):
@@ -193,7 +193,7 @@ class AFEPArguments():
 
         detectEQ = args.detectEQ
 
-        return cls(dataroot, replica_pattern, replicas, filename_pattern, args.temperature, detectEQ, args.makeFigures)
+        return cls(dataroot, replica_pattern, filename_pattern, args.temperature, detectEQ, args.makeFigures)
 
     def __post_init__(self) -> None:
         self.RT_kcal_per_mol = R / (KILO * calorie) * self.temperature
@@ -212,7 +212,7 @@ def read_and_decorrelate(args, replica, unkpath, fepoutFiles):
         u_nk = safep.detect_equilibrium_u_nk(u_nk)
         safep.plot_samples(ax, u_nk, color="orange",
                            label="Equilibrium-Detected")
-
+    breakpoint()
     plt.savefig(args.dataroot.joinpath(
         f"{str(replica)}_FEP_number_of_samples.pdf"))
     safep.save_UNK(u_nk, unkpath)
