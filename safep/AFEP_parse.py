@@ -181,7 +181,7 @@ class AFEPArguments():
     detectEQ: bool
     makeFigures: bool
     RT_kcal_per_mol: float=None
-    replicas: list[Path]=None
+    replicas: list[str]=None
 
     @classmethod
     def from_AFEPArgumentParser(cls, parser: AFEPArgumentParser):
@@ -197,7 +197,7 @@ class AFEPArguments():
 
     def __post_init__(self) -> None:
         self.RT_kcal_per_mol = R / (KILO * calorie) * self.temperature
-        self.replicas = list(self.dataroot.glob(self.replica_pattern))
+        self.replicas = [rep.stem for rep in self.dataroot.glob(self.replica_pattern)]
 
 
 def read_and_decorrelate(args, replica, unkpath, fepoutFiles):
@@ -212,9 +212,7 @@ def read_and_decorrelate(args, replica, unkpath, fepoutFiles):
         u_nk = safep.detect_equilibrium_u_nk(u_nk)
         safep.plot_samples(ax, u_nk, color="orange",
                            label="Equilibrium-Detected")
-    breakpoint()
-    plt.savefig(args.dataroot.joinpath(
-        f"{str(replica)}_FEP_number_of_samples.pdf"))
+    plt.savefig(args.dataroot.joinpath(f"{str(replica)}_FEP_number_of_samples.pdf"))
     safep.save_UNK(u_nk, unkpath)
     return u_nk
 
@@ -224,9 +222,10 @@ def process_replicas(args, itcolors):
     # Note: alchemlyb operates in units of kT by default.
     # We multiply by RT to convert to units of kcal/mol.
     fepruns = {}
+    root = args.dataroot
     for replica in args.replicas:
         print(f"Reading {replica}")
-        unkpath = replica.joinpath("decorrelated.csv")
+        unkpath = root/replica/"decorrelated.csv"
         u_nk = None
         if unkpath.is_file():
             print("Found existing dataframe. Reading.")
@@ -234,7 +233,7 @@ def process_replicas(args, itcolors):
         else:
             print(
                 f"Didn't find existing dataframe at {unkpath}. Checking for raw fepout files.")
-            fepoutFiles = list(replica.glob(args.filename_pattern))
+            fepoutFiles = list((root/replica).glob(args.filename_pattern))
             report_number_and_size_of_fepout_files(fepoutFiles)
 
             if len(list(fepoutFiles)) > 0:
