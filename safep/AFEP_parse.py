@@ -6,7 +6,6 @@ import argparse
 import os
 import warnings
 from dataclasses import dataclass
-from typing import NamedTuple
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -165,11 +164,11 @@ def initialize_general_figure(RT_kcal_per_mol, key, feprun):
     return fig, axes
 
 
-def report_number_and_size_of_fepout_files(fepoutFiles):
+def report_number_and_size_of_fepout_files(fepout_files):
     total_size = 0
-    for file in fepoutFiles:
+    for file in fepout_files:
         total_size += os.path.getsize(file)
-    print(f"Will process {len(fepoutFiles)} fepout files." +
+    print(f"Will process {len(fepout_files)} fepout files." +
           f"\nTotal size:{np.round(total_size/10**9, 2)}GB")
 
 @dataclass(slots=True)
@@ -276,11 +275,11 @@ def add_summary_stats(do_agg_data, mean, sterr, axes):
 
 
 def do_shared_convergence_plot(args, fepruns, dGs):
-    fig, convAx = plt.subplots(1, 1)
+    fig, conv_ax = plt.subplots(1, 1)
 
     for _, feprun in fepruns.items():
-        convAx = safep.convergence_plot(
-            convAx,
+        conv_ax = safep.convergence_plot(
+            conv_ax,
             feprun.forward * args.RT_kcal_per_mol,
             feprun.forward_error * args.RT_kcal_per_mol,
             feprun.backward * args.RT_kcal_per_mol,
@@ -289,22 +288,22 @@ def do_shared_convergence_plot(args, fepruns, dGs):
             bwd_color=feprun.color,
             errorbars=False,
         )
-        convAx.get_legend().remove()
+        conv_ax.get_legend().remove()
 
-    (forward_line,) = convAx.plot([], [],
+    (forward_line,) = conv_ax.plot([], [],
                                   linestyle="-",
                                   color="black",
                                   label="Forward Time Sampling")
-    (backward_line,) = convAx.plot([], [],
+    (backward_line,) = conv_ax.plot([], [],
                                    linestyle="--",
                                    color="black",
                                    label="Backward Time Sampling")
-    convAx.legend(handles=[forward_line, backward_line])
+    conv_ax.legend(handles=[forward_line, backward_line])
     ymin = np.min(dGs) - 1
     ymax = np.max(dGs) + 1
-    convAx.set_ylim((ymin, ymax))
+    conv_ax.set_ylim((ymin, ymax))
 
-    return fig, convAx
+    return fig, conv_ax
 
 
 def do_per_lambda_convergence_shared_axes(args, fepruns, mean, sterr, axes):
@@ -378,8 +377,8 @@ def get_summary_statistics(args, fepruns):
         dGs.append(dG)
         errors.append(error)
 
-        changeAndError = f"{key}: \u0394G = {dG}\u00B1{error} kcal/mol\n"
-        toprint += changeAndError
+        change_and_error = f"{key}: \u0394G = {dG}\u00B1{error} kcal/mol\n"
+        toprint += change_and_error
 
     toprint += "\n"
     mean = np.average(dGs)
