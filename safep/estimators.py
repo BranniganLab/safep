@@ -33,19 +33,28 @@ def get_exponential(u_nk):
     Returns: l[ambdas], l_mid [lambda window midpoints], dG_f [forward estimates], dG_b [backward estimates]
     ''' 
 
-    groups = u_nk.groupby(level=1)
-    dG=pd.DataFrame([])
-    for name, group in groups:
-        dG[name] = np.log(np.mean(np.exp(-1*group), axis=0))
+    states = u_nk.columns.values
+    n_states = len(states)
+    # Pre-group to avoid repeated groupby overhead
+    # dict keys are the 'Source' states
+    groups = dict(list(u_nk.groupby(level=1)))
 
-    dG_f=np.diag(dG, k=1)
-    dG_b=np.diag(dG, k=-1)
+    dG_f = []
+    dG_b = []
+    for i in range(n_states - 1):
+        u_diff_fwd = groups[states[i]][states[i+1]]
+        val_f = -np.log(np.mean(np.exp(-u_diff_fwd)))
+        dG_f.append(val_f)
 
-    l=dG.columns.to_list()
-    l_mid = np.mean([l[1:],l[:-1]], axis=0)
+        u_diff_bwd = groups[states[i+1]][states[i]]
+        val_b = -np.log(np.mean(np.exp(-u_diff_bwd)))
+        dG_b.append(val_b)
 
-    return l, l_mid, dG_f, dG_b
-    
+    l = states.tolist()
+    l_mid = np.mean([l[1:], l[:-1]], axis=0)
+
+    return l, l_mid, np.array(dG_f), np.array(dG_b)
+
 def get_BAR(bar):
     '''
     Extract key information from an alchemlyb.BAR object. Useful for plotting.
