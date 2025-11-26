@@ -5,7 +5,7 @@ import pytest
 from collections import namedtuple
 import json
 
-SAMPLE_RFEP_LOG = Path("../../Sample_Notebooks/RFEP_decouple.log")
+SAMPLE_RFEP_LOG = Path(__file__).parent/"../../Sample_Notebooks/RFEP_decouple.log"
 
 @pytest.fixture
 def parse_result():
