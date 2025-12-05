@@ -69,11 +69,11 @@ class AFEPArgumentParser(argparse.ArgumentParser):
         fepoutre (str): regex for fepout files
         replicare (str): regex for replica directories
         temperature (float): the temperature at which the simulation was run (K)
-        detect_equilibrium (bool): Whether or not to run automated equilibrium detection and downsampling
+        detect_equilibrium (bool): Flag to run automated equilibrium detection and downsampling
         fittingMethod (str): Method for fitting forward-backward discrepancies. Untested.
-        maxSize (float): Maximum size of data to parse. Default 1GB
+        max_size (float): UNUSED. Maximum size of data to parse. Default 1GB
             Note: this should be much less than the total RAM available.
-        makeFigures (bool): Whether or not to generate figures. Default False.
+        make_figures (bool): Whether or not to generate figures. Default False.
     """
 
     def __init__(self, *args, **kwargs):
@@ -117,14 +117,14 @@ class AFEPArgumentParser(argparse.ArgumentParser):
             default="LS",
         )
         self.add_argument(
-            "--maxSize",
+            "--max_size",
             type=float,
             help="Maximum total file size in GB." +
             "This is MUCH less than the required RAM. Default: 1",
             default=1,
         )
         self.add_argument(
-            "--makeFigures",
+            "--make_figures",
             type=bool,
             help="Run additional diagnostics and save figures to the directory. default: False",
             default=0,
@@ -169,7 +169,7 @@ class AFEPArguments():
     filename_pattern: str
     temperature: float
     detect_equilibrium: bool
-    makeFigures: bool
+    make_figures: bool
     RT_kcal_per_mol: float=None
     replicas: list[str]=None
 
@@ -191,7 +191,12 @@ class AFEPArguments():
 
         detect_equilibrium = args.detect_equilibrium
 
-        return cls(dataroot, replica_pattern, filename_pattern, args.temperature, detect_equilibrium, args.makeFigures)
+        return cls(dataroot,
+                   replica_pattern,
+                   filename_pattern,
+                   args.temperature,
+                   detect_equilibrium,
+                   args.make_figures)
 
     def __post_init__(self) -> None:
         """Get RT and standardize replica names"""
@@ -423,7 +428,7 @@ def main():
     fepruns = process_replicas(args, itcolors)
     summary, dGs, mean, sterr = get_summary_statistics(args, fepruns)
     print(summary)
-    if args.makeFigures == 1:
+    if args.make_figures == 1:
         make_figures(args, fepruns, dGs, mean, sterr)
         plt.show()
 
