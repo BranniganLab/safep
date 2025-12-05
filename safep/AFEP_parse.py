@@ -149,7 +149,7 @@ def initialize_general_figure(RT_kcal_per_mol, key, feprun):
     fig, axes = safep.plot_general(
         feprun.cumulative,
         None,
-        feprun.perWindow,
+        feprun.per_window,
         None,
         RT_kcal_per_mol,
         hysttype="lines",
@@ -220,7 +220,7 @@ def add_to_general_figure(fig, axes, args, key, feprun):
     fig, axes = safep.plot_general(
         feprun.cumulative,
         None,
-        feprun.perWindow,
+        feprun.per_window,
         None,
         args.RT_kcal_per_mol,
         fig=fig,
@@ -317,7 +317,7 @@ def do_per_lambda_convergence_shared_axes(args, fepruns, mean, sterr, axes):
             genfig, genaxes = safep.plot_general(
                 feprun.cumulative,
                 None,
-                feprun.perWindow,
+                feprun.per_window,
                 None,
                 args.RT_kcal_per_mol,
                 fig=genfig,

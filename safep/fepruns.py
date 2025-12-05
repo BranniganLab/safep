@@ -1,3 +1,5 @@
+"""Organize all the data associated with a FEP replica"""
+
 import os
 from dataclasses import dataclass
 
@@ -10,6 +12,15 @@ import safep
 
 
 def process_replicas(args, itcolors):
+    """Populate a dictionary of Fepruns based on information from a AFEPArguments object
+
+    Args:
+        args (AFEPArguments): information needed to collect fep data and analyze it
+        itcolors (iterator): an iterator over a list of matplotlib-compatible colors
+
+    Returns:
+        dict[FepRun]: a dictionary of all replicas
+    """
     # # Extract key features from the MBAR fitting and get ΔG
     # Note: alchemlyb operates in units of kT by default.
     # We multiply by RT to convert to units of kcal/mol.
@@ -44,8 +55,12 @@ def process_replicas(args, itcolors):
 
 @dataclass
 class FepRun:
+    """Datastructure for holding FEP replicas including:
+        energies (u_nk)
+        free energies
+        and associated metrics"""
     u_nk: pd.DataFrame
-    perWindow: pd.DataFrame
+    per_window: pd.DataFrame
     cumulative: pd.DataFrame
     forward: pd.DataFrame
     forward_error: pd.DataFrame
@@ -56,7 +71,7 @@ class FepRun:
 
     def __post_init__(self):
         # Run the BAR estimator on the fep data
-        self.perWindow, self.cumulative = safep.do_estimation(self.u_nk)
+        self.per_window, self.cumulative = safep.do_estimation(self.u_nk)
         (
             self.forward,
             self.forward_error,
@@ -68,6 +83,13 @@ class FepRun:
 
 
 def report_number_and_size_of_fepout_files(fepout_files):
+    """Check the number and size of all fepout files.
+
+    Proxy for checking if the data will fit in RAM.
+
+    Side effects:
+        print stats to stout
+    """
     total_size = 0
     for file in fepout_files:
         total_size += os.path.getsize(file)
@@ -75,10 +97,21 @@ def report_number_and_size_of_fepout_files(fepout_files):
           f"\nTotal size:{np.round(total_size/10**9, 2)}GB")
 
 
-def read_and_decorrelate(args, replica, unkpath, fepoutFiles):
+def read_and_decorrelate(args, replica, unkpath, fepout_files):
+    """Read each replica and optionally detect equilibrium/decorrelate samples
+
+    Args:
+        args (AFEPArguments): information needed to collect fep data and analyze
+        replica (str): name of the replica
+        unkpath (pathlib.Path): path to save the postprocessed data
+        fepout_files (list): list of paths to fepout files
+
+    Returns:
+        pd.DataFrame: a pandas DataFrame containing the postprocessed energies
+    """
     fig, ax = plt.subplots()
 
-    u_nk = namd.extract_u_nk(fepoutFiles, args.temperature)
+    u_nk = namd.extract_u_nk(fepout_files, args.temperature)
     u_nk = u_nk.sort_index(axis=0, level=1).sort_index(axis=1)
     safep.plot_samples(ax, u_nk, color="blue", label="Raw Data")
 
@@ -87,6 +120,6 @@ def read_and_decorrelate(args, replica, unkpath, fepoutFiles):
         u_nk = safep.detect_equilibrium_u_nk(u_nk)
         safep.plot_samples(ax, u_nk, color="orange",
                            label="Equilibrium-Detected")
-    plt.savefig(args.dataroot.joinpath(f"{str(replica)}_FEP_number_of_samples.pdf"))
+    fig.savefig(args.dataroot.joinpath(f"{str(replica)}_FEP_number_of_samples.pdf"))
     safep.save_UNK(u_nk, unkpath)
     return u_nk
