@@ -69,7 +69,7 @@ class AFEPArgumentParser(argparse.ArgumentParser):
         fepoutre (str): regex for fepout files
         replicare (str): regex for replica directories
         temperature (float): the temperature at which the simulation was run (K)
-        detectEQ (bool): Whether or not to run automated equilibrium detection and downsampling
+        detect_equilibrium (bool): Whether or not to run automated equilibrium detection and downsampling
         fittingMethod (str): Method for fitting forward-backward discrepancies. Untested.
         maxSize (float): Maximum size of data to parse. Default 1GB
             Note: this should be much less than the total RAM available.
@@ -104,7 +104,7 @@ class AFEPArgumentParser(argparse.ArgumentParser):
             default=303.15,
         )
         self.add_argument(
-            "--detectEQ",
+            "--detect_equilibrium",
             type=bool,
             help="Flag for automated equilibrium detection.",
             default=True,
@@ -168,7 +168,7 @@ class AFEPArguments():
     replica_pattern: str
     filename_pattern: str
     temperature: float
-    detectEQ: bool
+    detect_equilibrium: bool
     makeFigures: bool
     RT_kcal_per_mol: float=None
     replicas: list[str]=None
@@ -189,9 +189,9 @@ class AFEPArguments():
         replica_pattern = args.replicare
         filename_pattern = args.fepoutre
 
-        detectEQ = args.detectEQ
+        detect_equilibrium = args.detect_equilibrium
 
-        return cls(dataroot, replica_pattern, filename_pattern, args.temperature, detectEQ, args.makeFigures)
+        return cls(dataroot, replica_pattern, filename_pattern, args.temperature, detect_equilibrium, args.makeFigures)
 
     def __post_init__(self) -> None:
         """Get RT and standardize replica names"""
@@ -366,7 +366,7 @@ def make_figures(args, fepruns, dGs, mean, sterr) -> None:
     # # Plot the estimated total change in free energy as a function of simulation time;
     # contiguous subsets starting at t=0 ("Forward") and t=end ("Reverse")
 
-    fig, convAx = do_shared_convergence_plot(args, fepruns, dGs)
+    fig, _ = do_shared_convergence_plot(args, fepruns, dGs)
     fig.savefig(args.dataroot.joinpath("FEP_convergence.pdf"))
 
     fig, axes = do_per_lambda_convergence_shared_axes(
