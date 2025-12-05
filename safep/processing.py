@@ -102,6 +102,16 @@ def detect_equilibrium_u_nk(u_nk: pd.DataFrame):
 
 
 def decorrelate_u_nk(u_nk: pd.DataFrame, method="dE") -> pd.DataFrame:
+    """Decorrelate each window without equilibrium detection.
+
+    Args:
+        u_nk (pd.DataFrame): the energies in the alchemlyb style
+        method (str, optional): decorrelation method. See subsampling.decorrelate_u_nk.
+            Defaults to "dE".
+
+    Returns:
+        pd.DataFrame: the decorrelated energies in the alchemlyb style
+    """
     u_nk = u_nk.sort_index(axis=0, level=1).sort_index(axis=1)
     groups = u_nk.groupby("fep-lambda")
     decorr = pd.DataFrame([])
