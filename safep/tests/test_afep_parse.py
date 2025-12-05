@@ -25,3 +25,8 @@ def fepruns(afep_args, itcolors):
 def test_summary(afep_args, fepruns):
     summary, dGs, mean, sterr = get_summary_statistics(afep_args, fepruns)
     verify(summary)
+
+def test_u_nk(fepruns):
+    u_nk = fepruns["Replica1"].u_nk
+    string = u_nk.to_csv(index=False)
+    verify(string)
