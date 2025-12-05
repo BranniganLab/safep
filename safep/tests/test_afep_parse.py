@@ -10,7 +10,7 @@ def itcolors():
 
 @pytest.fixture
 def afep_args():
-    return AFEPArguments(dataroot = Path("../../Sample_Notebooks"),
+    return AFEPArguments(dataroot = Path(__file__).parent/"../../Sample_Notebooks",
                         replica_pattern = "Replica*",
                         replicas = None,
                         filename_pattern = "*.fep*",
