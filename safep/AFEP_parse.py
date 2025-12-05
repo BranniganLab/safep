@@ -62,6 +62,19 @@ def do_agg_data(dataax, plotax):
 
 
 class AFEPArgumentParser(argparse.ArgumentParser):
+    """Dedicated CLI argument parser for AFEP.
+
+    Attributes:
+        path (str|Path): root path for data folder.
+        fepoutre (str): regex for fepout files
+        replicare (str): regex for replica directories
+        temperature (float): the temperature at which the simulation was run (K)
+        detectEQ (bool): Whether or not to run automated equilibrium detection and downsampling
+        fittingMethod (str): Method for fitting forward-backward discrepancies. Untested.
+        maxSize (float): Maximum size of data to parse. Default 1GB
+            Note: this should be much less than the total RAM available.
+        makeFigures (bool): Whether or not to generate figures. Default False.
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -123,6 +136,16 @@ COLORS = ["blue", "red", "green", "purple", "orange", "violet", "cyan"]
 
 
 def initialize_general_figure(RT_kcal_per_mol, key, feprun):
+    """Create a new general figure
+
+    Args:
+        RT_kcal_per_mol (float): RT in kcal/mol
+        key (str): The key of the initial dataset
+        feprun (safep.Feprun): the feprun to plot
+
+    Returns:
+        Tuple(Fig,Axes): The figure and axes
+    """
     fig, axes = safep.plot_general(
         feprun.cumulative,
         None,
@@ -140,6 +163,7 @@ def initialize_general_figure(RT_kcal_per_mol, key, feprun):
 
 @dataclass(slots=True)
 class AFEPArguments():
+    """A more readable/testable format for CLI arguments"""
     dataroot: Path
     replica_pattern: str
     filename_pattern: str
@@ -151,6 +175,14 @@ class AFEPArguments():
 
     @classmethod
     def from_AFEPArgumentParser(cls, parser: AFEPArgumentParser):
+        """Unpack arguments from an AFEPArgumentParser object.
+
+        Args:
+            parser (AFEPArgumentParser): An AFEPArgumentParser object.
+
+        Returns:
+            AFEPArguments: The unpacked arguments.
+        """
         args = parser.parse_args()
 
         dataroot = Path(args.path)
@@ -162,11 +194,24 @@ class AFEPArguments():
         return cls(dataroot, replica_pattern, filename_pattern, args.temperature, detectEQ, args.makeFigures)
 
     def __post_init__(self) -> None:
+        """Get RT and standardize replica names"""
         self.RT_kcal_per_mol = R / (KILO * calorie) * self.temperature
         self.replicas = [rep.stem for rep in self.dataroot.glob(self.replica_pattern)]
 
 
 def add_to_general_figure(fig, axes, args, key, feprun):
+    """Add another replica to an existing figure.
+
+    Args:
+        fig (matplotlib.figure.Figure): The figure to add to.
+        axes (matplotlib.axes._subplots.Axes): The axes to add to.
+        args (argparse.Namespace): The parsed command line arguments.
+        key (str): The key to use for the figure.
+        feprun (safep.Feprun): The feprun replica to use.
+
+    Returns:
+        tuple(Fig, Axes): The figure and axes that were modified
+    """
     fig, axes = safep.plot_general(
         feprun.cumulative,
         None,
@@ -183,7 +228,18 @@ def add_to_general_figure(fig, axes, args, key, feprun):
     return fig, axes
 
 
-def add_summary_stats(do_agg_data, mean, sterr, axes):
+def add_summary_stats(mean, sterr, axes):
+    """Add summary statistics to a general safep figure.
+
+    Args:
+        mean (float): the mean free energy across replicas.
+        sterr (float): the standard deviation or standard error
+            of the free energy across replicas.
+        axes (matplotlib.axes): matplotlib axes object
+
+    Returns:
+        Axes: the modified matplotlib axes object
+    """
     axes[3] = do_agg_data(axes[2], axes[3])
 
     axes[0].set_title(str(mean) + r"$\pm$" + str(sterr) + " kcal/mol")
@@ -192,6 +248,17 @@ def add_summary_stats(do_agg_data, mean, sterr, axes):
 
 
 def do_shared_convergence_plot(args, fepruns, dGs):
+    """Make the convergence plot (reverse and forward cumulative averages)
+
+    Args:
+        args (AFEPArguments): command line arguments
+        fepruns (dict): fepruns dictionary
+        dGs (list): list of free energies
+
+    Returns:
+        tuple(Fig, Axes): figure and axes with FCA/RCA convergence
+
+    """
     fig, conv_ax = plt.subplots(1, 1)
 
     for _, feprun in fepruns.items():
@@ -224,6 +291,18 @@ def do_shared_convergence_plot(args, fepruns, dGs):
 
 
 def do_per_lambda_convergence_shared_axes(args, fepruns, mean, sterr, axes):
+    """Plot lambda convergence for all replicas.
+
+    Args:
+        args (AFEPArguments): command line arguments
+        fepruns (dict): fepruns dictionary
+        mean (float): mean value across replicas
+        sterr (float): sterr value across replicas
+        axes (list): matplotlib axes list
+
+    Returns:
+        tuple[Fig, Axes]: figure and axes objects with the per lambda convergence
+    """
     genfig = None
     for key, feprun in fepruns.items():
         if genfig is None:
@@ -256,7 +335,22 @@ def do_per_lambda_convergence_shared_axes(args, fepruns, mean, sterr, axes):
     return genfig, genaxes
 
 
-def make_figures(args, fepruns, dGs, mean, sterr):
+def make_figures(args, fepruns, dGs, mean, sterr) -> None:
+    """Make general SAFEP figures and convergence plots
+
+    Args:
+        args (AFEPArguments): arguments from argparse
+        fepruns (dict): fepruns dictionary
+        dGs (list): list of free energies
+        mean (float): mean free energy across replicas
+        sterr (float): sterr free energy across replicas
+
+    Returns:
+        None
+
+    Side effects:
+        Saves FEP_general_figures.pdf, FEP_convergence.pdf, and FEP_perLambda_convergence.pdf
+    """
     fig = None
     for key, feprun in fepruns.items():
         if fig is None:
@@ -266,7 +360,7 @@ def make_figures(args, fepruns, dGs, mean, sterr):
             fig, axes = add_to_general_figure(fig, axes, args, key, feprun)
 
         # hack to get aggregate data:
-    axes = add_summary_stats(do_agg_data, mean, sterr, axes)
+    axes = add_summary_stats(mean, sterr, axes)
     fig.savefig(args.dataroot.joinpath("FEP_general_figures.pdf"))
 
     # # Plot the estimated total change in free energy as a function of simulation time;
@@ -281,6 +375,16 @@ def make_figures(args, fepruns, dGs, mean, sterr):
 
 
 def get_summary_statistics(args, fepruns):
+    """Extract summary statistics from fepruns.
+
+    Args:
+        args (AFEPArguments): parsed command line arguments
+        fepruns (dict): dict of fepruns
+
+    Returns:
+        tuple[str, list[float], float, float]: a pretty print string, individual delta Gs,
+        and the mean and standard error across replicas
+    """
     toprint = ""
     dGs = []
     errors = []
@@ -311,6 +415,8 @@ def get_summary_statistics(args, fepruns):
 
 
 def main():
+    """Main function for parsing fep data and calculating free energy of (de)coupling
+    """
     parser = AFEPArgumentParser()
     args = AFEPArguments.from_AFEPArgumentParser(parser)
     itcolors = iter(COLORS)
