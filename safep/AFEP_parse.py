@@ -310,17 +310,17 @@ def get_summary_statistics(args, fepruns):
     return toprint, dGs, mean, sterr
 
 
-if __name__ == "__main__":
+def main():
     parser = AFEPArgumentParser()
     args = AFEPArguments.from_AFEPArgumentParser(parser)
-
     itcolors = iter(COLORS)
-
     fepruns = process_replicas(args, itcolors)
-
     summary, dGs, mean, sterr = get_summary_statistics(args, fepruns)
     print(summary)
-
     if args.makeFigures == 1:
         make_figures(args, fepruns, dGs, mean, sterr)
         plt.show()
+
+
+if __name__ == "__main__":
+    main()
