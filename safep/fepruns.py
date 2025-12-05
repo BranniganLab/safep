@@ -36,13 +36,13 @@ def process_replicas(args, itcolors):
         else:
             print(
                 f"Didn't find existing dataframe at {unkpath}. Checking for raw fepout files.")
-            fepoutFiles = list((root/replica).glob(args.filename_pattern))
-            report_number_and_size_of_fepout_files(fepoutFiles)
+            fepout_files = list((root/replica).glob(args.filename_pattern))
+            report_number_and_size_of_fepout_files(fepout_files)
 
-            if len(list(fepoutFiles)) > 0:
+            if len(list(fepout_files)) > 0:
                 print("Reading fepout files")
                 u_nk = read_and_decorrelate(
-                    args, replica, unkpath, fepoutFiles)
+                    args, replica, unkpath, fepout_files)
             else:
                 print(
                     f"WARNING: no fepout files found for {replica}. Skipping.")
