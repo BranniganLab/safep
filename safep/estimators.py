@@ -7,7 +7,10 @@ def get_exponential(u_nk):
     """
     Get exponential estimation of the change in free energy.
     Arguments: u_nk in alchemlyb format
-    Returns: l[ambdas], l_mid [lambda window midpoints], dG_f [forward estimates], dG_b [backward estimates]
+    Returns:    l[ambdas],
+                l_mid [lambda window midpoints],
+                dG_f [forward estimates],
+                dG_b [backward estimates]
     """
 
     groups = u_nk.groupby(level=1)
@@ -28,7 +31,12 @@ def get_BAR(bar):
     """
     Extract key information from an alchemlyb.BAR object. Useful for plotting.
     Arguments: a fitted BAR object
-    Returns: l[ambdas], l_mid [lambda window midpoints], f [the cumulative free energy], df [the per-window free energy], ddf [the per-window errors], errors [the cumulative error]
+    Returns:    l[ambdas],
+                l_mid [lambda window midpoints],
+                f [the cumulative free energy],
+                df [the per-window free energy],
+                ddf [the per-window errors],
+                errors [the cumulative error]
     """
 
     states = bar.states_
