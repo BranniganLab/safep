@@ -62,11 +62,11 @@ def do_estimation(u_nk, method="both"):
     """
     Run both exponential and BAR estimators and return the results in tidy dataframes.
     Arguments: u_nk in the alchemlyb format, method of fitting (String: BAR, EXP, or both)
-    Returns: perWindow estimates (including errors), cumulative estimates (including errors)
+    Returns: per_window estimates (including errors), cumulative estimates (including errors)
     """
     u_nk = u_nk.sort_index(level=1)
     cumulative = pd.DataFrame()
-    perWindow = pd.DataFrame()
+    per_window = pd.DataFrame()
     if method == "both" or method == "BAR":
         bar = BAR()
         bar.fit(u_nk)
@@ -76,9 +76,9 @@ def do_estimation(u_nk, method="both"):
         cumulative[("BAR", "errors")] = errors
         cumulative.index = ls
 
-        perWindow[("BAR", "df")] = dfs
-        perWindow[("BAR", "ddf")] = ddfs
-        perWindow.index = l_mids
+        per_window[("BAR", "df")] = dfs
+        per_window[("BAR", "ddf")] = ddfs
+        per_window.index = l_mids
 
     if method == "both" or method == "EXP":
         expl, expmid, dG_fs, dG_bs = get_exponential(u_nk)
@@ -87,17 +87,17 @@ def do_estimation(u_nk, method="both"):
         cumulative[("EXP", "fb")] = np.insert(-np.cumsum(dG_bs), 0, 0)
         cumulative.index = expl
 
-        perWindow[("EXP", "dG_f")] = dG_fs
-        perWindow[("EXP", "dG_b")] = dG_bs
-        perWindow[("EXP", "difference")] = np.array(dG_fs) + np.array(dG_bs)
-        perWindow.index = expmid
+        per_window[("EXP", "dG_f")] = dG_fs
+        per_window[("EXP", "dG_b")] = dG_bs
+        per_window[("EXP", "difference")] = np.array(dG_fs) + np.array(dG_bs)
+        per_window.index = expmid
 
-    perWindow.columns = pd.MultiIndex.from_tuples(perWindow.columns)
-    perWindow = perWindow.fillna(0)
+    per_window.columns = pd.MultiIndex.from_tuples(per_window.columns)
+    per_window = per_window.fillna(0)
     cumulative.columns = pd.MultiIndex.from_tuples(cumulative.columns)
     cumulative = cumulative.fillna(0)
 
-    return perWindow.copy(), cumulative.copy()
+    return per_window.copy(), cumulative.copy()
 
 
 def get_dG_from_data(data, temperature):
