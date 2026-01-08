@@ -9,7 +9,7 @@ SAMPLE_RFEP_LOG = Path(__file__).parent/"../../Sample_Notebooks/RFEP_decouple.lo
 
 @pytest.fixture
 def parse_result():
-    ParseResult = namedtuple('ParseReult', 'global_conf colvars biases TI_traj')
+    ParseResult = namedtuple('ParseResult', 'global_conf colvars biases TI_traj')
     return ParseResult(*parse_Colvars_log(SAMPLE_RFEP_LOG))
 
 def test_global_config(parse_result):
