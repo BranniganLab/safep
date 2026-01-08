@@ -1,29 +1,6 @@
-# Import block
-import matplotlib.pyplot as plt
-
 import numpy as np
-from numpy.lib.stride_tricks import sliding_window_view
-
-from scipy.stats import linregress as lr
-from scipy.stats import norm
-from scipy.special import erfc
-from scipy.optimize import curve_fit as scipyFit
-from scipy.stats import skew
-
 import pandas as pd
-
-from alchemlyb.visualisation.dF_state import plot_dF_state
-from alchemlyb.parsing import namd
 from alchemlyb.estimators import BAR
-from alchemlyb.visualisation.dF_state import plot_dF_state
-from alchemlyb.visualisation import plot_convergence
-
-import re
-from tqdm import tqdm  # for progress bars
-from natsort import natsorted  # for sorting "naturally" instead of alphabetically
-from glob import glob  # file regexes
-
-from .helpers import *
 
 
 def get_exponential(u_nk):
@@ -115,31 +92,7 @@ def do_estimation(u_nk, method="both"):
     return perWindow.copy(), cumulative.copy()
 
 
-# Light-weight exponential estimator. Requires alternative parser.
 def get_dG_from_data(data, temperature):
-    from scipy.constants import R, calorie
-
-    beta = 1 / (
-        R / (1000 * calorie) * temperature
-    )  # So that the final result is in kcal/mol
-
-    groups = data.groupby(level=0)
-    dG = []
-    for name, group in groups:
-        isUp = group.up
-        dE = group.dE
-        toAppend = [name, -1 * np.log(np.mean(np.exp(-beta * dE[isUp]))), 1]
-        dG.append(toAppend)
-        toAppend = [name, -1 * np.log(np.mean(np.exp(-beta * dE[~isUp]))), 0]
-        dG.append(toAppend)
-
-    dG = pd.DataFrame(dG, columns=["window", "dG", "up"])
-    dG = dG.set_index("window")
-
-    dG_f = dG.loc[dG.up == 1]
-    dG_b = dG.loc[dG.up == 0]
-
-    dG_f = dG_f.dG.dropna()
-    dG_b = dG_b.dG.dropna()
-
-    return dG_f, dG_b
+    """Removed. I don't think this function is ever used. ES"""
+    raise NotImplementedError("This function does not appear to be used anywhere." +
+                              "If that is not the case, please contact the developer of safep.")
