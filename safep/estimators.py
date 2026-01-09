@@ -67,30 +67,42 @@ def do_estimation(u_nk, method="both"):
     u_nk = u_nk.sort_index(level=1)
     cumulative = pd.DataFrame()
     per_window = pd.DataFrame()
-    if method == "both" or method == "BAR":
+    if method in ["both", "BAR"]:
         bar = BAR()
         bar.fit(u_nk)
         ls, l_mids, fs, dfs, ddfs, errors = get_BAR(bar)
 
-        cumulative[("BAR", "f")] = fs
-        cumulative[("BAR", "errors")] = errors
-        cumulative.index = ls
+        bar_cumulative = pd.DataFrame()
+        bar_per_window = pd.DataFrame()
 
-        per_window[("BAR", "df")] = dfs
-        per_window[("BAR", "ddf")] = ddfs
-        per_window.index = l_mids
+        bar_cumulative[("BAR", "f")] = fs
+        bar_cumulative[("BAR", "errors")] = errors
+        bar_cumulative.index = ls
 
-    if method == "both" or method == "EXP":
+        bar_per_window[("BAR", "df")] = dfs
+        bar_per_window[("BAR", "ddf")] = ddfs
+        bar_per_window.index = l_mids
+
+        cumulative = pd.concat([cumulative, bar_cumulative], axis=1)
+        per_window = pd.concat([per_window, bar_per_window], axis=1)
+
+    if method in ["both", "EXP"]:
         expl, expmid, dG_fs, dG_bs = get_exponential(u_nk)
 
-        cumulative[("EXP", "ff")] = np.insert(np.cumsum(dG_fs), 0, 0)
-        cumulative[("EXP", "fb")] = np.insert(-np.cumsum(dG_bs), 0, 0)
-        cumulative.index = expl
+        exp_cumulative = pd.DataFrame()
+        exp_per_window = pd.DataFrame()
 
-        per_window[("EXP", "dG_f")] = dG_fs
-        per_window[("EXP", "dG_b")] = dG_bs
-        per_window[("EXP", "difference")] = np.array(dG_fs) + np.array(dG_bs)
-        per_window.index = expmid
+        exp_cumulative[("EXP", "ff")] = np.insert(np.cumsum(dG_fs), 0, 0)
+        exp_cumulative[("EXP", "fb")] = np.insert(-np.cumsum(dG_bs), 0, 0)
+        exp_cumulative.index = expl
+
+        exp_per_window[("EXP", "dG_f")] = dG_fs
+        exp_per_window[("EXP", "dG_b")] = dG_bs
+        exp_per_window[("EXP", "difference")] = np.array(dG_fs) + np.array(dG_bs)
+        exp_per_window.index = expmid
+
+        cumulative = pd.concat([cumulative, exp_cumulative], axis=1)
+        per_window = pd.concat([per_window, exp_per_window], axis=1)
 
     per_window.columns = pd.MultiIndex.from_tuples(per_window.columns)
     per_window = per_window.fillna(0)
