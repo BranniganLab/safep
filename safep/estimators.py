@@ -1,3 +1,4 @@
+"""Functions for doing exponential and BAR estimation using Alchmelyb-style dataframes."""
 import numpy as np
 import pandas as pd
 from alchemlyb.estimators import BAR
