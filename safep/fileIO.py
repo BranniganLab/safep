@@ -1,7 +1,8 @@
 from pathlib import Path
 import re
+import numpy as np
 import pandas as pd
-
+from safep.helpers import deprecation_warning
 
 def guess_lambda(fname):
     '''
@@ -13,6 +14,11 @@ def guess_lambda(fname):
     return L
 
 def save_UNK(u_nk, filepath, safety=True):
+    deprecation_warning("save_UNK", "save_u_nk")
+    return save_u_nk(u_nk, filepath, safety)
+
+
+def save_u_nk(u_nk, filepath, safety=True):
     '''
     Write u_nk to a file
     Arguments: u_nk in the format of alchemlyb, filepath
@@ -25,8 +31,12 @@ def save_UNK(u_nk, filepath, safety=True):
         u_nk.to_csv(filepath)
 
     return
-     
+
 def read_UNK(filepath):
+    deprecation_warning("read_UNK", "read_u_nk")
+    return read_u_nk(filepath)
+     
+def read_u_nk(filepath):
     '''
     Read a u_nk that was written by saveUNK.
     Arguments: filepath

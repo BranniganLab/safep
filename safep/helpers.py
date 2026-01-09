@@ -1,7 +1,13 @@
-# Import block
 import numpy as np
-
+import warnings
 from scipy.stats import norm
+
+def deprecation_warning(oldname, newname):
+    warnings.warn(
+        f"safep's {oldname} is deprecated and will be removed in a future version. Use {newname} instead.",
+        DeprecationWarning,
+        stacklevel=2  # stacklevel ensures the warning points to the user's code
+    )
 
 # Calculate the coefficient of determination:
 def get_Rsq(X, Y, Yexpected):
