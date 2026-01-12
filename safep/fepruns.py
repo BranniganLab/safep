@@ -115,7 +115,7 @@ def read_and_decorrelate(args, replica, unkpath, fepout_files):
     u_nk = u_nk.sort_index(axis=0, level=1).sort_index(axis=1)
     safep.plot_samples(ax, u_nk, color="blue", label="Raw Data")
 
-    if args.detectEQ:
+    if args.detect_equilibrium:
         print("Detecting equilibrium")
         u_nk = safep.detect_equilibrium_u_nk(u_nk)
         safep.plot_samples(ax, u_nk, color="orange",
