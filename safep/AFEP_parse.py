@@ -393,7 +393,7 @@ def get_summary_statistics(args, fepruns):
     toprint = ""
     dGs = []
     errors = []
-    for key, feprun in fepruns.items():
+    for key, feprun in sorted(fepruns.items()):
         cumulative = feprun.cumulative
         dG = np.round(cumulative.BAR.f.iloc[-1] * args.RT_kcal_per_mol, 1)
         error = np.round(
