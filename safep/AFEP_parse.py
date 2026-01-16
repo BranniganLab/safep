@@ -1,7 +1,8 @@
 """
-Large datasets can be difficult to parse on a workstation due to inefficiencies 
+Large datasets can be difficult to parse on a workstation due to inefficiencies
 in the way data is represented for pymbar. When possible, reduce the size of your dataset.
 """
+
 import argparse
 import warnings
 from dataclasses import dataclass
@@ -46,9 +47,15 @@ def do_agg_data(dataax, plotax):
     temp = pd.Series(pdf_y, index=pdf_x)
     mode = temp.idxmax()
 
-    textstr = (r"$\rm mode=$" + f"{np.round(mode,2)}" + "\n" + fr"$\mu$={np.round(average,2)}" +
-               "\n" + fr"$\sigma$={np.round(std,2)}")
-    props = {"boxstyle": 'square', "facecolor": 'white', "alpha": 1}
+    textstr = (
+        r"$\rm mode=$"
+        + f"{np.round(mode,2)}"
+        + "\n"
+        + rf"$\mu$={np.round(average,2)}"
+        + "\n"
+        + rf"$\sigma$={np.round(std,2)}"
+    )
+    props = {"boxstyle": "square", "facecolor": "white", "alpha": 1}
     plotax.text(
         0.175,
         0.95,
@@ -113,15 +120,15 @@ class AFEPArgumentParser(argparse.ArgumentParser):
         self.add_argument(
             "--fittingMethod",
             type=str,
-            help="Method for fitting the forward-backward discrepancies (hysteresis)." +
-            "LS=least squares, ML=maximum likelihood Default: LS",
+            help="Method for fitting the forward-backward discrepancies (hysteresis)."
+            + "LS=least squares, ML=maximum likelihood Default: LS",
             default="LS",
         )
         self.add_argument(
             "--max_size",
             type=float,
-            help="Maximum total file size in GB." +
-            "This is MUCH less than the required RAM. Default: 1",
+            help="Maximum total file size in GB."
+            + "This is MUCH less than the required RAM. Default: 1",
             default=1,
         )
         self.add_argument(
@@ -163,16 +170,17 @@ def initialize_general_figure(RT_kcal_per_mol, key, feprun):
 
 
 @dataclass(slots=True)
-class AFEPArguments():
+class AFEPArguments:
     """A more readable/testable format for CLI arguments"""
+
     dataroot: Path
     replica_pattern: str
     filename_pattern: str
     temperature: float
     detect_equilibrium: bool
     make_figures: bool
-    RT_kcal_per_mol: float=None
-    replicas: list[str]=None
+    RT_kcal_per_mol: float = None
+    replicas: list[str] = None
 
     @classmethod
     def from_AFEPArgumentParser(cls, parser: AFEPArgumentParser):
@@ -192,12 +200,14 @@ class AFEPArguments():
 
         detect_equilibrium = args.detect_equilibrium
 
-        return cls(dataroot,
-                   replica_pattern,
-                   filename_pattern,
-                   args.temperature,
-                   detect_equilibrium,
-                   args.make_figures)
+        return cls(
+            dataroot,
+            replica_pattern,
+            filename_pattern,
+            args.temperature,
+            detect_equilibrium,
+            args.make_figures,
+        )
 
     def __post_init__(self) -> None:
         """Get RT and standardize replica names"""
@@ -248,7 +258,7 @@ def add_summary_stats(mean, sterr, axes):
     """
     axes[3] = do_agg_data(axes[2], axes[3])
 
-    axes[0].set_title(str(round(mean,3)) + r"$\pm$" + str(sterr) + " kcal/mol")
+    axes[0].set_title(str(round(mean, 3)) + r"$\pm$" + str(sterr) + " kcal/mol")
     axes[0].legend()
     return axes
 
@@ -280,14 +290,12 @@ def do_shared_convergence_plot(args, fepruns, dGs):
         )
         conv_ax.get_legend().remove()
 
-    (forward_line,) = conv_ax.plot([], [],
-                                  linestyle="-",
-                                  color="black",
-                                  label="Forward Time Sampling")
-    (backward_line,) = conv_ax.plot([], [],
-                                   linestyle="--",
-                                   color="black",
-                                   label="Backward Time Sampling")
+    (forward_line,) = conv_ax.plot(
+        [], [], linestyle="-", color="black", label="Forward Time Sampling"
+    )
+    (backward_line,) = conv_ax.plot(
+        [], [], linestyle="--", color="black", label="Backward Time Sampling"
+    )
     conv_ax.legend(handles=[forward_line, backward_line])
     ymin = np.min(dGs) - 1
     ymax = np.max(dGs) + 1
@@ -309,12 +317,27 @@ def do_per_lambda_convergence_shared_axes(fepruns, mean, sterr):
     Returns:
         tuple[Fig, Axes]: figure and axes objects with the per lambda convergence
     """
-    fig, (hyst_ax, pdf_ax) = plt.subplots(1,2, sharex='col', sharey='row', gridspec_kw={'width_ratios': [2, 1]}, figsize=(8,5))
+    fig, (hyst_ax, pdf_ax) = plt.subplots(
+        1,
+        2,
+        sharex="col",
+        sharey="row",
+        gridspec_kw={"width_ratios": [2, 1]},
+        figsize=(8, 5),
+    )
     for _, feprun in fepruns.items():
-        plot_hysteresis((hyst_ax, pdf_ax), feprun.per_window, xlim=[-1,1], hysttype="lines", color=feprun.color, fontsize=12, pdf_type='KDE')
+        plot_hysteresis(
+            (hyst_ax, pdf_ax),
+            feprun.per_window,
+            xlim=[-1, 1],
+            hysttype="lines",
+            color=feprun.color,
+            fontsize=12,
+            pdf_type="KDE",
+        )
 
     pdf_ax = do_agg_data(hyst_ax, pdf_ax)
-    hyst_ax.set_title(str(round(mean,3)) + r"$\pm$" + str(sterr) + " kcal/mol")
+    hyst_ax.set_title(str(round(mean, 3)) + r"$\pm$" + str(sterr) + " kcal/mol")
 
     return fig, (hyst_ax, pdf_ax)
 
@@ -359,12 +382,11 @@ def do_general_figures_plot(args, fepruns, mean, sterr):
 
     Returns:
         fig, axes: figure and axes objects containing the figure panels
-        """
+    """
     fig = None
     for key, feprun in fepruns.items():
         if fig is None:
-            fig, axes = initialize_general_figure(
-                args.RT_kcal_per_mol, key, feprun)
+            fig, axes = initialize_general_figure(args.RT_kcal_per_mol, key, feprun)
         else:
             fig, axes = add_to_general_figure(fig, axes, args, key, feprun)
 
@@ -391,12 +413,11 @@ def get_summary_statistics(args, fepruns):
     for key, feprun in sorted(fepruns.items()):
         cumulative = feprun.cumulative
         dG = np.round(cumulative.BAR.f.iloc[-1] * args.RT_kcal_per_mol, 1)
-        error = np.round(
-            cumulative.BAR.errors.iloc[-1] * args.RT_kcal_per_mol, 1)
+        error = np.round(cumulative.BAR.errors.iloc[-1] * args.RT_kcal_per_mol, 1)
         dGs.append(dG)
         errors.append(error)
 
-        change_and_error = f"{key}: \u0394G = {dG}\u00B1{error} kcal/mol\n"
+        change_and_error = f"{key}: \u0394G = {dG}\u00b1{error} kcal/mol\n"
         toprint += change_and_error
 
     toprint += "\n"
@@ -415,8 +436,7 @@ def get_summary_statistics(args, fepruns):
 
 
 def main():
-    """Main function for parsing fep data and calculating free energy of (de)coupling
-    """
+    """Main function for parsing fep data and calculating free energy of (de)coupling"""
     parser = AFEPArgumentParser()
     args = AFEPArguments.from_AFEPArgumentParser(parser)
     itcolors = iter(COLORS)
