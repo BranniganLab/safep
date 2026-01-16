@@ -16,6 +16,7 @@ from scipy.constants import R, calorie
 
 import safep
 from safep.fepruns import process_replicas
+from safep.plotting import plot_hysteresis
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
@@ -308,36 +309,19 @@ def do_per_lambda_convergence_shared_axes(args, fepruns, mean, sterr, axes):
     Returns:
         tuple[Fig, Axes]: figure and axes objects with the per lambda convergence
     """
-    genfig = None
+    fig, (hyst_ax, pdf_ax) = plt.subplots(1,2, sharex='col', sharey='row', gridspec_kw={'width_ratios': [2, 1]}, figsize=(5,3))
     for key, feprun in fepruns.items():
-        if genfig is None:
-            genfig, genaxes = initialize_general_figure(
-                args.RT_kcal_per_mol, key, feprun)
-        else:
-            genfig, genaxes = safep.plot_general(
-                feprun.cumulative,
-                None,
-                feprun.per_window,
-                None,
-                args.RT_kcal_per_mol,
-                fig=genfig,
-                axes=genaxes,
-                hysttype="lines",
-                label=key,
-                color=feprun.color,
-            )
-    plt.delaxes(genaxes[0])
-    plt.delaxes(genaxes[1])
+        plot_hysteresis((hyst_ax, pdf_ax), feprun.per_window, xlim=[-1,1], hysttype="lines", color=feprun.color, fontsize=12, pdf_type='KDE')
 
-    genaxes[3] = do_agg_data(axes[2], axes[3])
-    genaxes[2].set_title(str(mean) + r"$\pm$" + str(sterr) + " kcal/mol")
+    pdf_ax = do_agg_data(hyst_ax, pdf_ax)
+    hyst_ax.set_title(str(mean) + r"$\pm$" + str(sterr) + " kcal/mol")
 
-    for txt in genfig.texts:
+    for txt in fig.texts:
         print(1)
         txt.set_visible(False)
         txt.set_text("")
 
-    return genfig, genaxes
+    return fig, (hyst_ax, pdf_ax)
 
 
 def make_figures(args, fepruns, dGs, mean, sterr) -> None:
