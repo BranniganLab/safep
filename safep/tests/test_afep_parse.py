@@ -15,8 +15,8 @@ def afep_args():
                         replicas = None,
                         filename_pattern = "*.fep*",
                         temperature = 303.15,
-                        detectEQ = True,
-                        makeFigures = False)
+                        detect_equilibrium = True,
+                        make_figures = False)
 
 @pytest.fixture
 def fepruns(afep_args, itcolors):
