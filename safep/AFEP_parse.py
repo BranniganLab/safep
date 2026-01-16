@@ -356,7 +356,7 @@ def make_figures(args, fepruns, dGs, mean, sterr) -> None:
     Side effects:
         Saves FEP_general_figures.pdf, FEP_convergence.pdf, and FEP_perLambda_convergence.pdf
     """
-    fig, axes = plot_general_figures(args, fepruns, mean, sterr)
+    fig, axes = do_general_figures_plot(args, fepruns, mean, sterr)
     fig.savefig(args.dataroot.joinpath("FEP_general_figures.pdf"))
 
     # # Plot the estimated total change in free energy as a function of simulation time;
@@ -370,7 +370,7 @@ def make_figures(args, fepruns, dGs, mean, sterr) -> None:
     fig.savefig(args.dataroot.joinpath("FEP_perLambda_convergence.pdf"))
 
 
-def plot_general_figures(args, fepruns, mean, sterr):
+def do_general_figures_plot(args, fepruns, mean, sterr):
     """plot general SAFEP figures
 
     Args:
