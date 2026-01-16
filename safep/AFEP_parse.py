@@ -248,7 +248,7 @@ def add_summary_stats(mean, sterr, axes):
     """
     axes[3] = do_agg_data(axes[2], axes[3])
 
-    axes[0].set_title(str(mean) + r"$\pm$" + str(sterr) + " kcal/mol")
+    axes[0].set_title(str(round(mean,3)) + r"$\pm$" + str(sterr) + " kcal/mol")
     axes[0].legend()
     return axes
 
