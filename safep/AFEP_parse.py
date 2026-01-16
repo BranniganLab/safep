@@ -356,16 +356,7 @@ def make_figures(args, fepruns, dGs, mean, sterr) -> None:
     Side effects:
         Saves FEP_general_figures.pdf, FEP_convergence.pdf, and FEP_perLambda_convergence.pdf
     """
-    fig = None
-    for key, feprun in fepruns.items():
-        if fig is None:
-            fig, axes = initialize_general_figure(
-                args.RT_kcal_per_mol, key, feprun)
-        else:
-            fig, axes = add_to_general_figure(fig, axes, args, key, feprun)
-
-        # hack to get aggregate data:
-    axes = add_summary_stats(mean, sterr, axes)
+    fig, axes = plot_general_figures(args, fepruns, mean, sterr)
     fig.savefig(args.dataroot.joinpath("FEP_general_figures.pdf"))
 
     # # Plot the estimated total change in free energy as a function of simulation time;
@@ -377,6 +368,31 @@ def make_figures(args, fepruns, dGs, mean, sterr) -> None:
     fig, axes = do_per_lambda_convergence_shared_axes(
         args, fepruns, mean, sterr, axes)
     fig.savefig(args.dataroot.joinpath("FEP_perLambda_convergence.pdf"))
+
+
+def plot_general_figures(args, fepruns, mean, sterr):
+    """plot general SAFEP figures
+
+    Args:
+        args (AFEPArguments): arguments from argparse
+        fepruns (dict): fepruns dictionary
+        mean (float): mean free energy across replicas
+        sterr (float): sterr free energy across replicas
+
+    Returns:
+        fig, axes: figure and axes objects containing the figure panels
+        """
+    fig = None
+    for key, feprun in fepruns.items():
+        if fig is None:
+            fig, axes = initialize_general_figure(
+                args.RT_kcal_per_mol, key, feprun)
+        else:
+            fig, axes = add_to_general_figure(fig, axes, args, key, feprun)
+
+        # hack to get aggregate data:
+    axes = add_summary_stats(mean, sterr, axes)
+    return fig, axes
 
 
 def get_summary_statistics(args, fepruns):
