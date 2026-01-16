@@ -309,8 +309,8 @@ def do_per_lambda_convergence_shared_axes(fepruns, mean, sterr):
     Returns:
         tuple[Fig, Axes]: figure and axes objects with the per lambda convergence
     """
-    fig, (hyst_ax, pdf_ax) = plt.subplots(1,2, sharex='col', sharey='row', gridspec_kw={'width_ratios': [2, 1]}, figsize=(5,3))
-    for key, feprun in fepruns.items():
+    fig, (hyst_ax, pdf_ax) = plt.subplots(1,2, sharex='col', sharey='row', gridspec_kw={'width_ratios': [2, 1]}, figsize=(8,5))
+    for _, feprun in fepruns.items():
         plot_hysteresis((hyst_ax, pdf_ax), feprun.per_window, xlim=[-1,1], hysttype="lines", color=feprun.color, fontsize=12, pdf_type='KDE')
 
     pdf_ax = do_agg_data(hyst_ax, pdf_ax)
@@ -335,7 +335,7 @@ def make_figures(args, fepruns, dGs, mean, sterr) -> None:
     Side effects:
         Saves FEP_general_figures.pdf, FEP_convergence.pdf, and FEP_perLambda_convergence.pdf
     """
-    fig, axes = do_general_figures_plot(args, fepruns, mean, sterr)
+    fig, _ = do_general_figures_plot(args, fepruns, mean, sterr)
     fig.savefig(args.dataroot.joinpath("FEP_general_figures.pdf"))
 
     # # Plot the estimated total change in free energy as a function of simulation time;
@@ -344,7 +344,7 @@ def make_figures(args, fepruns, dGs, mean, sterr) -> None:
     fig, _ = do_shared_convergence_plot(args, fepruns, dGs)
     fig.savefig(args.dataroot.joinpath("FEP_convergence.pdf"))
 
-    fig, axes = do_per_lambda_convergence_shared_axes(fepruns, mean, sterr)
+    fig, _ = do_per_lambda_convergence_shared_axes(fepruns, mean, sterr)
     fig.savefig(args.dataroot.joinpath("FEP_perLambda_convergence.pdf"))
 
 
