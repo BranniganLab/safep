@@ -392,6 +392,7 @@ def do_general_figures_plot(args, fepruns, mean, sterr):
 
         # hack to get aggregate data:
     axes = add_summary_stats(mean, sterr, axes)
+    fig.tight_layout()
     return fig, axes
 
 
