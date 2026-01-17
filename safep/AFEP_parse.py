@@ -7,6 +7,7 @@ import argparse
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
+from natsort import natsorted
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -210,9 +211,9 @@ class AFEPArguments:
         )
 
     def __post_init__(self) -> None:
-        """Get RT and standardize replica names"""
+        """Get RT, standardize and sort replica names"""
         self.RT_kcal_per_mol = R / (KILO * calorie) * self.temperature
-        self.replicas = [rep.stem for rep in self.dataroot.glob(self.replica_pattern)]
+        self.replicas = natsorted([rep.stem for rep in self.dataroot.glob(self.replica_pattern)])
 
 
 def add_to_general_figure(fig, axes, args, key, feprun):
@@ -410,7 +411,7 @@ def get_summary_statistics(args, fepruns):
     toprint = ""
     dGs = []
     errors = []
-    for key, feprun in sorted(fepruns.items()):
+    for key, feprun in natsorted(fepruns.items()):
         cumulative = feprun.cumulative
         dG = np.round(cumulative.BAR.f.iloc[-1] * args.RT_kcal_per_mol, 1)
         error = np.round(cumulative.BAR.errors.iloc[-1] * args.RT_kcal_per_mol, 1)
