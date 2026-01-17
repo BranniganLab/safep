@@ -213,7 +213,10 @@ class AFEPArguments:
     def __post_init__(self) -> None:
         """Get RT, standardize and sort replica names"""
         self.RT_kcal_per_mol = R / (KILO * calorie) * self.temperature
-        self.replicas = natsorted([rep.stem for rep in self.dataroot.glob(self.replica_pattern)])
+        if self.replica_pattern == '':
+            self.replicas = ['.']
+        else:
+            self.replicas = natsorted([rep.stem for rep in self.dataroot.glob(self.replica_pattern)])
 
 
 def add_to_general_figure(fig, axes, args, key, feprun):
