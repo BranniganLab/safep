@@ -421,7 +421,10 @@ def get_summary_statistics(args, fepruns):
         dGs.append(dG)
         errors.append(error)
 
-        change_and_error = f"{key}: \u0394G = {dG}\u00b1{error} kcal/mol\n"
+        if len(fepruns) == 1:
+            change_and_error = f"\u0394G = {dG}\u00b1{error} kcal/mol\n"
+        else:
+            change_and_error = f"{key}: \u0394G = {dG}\u00b1{error} kcal/mol\n"
         toprint += change_and_error
 
     toprint += "\n"
@@ -431,9 +434,10 @@ def get_summary_statistics(args, fepruns):
     # the MBAR estimated error will be more reliable, albeit underestimated
     if len(dGs) < 3:
         sterr = np.sqrt(np.sum(np.square(errors)))
+        # Nothing new to print
     else:
         sterr = np.round(np.std(dGs), 1)
-    toprint += f"mean: {mean} kcal/mol\n" + f"sterr: {sterr} kcal/mol"
+        toprint += f"mean: {mean} kcal/mol\n" + f"sterr: {sterr} kcal/mol"
     if np.isnan(mean):
         raise RuntimeError("Free energy average is NaN")
     return toprint, dGs, mean, sterr
