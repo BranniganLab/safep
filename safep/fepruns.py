@@ -120,6 +120,6 @@ def read_and_decorrelate(args, replica, unkpath, fepout_files):
         u_nk = safep.detect_equilibrium_u_nk(u_nk)
         safep.plot_samples(ax, u_nk, color="orange",
                            label="Equilibrium-Detected")
+        safep.save_UNK(u_nk, unkpath) # Only save decorrelated samples
     fig.savefig(args.dataroot.joinpath(f"{str(replica)}_FEP_number_of_samples.pdf"))
-    safep.save_UNK(u_nk, unkpath)
     return u_nk
