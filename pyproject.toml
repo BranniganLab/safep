@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 dependencies = [
     'numpy>=1.22.0',
     'pandas>=1.4.0', 
-    'alchemlyb==2.0.0', 
+    'alchemlyb==2.*',
     'matplotlib>=3.5.0', 
     'natsort>=7.1.0', 
     'tqdm',

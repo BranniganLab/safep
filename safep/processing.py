@@ -102,6 +102,17 @@ def detect_equilibrium_u_nk(u_nk: pd.DataFrame):
 
 
 def decorrelate_u_nk(u_nk: pd.DataFrame, method="dE") -> pd.DataFrame:
+    """Decorrelate each window without equilibrium detection.
+
+    Args:
+        u_nk (pd.DataFrame): the energies in the alchemlyb style
+        method (str, optional): decorrelation method. See subsampling.decorrelate_u_nk.
+            Defaults to "dE".
+
+    Returns:
+        pd.DataFrame: the decorrelated energies in the alchemlyb style
+    """
+    u_nk = u_nk.sort_index(axis=0, level=1).sort_index(axis=1)
     groups = u_nk.groupby("fep-lambda")
     decorr = pd.DataFrame([])
     for key, group in groups:
@@ -126,9 +137,8 @@ def read_and_process(fepoutFiles, temperature, decorrelate, detectEQ):
     """
     fepoutFiles = natsorted(fepoutFiles)
     u_nk = namd.extract_u_nk(fepoutFiles, temperature)
-    
     if detectEQ and decorrelate:
-    	print("Warning: detecting equilibrium ALSO decorrelates the samples")
+        print("Warning: detecting equilibrium ALSO decorrelates the samples")
     
     if detectEQ:
         print("Detecting Equilibrium (includes decorrelating)")
