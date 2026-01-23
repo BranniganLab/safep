@@ -11,12 +11,7 @@ import os
 def main(logfile):
     # In[ ]:
     global_conf, colvars, biases, TI_traj = safep.parse_Colvars_log(logfile)
-    # Need to pick the right restraint if there are several
-    # TODO look for harmonic wall with changing k
-    for b in biases:
-        if float(b['targetForceConstant']) >= 0 or b['decoupling'] in ['on', 'yes', 'true']:
-            DBC_rest = safep.make_harmonicWall_from_Colvars(b)
-            break
+    DBC_rest = get_changing_bias(biases)
     rest_name = DBC_rest['name']
     cvs = DBC_rest['colvar']
     print(f'Processing TI data for restraint {rest_name} on CVs {cvs}')
@@ -68,6 +63,16 @@ def main(logfile):
     axes[1].plot(lambdas, np.array(dAdL), marker='o', label='Colvars internal dA/dlambda', color='red')
     axes[1].legend()
     plt.savefig(Path(logfile).name.replace('.log', '_figures.png'))
+
+
+def get_changing_bias(biases):
+    # Need to pick the right restraint if there are several
+    # TODO look for harmonic wall with changing k
+    for b in biases:
+        if float(b['targetForceConstant']) >= 0 or b['decoupling'] in ['on', 'yes', 'true']:
+            DBC_rest = safep.make_harmonicWall_from_Colvars(b)
+            break
+    return DBC_rest
 
 
 if __name__ == "__main__":
