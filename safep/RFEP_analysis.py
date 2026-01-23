@@ -1,3 +1,4 @@
+from pathlib import Path
 import safep
 from glob import glob
 import re
@@ -67,7 +68,7 @@ def main(logfile):
     # This plot
     axes[1].plot(lambdas, np.array(dAdL), marker='o', label='Colvars internal dA/dlambda', color='red')
     axes[1].legend()
-    plt.show()
+    plt.savefig(Path(logfile).name.replace('.log', '_figures.png'))
 
 
 if __name__ == "__main__":
