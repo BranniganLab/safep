@@ -9,7 +9,6 @@ import os
 
 
 def main(logfile):
-    global f, columns, dataTI
     # In[ ]:
     global_conf, colvars, biases, TI_traj = safep.parse_Colvars_log(logfile)
     # Need to pick the right restraint if there are several
