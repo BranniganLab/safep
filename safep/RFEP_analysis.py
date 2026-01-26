@@ -18,16 +18,7 @@ def main(logfile):
     path = os.path.dirname(logfile)  # We assume the colvars traj and log are in the same directory
     colvarsTraj = get_colvars_traj_filename(global_conf, path)
 
-    # Extract precomputed TI info from traj file
-    dAdL = TI_traj[rest_name]['dAdL']
-    lambdas = TI_traj[rest_name]['L']
-    # if lambdaExponent >=2, set a zero derivative for lambda=0 (might be NaN in the data)
-    if int(DBC_rest['lambdaExponent']) >= 2 and np.isnan(dAdL[-1]):
-        dAdL[-1] = 0.0
-    if DBC_rest['decoupling']:  # lambdas have opposite meaning
-        # Convert to coupling
-        dAdL = - np.array(dAdL)
-        lambdas = 1.0 - np.array(lambdas)
+    dAdL = get_precomputed_gradients(DBC_rest, TI_traj, rest_name)
 
     # Setup and processing of colvars data
     columns = get_colvar_column_names(colvarsTraj)
@@ -40,9 +31,24 @@ def main(logfile):
 
     fig, axes = safep.plot_TI(TIcumulative, TIperWindow, fontsize=20)
     # This plot
-    axes[1].plot(lambdas, np.array(dAdL), marker='o', label='Colvars internal dA/dlambda', color='red')
+    axes[1].plot(dAdL.index, dAdL, marker='o', label='Colvars internal dA/dlambda', color='red')
     axes[1].legend()
     plt.savefig(Path(logfile).name.replace('.log', '_figures.png'))
+
+
+def get_precomputed_gradients(DBC_rest, TI_traj, rest_name):
+    dAdL = TI_traj[rest_name]['dAdL']
+    lambdas = TI_traj[rest_name]['L']
+    # if lambdaExponent >=2, set a zero derivative for lambda=0 (might be NaN in the data)
+    if int(DBC_rest['lambdaExponent']) >= 2 and np.isnan(dAdL[-1]):
+        dAdL[-1] = 0.0
+    if DBC_rest['decoupling']:  # lambdas have opposite meaning
+        # Convert to coupling
+        dAdL = - np.array(dAdL)
+        lambdas = 1.0 - np.array(lambdas)
+    dAdL_series = pd.Series(dAdL)
+    dAdL_series.index = lambdas
+    return dAdL_series
 
 
 def get_colvar_column_names(colvarsTraj):
