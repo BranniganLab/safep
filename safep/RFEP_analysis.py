@@ -36,6 +36,20 @@ def main(logfile):
     columns = re.split(' +', first_line)[1:-1]
     # trajectory could be read using colvartools (read multiple files etc)
     # this might fail if vector variables are present
+    dataTI = read_and_sanitize_TI_data(DBC_rest, columns, colvarsTraj)
+    TIperWindow, TIcumulative = safep.process_TI(dataTI, DBC_rest, None)
+    # In[ ]:
+    print_TI_summary(TIcumulative)
+    # In[ ]:
+    ''' Plot the results. '''
+    fig, axes = safep.plot_TI(TIcumulative, TIperWindow, fontsize=20)
+    # This plot
+    axes[1].plot(lambdas, np.array(dAdL), marker='o', label='Colvars internal dA/dlambda', color='red')
+    axes[1].legend()
+    plt.savefig(Path(logfile).name.replace('.log', '_figures.png'))
+
+
+def read_and_sanitize_TI_data(DBC_rest, columns, colvarsTraj):
     dataTI = pd.read_csv(colvarsTraj, sep=r'\s+', names=columns, comment='#', index_col=0)
     # We could also take a user parameter to adjust this in post-processing, or do equilibration detection
     n_equil = DBC_rest['targetEquilSteps']
@@ -48,16 +62,7 @@ def main(logfile):
     dataLs = np.round([schedule[i] for i in Ls], 3)
     dataTI.loc[:, 'L'] = dataLs
     dataTI = dataTI.iloc[1:]
-    TIperWindow, TIcumulative = safep.process_TI(dataTI, DBC_rest, None)
-    # In[ ]:
-    print_TI_summary(TIcumulative)
-    # In[ ]:
-    ''' Plot the results. '''
-    fig, axes = safep.plot_TI(TIcumulative, TIperWindow, fontsize=20)
-    # This plot
-    axes[1].plot(lambdas, np.array(dAdL), marker='o', label='Colvars internal dA/dlambda', color='red')
-    axes[1].legend()
-    plt.savefig(Path(logfile).name.replace('.log', '_figures.png'))
+    return dataTI
 
 
 def print_TI_summary(TIcumulative):
