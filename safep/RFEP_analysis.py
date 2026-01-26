@@ -22,8 +22,6 @@ def main(logfile):
 
     # Setup and processing of colvars data
     columns = get_colvar_column_names(colvarsTraj)
-    # trajectory could be read using colvartools (read multiple files etc)
-    # this might fail if vector variables are present
     dataTI = read_and_sanitize_TI_data(DBC_rest, columns, colvarsTraj)
     TIperWindow, TIcumulative = safep.process_TI(dataTI, DBC_rest, None)
 
@@ -59,6 +57,10 @@ def get_colvar_column_names(colvarsTraj):
 
 
 def read_and_sanitize_TI_data(DBC_rest, columns, colvarsTraj):
+    """
+    trajectory could be read using colvartools (read multiple files etc)
+    this might fail if vector variables are present
+    """
     dataTI = pd.read_csv(colvarsTraj, sep=r'\s+', names=columns, comment='#', index_col=0)
     # We could also take a user parameter to adjust this in post-processing, or do equilibration detection
     n_equil = DBC_rest['targetEquilSteps']
