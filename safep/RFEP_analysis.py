@@ -9,7 +9,6 @@ import os
 
 
 def main(logfile):
-    # In[ ]:
     global_conf, colvars, biases, TI_traj = safep.parse_Colvars_log(logfile)
 
     DBC_rest = get_changing_bias(biases)
@@ -18,7 +17,7 @@ def main(logfile):
     print(f'Processing TI data for restraint {rest_name} on CVs {cvs}')
     path = os.path.dirname(logfile)  # We assume the colvars traj and log are in the same directory
     colvarsTraj = get_colvars_traj_filename(global_conf, path)
-    # In[ ]:
+
     # Extract precomputed TI info from traj file
     dAdL = TI_traj[rest_name]['dAdL']
     lambdas = TI_traj[rest_name]['L']
@@ -29,24 +28,28 @@ def main(logfile):
         # Convert to coupling
         dAdL = - np.array(dAdL)
         lambdas = 1.0 - np.array(lambdas)
-    # In[ ]:
+
     # Setup and processing of colvars data
-    with open(colvarsTraj) as f:
-        first_line = f.readline()
-    columns = re.split(' +', first_line)[1:-1]
+    columns = get_colvar_column_names(colvarsTraj)
     # trajectory could be read using colvartools (read multiple files etc)
     # this might fail if vector variables are present
     dataTI = read_and_sanitize_TI_data(DBC_rest, columns, colvarsTraj)
     TIperWindow, TIcumulative = safep.process_TI(dataTI, DBC_rest, None)
-    # In[ ]:
+
     print_TI_summary(TIcumulative)
-    # In[ ]:
-    ''' Plot the results. '''
+
     fig, axes = safep.plot_TI(TIcumulative, TIperWindow, fontsize=20)
     # This plot
     axes[1].plot(lambdas, np.array(dAdL), marker='o', label='Colvars internal dA/dlambda', color='red')
     axes[1].legend()
     plt.savefig(Path(logfile).name.replace('.log', '_figures.png'))
+
+
+def get_colvar_column_names(colvarsTraj):
+    with open(colvarsTraj) as f:
+        first_line = f.readline()
+    columns = re.split(' +', first_line)[1:-1]
+    return columns
 
 
 def read_and_sanitize_TI_data(DBC_rest, columns, colvarsTraj):
