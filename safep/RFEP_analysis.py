@@ -18,20 +18,11 @@ def main(logfile):
     path = os.path.dirname(logfile)  # We assume the colvars traj and log are in the same directory
     colvarsTraj = get_colvars_traj_filename(global_conf, path)
 
-    dAdL = get_precomputed_gradients(DBC_rest, TI_traj, rest_name)
-
-    # Setup and processing of colvars data
-    columns = get_colvar_column_names(colvarsTraj)
-    dataTI = read_and_sanitize_TI_data(DBC_rest, columns, colvarsTraj)
-    TIperWindow, TIcumulative = safep.process_TI(dataTI, DBC_rest, None)
-
+    TIcumulative, TIperWindow = get_cumulative_and_per_window_TI_data(DBC_rest, colvarsTraj)
     print_TI_summary(TIcumulative)
 
-    fig, axes = safep.plot_TI(TIcumulative, TIperWindow, fontsize=20)
-    # This plot
-    axes[1].plot(dAdL.index, dAdL, marker='o', label='Colvars internal dA/dlambda', color='red')
-    axes[1].legend()
-    plt.savefig(Path(logfile).name.replace('.log', '_figures.png'))
+    dAdL = get_precomputed_gradients(DBC_rest, TI_traj, rest_name)
+    make_and_save_TI_figure(TIcumulative, TIperWindow, dAdL, logfile)
 
 
 def get_precomputed_gradients(DBC_rest, TI_traj, rest_name):
@@ -99,6 +90,21 @@ def get_changing_bias(biases):
             DBC_rest = safep.make_harmonicWall_from_Colvars(b)
             break
     return DBC_rest
+
+
+def make_and_save_TI_figure(TIcumulative, TIperWindow, dAdL, logfile):
+    fig, axes = safep.plot_TI(TIcumulative, TIperWindow, fontsize=20)
+    # This plot
+    axes[1].plot(dAdL.index, dAdL, marker='o', label='Colvars internal dA/dlambda', color='red')
+    axes[1].legend()
+    plt.savefig(Path(logfile).name.replace('.log', '_figures.png'))
+
+
+def get_cumulative_and_per_window_TI_data(DBC_rest, colvarsTraj):
+    columns = get_colvar_column_names(colvarsTraj)
+    dataTI = read_and_sanitize_TI_data(DBC_rest, columns, colvarsTraj)
+    TIperWindow, TIcumulative = safep.process_TI(dataTI, DBC_rest, None)
+    return TIcumulative, TIperWindow
 
 
 if __name__ == "__main__":
