@@ -11,15 +11,13 @@ import os
 def main(logfile):
     # In[ ]:
     global_conf, colvars, biases, TI_traj = safep.parse_Colvars_log(logfile)
+
     DBC_rest = get_changing_bias(biases)
     rest_name = DBC_rest['name']
     cvs = DBC_rest['colvar']
     print(f'Processing TI data for restraint {rest_name} on CVs {cvs}')
     path = os.path.dirname(logfile)  # We assume the colvars traj and log are in the same directory
-    if 'traj_file' in global_conf:
-        colvarsTraj = os.path.join(path, global_conf['traj_file'])
-    else:
-        colvarsTraj = os.path.join(path, global_conf['output_prefix'], '.colvars.traj')
+    colvarsTraj = get_colvars_traj_filename(global_conf, path)
     # In[ ]:
     # Extract precomputed TI info from traj file
     dAdL = TI_traj[rest_name]['dAdL']
@@ -52,10 +50,7 @@ def main(logfile):
     dataTI = dataTI.iloc[1:]
     TIperWindow, TIcumulative = safep.process_TI(dataTI, DBC_rest, None)
     # In[ ]:
-    dG_DBC = np.round(TIcumulative['dG'][1], 1)
-    error_DBC = np.round(TIcumulative['error'][1], 1)
-    print(f'ΔG_DBC = {dG_DBC} kcal/mol')
-    print(f'Standard Deviation: {error_DBC} kcal/mol')
+    print_TI_summary(TIcumulative)
     # In[ ]:
     ''' Plot the results. '''
     fig, axes = safep.plot_TI(TIcumulative, TIperWindow, fontsize=20)
@@ -63,6 +58,21 @@ def main(logfile):
     axes[1].plot(lambdas, np.array(dAdL), marker='o', label='Colvars internal dA/dlambda', color='red')
     axes[1].legend()
     plt.savefig(Path(logfile).name.replace('.log', '_figures.png'))
+
+
+def print_TI_summary(TIcumulative):
+    dG_DBC = np.round(TIcumulative['dG'][1], 1)
+    error_DBC = np.round(TIcumulative['error'][1], 1)
+    print(f'ΔG_DBC = {dG_DBC} kcal/mol')
+    print(f'Standard Deviation: {error_DBC} kcal/mol')
+
+
+def get_colvars_traj_filename(global_conf, path):
+    if 'traj_file' in global_conf:
+        colvarsTraj = os.path.join(path, global_conf['traj_file'])
+    else:
+        colvarsTraj = os.path.join(path, global_conf['output_prefix'], '.colvars.traj')
+    return colvarsTraj
 
 
 def get_changing_bias(biases):
