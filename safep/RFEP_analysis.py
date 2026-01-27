@@ -4,7 +4,7 @@ from pathlib import Path
 import re
 import numpy as np
 import pandas as pd
-
+import argparse
 import safep
 
 
@@ -139,4 +139,7 @@ def get_cumulative_and_per_window_TI_data(restraint, colvars_traj):
 
 
 if __name__ == "__main__":
-    main("RFEP_decouple.log")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("logfile", action="store", type=Path)
+    args = parser.parse_args()
+    main(args.logfile)
