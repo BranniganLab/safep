@@ -1,11 +1,11 @@
+import os
 from pathlib import Path
-import safep
-from glob import glob
 import re
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import os
+
+import safep
 
 
 def main(logfile):
@@ -58,7 +58,9 @@ def read_and_sanitize_TI_data(DBC_rest, columns, colvarsTraj):
     cv = DBC_rest['colvar']
     dataTI = dataTI.rename(columns={cv: 'DBC'})
     schedule = DBC_rest['lambdaSchedule']
-    dataTI = dataTI[dataTI.index >= n_equil][1:]  # Remove first samples of each window from analysis
+
+    # Remove first samples of each window from analysis
+    dataTI = dataTI[dataTI.index >= n_equil][1:]
     dataTI.index = dataTI.index - n_equil
     Ls = np.minimum((dataTI.index.values - 1) // DBC_rest['targetNumSteps'], len(schedule) - 1)
     dataLs = np.round([schedule[i] for i in Ls], 3)
@@ -94,7 +96,6 @@ def get_changing_bias(biases):
 
 def make_and_save_TI_figure(TIcumulative, TIperWindow, dAdL, logfile):
     fig, axes = safep.plot_TI(TIcumulative, TIperWindow, fontsize=20)
-    # This plot
     axes[1].plot(dAdL.index, dAdL, marker='o', label='Colvars internal dA/dlambda', color='red')
     axes[1].legend()
     plt.savefig(Path(logfile).name.replace('.log', '_figures.png'))
@@ -109,7 +110,3 @@ def get_cumulative_and_per_window_TI_data(DBC_rest, colvarsTraj):
 
 if __name__ == "__main__":
     main('RFEP_decouple.log')
-
-
-
-
