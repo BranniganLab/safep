@@ -2,7 +2,6 @@ from pathlib import Path
 import re
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 
 import safep
 
@@ -21,8 +20,8 @@ def main(logfile):
     TI_cumulative, TI_per_window = get_cumulative_and_per_window_TI_data(restraint, colvars_traj)
     print_TI_summary(TI_cumulative)
 
-    dAdL = get_precomputed_gradients(restraint, TI_traj, rest_name)
-    make_and_save_TI_figure(TI_cumulative, TI_per_window, dAdL, logfile)
+    free_energy_gradients = get_precomputed_gradients(restraint, TI_traj, rest_name)
+    make_and_save_TI_figure(TI_cumulative, TI_per_window, free_energy_gradients, logfile)
 
 
 def get_precomputed_gradients(restraint, TI_traj, rest_name):
