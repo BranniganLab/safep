@@ -13,7 +13,7 @@ import pandas as pd
 import safep
 
 
-def main(logfile: str|Path) -> None:
+def main(logfile: str | Path) -> None:
     """Main RFEP function to read, parse, and process a TI calculation log file.
 
     Requires a colvars trajectory file in the same directory.
@@ -42,17 +42,23 @@ def main(logfile: str|Path) -> None:
     path = logfile.parent
     colvars_traj = get_colvars_traj_filename(global_conf, path)
 
-    TI_cumulative, TI_per_window = get_cumulative_and_per_window_TI_data(restraint, colvars_traj)
+    TI_cumulative, TI_per_window = get_cumulative_and_per_window_TI_data(
+        restraint, colvars_traj
+    )
     print_TI_summary(TI_cumulative)
 
     free_energy_gradients = get_precomputed_gradients(restraint, TI_traj, rest_name)
-    make_and_save_TI_figure(TI_cumulative, TI_per_window, free_energy_gradients, logfile)
+    make_and_save_TI_figure(
+        TI_cumulative, TI_per_window, free_energy_gradients, logfile
+    )
 
 
-def get_precomputed_gradients(restraint: dict, TI_traj: dict, rest_name: str) -> pd.Series:
+def get_precomputed_gradients(
+    restraint: dict, TI_traj: dict, rest_name: str
+) -> pd.Series:
     """Get precomputed gradients for a restraint.
     Args:
-        restraint (dict): The restraint dictionary with at least the keys "decoupling" and "lambdaExponent"
+        restraint (dict): The restraint dictionary
         TI_traj (dict): Colvars trajectory file
         rest_name (str): Name of restraint file
 
@@ -62,7 +68,9 @@ def get_precomputed_gradients(restraint: dict, TI_traj: dict, rest_name: str) ->
     free_energy_gradients = TI_traj[rest_name]["dAdL"]
     lambdas = TI_traj[rest_name]["L"]
     # if lambdaExponent >=2, set a zero derivative for lambda=0 (might be NaN in the data)
-    if int(restraint.get("lambdaExponent", 1)) >= 2 and np.isnan(free_energy_gradients[-1]):
+    if int(restraint.get("lambdaExponent", 1)) >= 2 and np.isnan(
+        free_energy_gradients[-1]
+    ):
         free_energy_gradients[-1] = 0.0
     if bool(restraint.get("decoupling", False)):  # lambdas have opposite meaning
         # Convert to coupling
@@ -73,7 +81,7 @@ def get_precomputed_gradients(restraint: dict, TI_traj: dict, rest_name: str) ->
     return gradient_series
 
 
-def get_colvar_column_names(colvars_traj: Path|str) -> list[str]:
+def get_colvar_column_names(colvars_traj: Path | str) -> list[str]:
     """Get column names from a colvars traj file
 
     Args:
@@ -88,7 +96,9 @@ def get_colvar_column_names(colvars_traj: Path|str) -> list[str]:
     return columns
 
 
-def read_and_sanitize_TI_data(restraint: dict, columns: list[str], colvars_traj: Path|str) -> pd.DataFrame:
+def read_and_sanitize_TI_data(
+    restraint: dict, columns: list[str], colvars_traj: Path | str
+) -> pd.DataFrame:
     """Parse a colvars trajectory file and sanitize the column names.
 
     Trajectory could be read using colvartools (read multiple files etc)
@@ -104,7 +114,8 @@ def read_and_sanitize_TI_data(restraint: dict, columns: list[str], colvars_traj:
     Returns:
         pd.DataFrame: Dataframe of colvars trajectory with column names sanitized
     """
-    data_TI = pd.read_csv(colvars_traj, sep=r"\s+", names=columns, comment="#", index_col=0)
+    kwargs = {"sep": r"\s+", "names": columns, "comment": "#", "index_col": 0}
+    data_TI = pd.read_csv(colvars_traj, **kwargs)
     n_equil = restraint["targetEquilSteps"]
     cv = restraint["colvar"]
     data_TI = data_TI.rename(columns={cv: "DBC"})
@@ -113,7 +124,7 @@ def read_and_sanitize_TI_data(restraint: dict, columns: list[str], colvars_traj:
     # Remove first samples of each window from analysis
     data_TI = data_TI[data_TI.index >= n_equil][1:]
     data_TI.index = data_TI.index - n_equil
-    max_possible_n_lambdas = (data_TI.index.values - 1) // restraint['targetNumSteps']
+    max_possible_n_lambdas = (data_TI.index.values - 1) // restraint["targetNumSteps"]
     expected_n_lambdas = len(schedule) - 1
     n_lambdas = np.minimum(max_possible_n_lambdas, expected_n_lambdas)
     data_lambdas = np.round([schedule[i] for i in n_lambdas], 3)
@@ -140,7 +151,7 @@ def print_TI_summary(TI_cumulative: pd.DataFrame) -> None:
     print(f"Standard Deviation: {error} kcal/mol")
 
 
-def get_colvars_traj_filename(global_conf: dict, path: Path|str) -> Path:
+def get_colvars_traj_filename(global_conf: dict, path: Path | str) -> Path:
     """Get the path to the colvars trajectory file
 
     Args:
@@ -179,7 +190,10 @@ def get_changing_bias(biases: list[dict]) -> dict:
 
 
 def make_and_save_TI_figure(
-    TI_cumulative: pd.Series, TI_per_window: pd.Series, free_energy_gradient: pd.Series, logfile: Path|str
+    TI_cumulative: pd.Series,
+    TI_per_window: pd.Series,
+    free_energy_gradient: pd.Series,
+    logfile: Path | str,
 ) -> None:
     """Plot the TI results and save to a ..._figures.png file
 
@@ -207,7 +221,9 @@ def make_and_save_TI_figure(
     fig.savefig(Path(logfile).name.replace(".log", "_figures.png"))
 
 
-def get_cumulative_and_per_window_TI_data(restraint: dict, colvars_traj: Path|str) -> tuple[pd.DataFrame, pd.DataFrame]:
+def get_cumulative_and_per_window_TI_data(
+    restraint: dict, colvars_traj: Path | str
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Extract TI data from a colvars trajectory file
 
     Args:
