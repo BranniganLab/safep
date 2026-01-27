@@ -11,77 +11,77 @@ def main(logfile):
     logfile = Path(logfile)
     global_conf, colvars, biases, TI_traj = safep.parse_Colvars_log(logfile)
 
-    DBC_rest = get_changing_bias(biases)
-    rest_name = DBC_rest['name']
-    cvs = DBC_rest['colvar']
+    restraint = get_changing_bias(biases)
+    rest_name = restraint['name']
+    cvs = restraint['colvar']
     print(f'Processing TI data for restraint {rest_name} on CVs {cvs}')
     path = logfile.parent  # We assume the colvars traj and log are in the same directory
-    colvarsTraj = get_colvars_traj_filename(global_conf, path)
+    colvars_traj = get_colvars_traj_filename(global_conf, path)
 
-    TIcumulative, TIperWindow = get_cumulative_and_per_window_TI_data(DBC_rest, colvarsTraj)
-    print_TI_summary(TIcumulative)
+    TI_cumulative, TI_per_window = get_cumulative_and_per_window_TI_data(restraint, colvars_traj)
+    print_TI_summary(TI_cumulative)
 
-    dAdL = get_precomputed_gradients(DBC_rest, TI_traj, rest_name)
-    make_and_save_TI_figure(TIcumulative, TIperWindow, dAdL, logfile)
+    dAdL = get_precomputed_gradients(restraint, TI_traj, rest_name)
+    make_and_save_TI_figure(TI_cumulative, TI_per_window, dAdL, logfile)
 
 
-def get_precomputed_gradients(DBC_rest, TI_traj, rest_name):
-    dAdL = TI_traj[rest_name]['dAdL']
+def get_precomputed_gradients(restraint, TI_traj, rest_name):
+    free_energy_gradients = TI_traj[rest_name]['dAdL']
     lambdas = TI_traj[rest_name]['L']
     # if lambdaExponent >=2, set a zero derivative for lambda=0 (might be NaN in the data)
-    if int(DBC_rest['lambdaExponent']) >= 2 and np.isnan(dAdL[-1]):
-        dAdL[-1] = 0.0
-    if DBC_rest['decoupling']:  # lambdas have opposite meaning
+    if int(restraint['lambdaExponent']) >= 2 and np.isnan(free_energy_gradients[-1]):
+        free_energy_gradients[-1] = 0.0
+    if restraint['decoupling']:  # lambdas have opposite meaning
         # Convert to coupling
-        dAdL = - np.array(dAdL)
+        free_energy_gradients = - np.array(free_energy_gradients)
         lambdas = 1.0 - np.array(lambdas)
-    dAdL_series = pd.Series(dAdL)
-    dAdL_series.index = lambdas
-    return dAdL_series
+    gradient_series = pd.Series(free_energy_gradients)
+    gradient_series.index = lambdas
+    return gradient_series
 
 
-def get_colvar_column_names(colvarsTraj):
-    with open(colvarsTraj) as f:
+def get_colvar_column_names(colvars_traj):
+    with open(colvars_traj) as f:
         first_line = f.readline()
     columns = re.split(' +', first_line)[1:-1]
     return columns
 
 
-def read_and_sanitize_TI_data(DBC_rest, columns, colvarsTraj):
+def read_and_sanitize_TI_data(restraint, columns, colvarsTraj):
     """
     trajectory could be read using colvartools (read multiple files etc)
     this might fail if vector variables are present
     """
-    dataTI = pd.read_csv(colvarsTraj, sep=r'\s+', names=columns, comment='#', index_col=0)
+    data_TI = pd.read_csv(colvarsTraj, sep=r'\s+', names=columns, comment='#', index_col=0)
     # We could also take a user parameter to adjust this in post-processing, or do equilibration detection
-    n_equil = DBC_rest['targetEquilSteps']
-    cv = DBC_rest['colvar']
-    dataTI = dataTI.rename(columns={cv: 'DBC'})
-    schedule = DBC_rest['lambdaSchedule']
+    n_equil = restraint['targetEquilSteps']
+    cv = restraint['colvar']
+    data_TI = data_TI.rename(columns={cv: 'DBC'})
+    schedule = restraint['lambdaSchedule']
 
     # Remove first samples of each window from analysis
-    dataTI = dataTI[dataTI.index >= n_equil][1:]
-    dataTI.index = dataTI.index - n_equil
-    Ls = np.minimum((dataTI.index.values - 1) // DBC_rest['targetNumSteps'], len(schedule) - 1)
-    dataLs = np.round([schedule[i] for i in Ls], 3)
-    dataTI.loc[:, 'L'] = dataLs
-    dataTI = dataTI.iloc[1:]
-    return dataTI
+    data_TI = data_TI[data_TI.index >= n_equil][1:]
+    data_TI.index = data_TI.index - n_equil
+    lambdas = np.minimum((data_TI.index.values - 1) // restraint['targetNumSteps'], len(schedule) - 1)
+    data_lambdas = np.round([schedule[i] for i in lambdas], 3)
+    data_TI.loc[:, 'L'] = data_lambdas
+    data_TI = data_TI.iloc[1:]
+    return data_TI
 
 
-def print_TI_summary(TIcumulative):
-    dG_DBC = np.round(TIcumulative['dG'][1], 1)
-    error_DBC = np.round(TIcumulative['error'][1], 1)
-    print(f'ΔG_DBC = {dG_DBC} kcal/mol')
-    print(f'Standard Deviation: {error_DBC} kcal/mol')
+def print_TI_summary(TI_cumulative):
+    free_energy = np.round(TI_cumulative['dG'][1], 1)
+    error = np.round(TI_cumulative['error'][1], 1)
+    print(f'ΔG_DBC = {free_energy} kcal/mol')
+    print(f'Standard Deviation: {error} kcal/mol')
 
 
 def get_colvars_traj_filename(global_conf, path):
     if 'traj_file' in global_conf:
-        colvarsTraj = path/global_conf['traj_file']
+        colvars_traj = path/global_conf['traj_file']
     else:
-        colvarsTraj = path/(global_conf['output_prefix']+'.colvars.traj')
-    return colvarsTraj
+        colvars_traj = path/(global_conf['output_prefix']+'.colvars.traj')
+    return colvars_traj
 
 
 def get_changing_bias(biases):
@@ -89,23 +89,23 @@ def get_changing_bias(biases):
     # TODO look for harmonic wall with changing k
     for b in biases:
         if float(b['targetForceConstant']) >= 0 or b['decoupling'] in ['on', 'yes', 'true']:
-            DBC_rest = safep.make_harmonicWall_from_Colvars(b)
+            restraint = safep.make_harmonicWall_from_Colvars(b)
             break
-    return DBC_rest
+    return restraint
 
 
-def make_and_save_TI_figure(TIcumulative, TIperWindow, dAdL, logfile):
-    fig, axes = safep.plot_TI(TIcumulative, TIperWindow, fontsize=20)
-    axes[1].plot(dAdL.index, dAdL, marker='o', label='Colvars internal dA/dlambda', color='red')
+def make_and_save_TI_figure(TI_cumulative, TI_per_window, free_energy_gradient, logfile):
+    fig, axes = safep.plot_TI(TI_cumulative, TI_per_window, fontsize=20)
+    axes[1].plot(free_energy_gradient.index, free_energy_gradient, marker='o', label='Colvars internal dA/dlambda', color='red')
     axes[1].legend()
     plt.savefig(Path(logfile).name.replace('.log', '_figures.png'))
 
 
-def get_cumulative_and_per_window_TI_data(DBC_rest, colvarsTraj):
-    columns = get_colvar_column_names(colvarsTraj)
-    dataTI = read_and_sanitize_TI_data(DBC_rest, columns, colvarsTraj)
-    TIperWindow, TIcumulative = safep.process_TI(dataTI, DBC_rest, None)
-    return TIcumulative, TIperWindow
+def get_cumulative_and_per_window_TI_data(restraint, colvars_traj):
+    columns = get_colvar_column_names(colvars_traj)
+    data_TI = read_and_sanitize_TI_data(restraint, columns, colvars_traj)
+    TI_per_window, TI_cumulative = safep.process_TI(data_TI, restraint, None)
+    return TI_cumulative, TI_per_window
 
 
 if __name__ == "__main__":
