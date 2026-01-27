@@ -1,0 +1,3 @@
+[MESSAGES CONTROL]
+# Add "x" and "y" to the list of allowed variable names via regex
+good-names-rgxs=.*TI.*
