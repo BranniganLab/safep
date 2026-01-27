@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 import re
 import numpy as np
@@ -9,13 +8,14 @@ import safep
 
 
 def main(logfile):
+    logfile = Path(logfile)
     global_conf, colvars, biases, TI_traj = safep.parse_Colvars_log(logfile)
 
     DBC_rest = get_changing_bias(biases)
     rest_name = DBC_rest['name']
     cvs = DBC_rest['colvar']
     print(f'Processing TI data for restraint {rest_name} on CVs {cvs}')
-    path = os.path.dirname(logfile)  # We assume the colvars traj and log are in the same directory
+    path = logfile.parent  # We assume the colvars traj and log are in the same directory
     colvarsTraj = get_colvars_traj_filename(global_conf, path)
 
     TIcumulative, TIperWindow = get_cumulative_and_per_window_TI_data(DBC_rest, colvarsTraj)
@@ -78,9 +78,9 @@ def print_TI_summary(TIcumulative):
 
 def get_colvars_traj_filename(global_conf, path):
     if 'traj_file' in global_conf:
-        colvarsTraj = os.path.join(path, global_conf['traj_file'])
+        colvarsTraj = path/global_conf['traj_file']
     else:
-        colvarsTraj = os.path.join(path, global_conf['output_prefix'], '.colvars.traj')
+        colvarsTraj = path/(global_conf['output_prefix']+'.colvars.traj')
     return colvarsTraj
 
 
