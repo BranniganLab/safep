@@ -9,6 +9,8 @@ import re
 
 import numpy as np
 import pandas as pd
+from matplotlib.figure import Figure
+from matplotlib.axes import Axes
 
 import safep
 
@@ -48,9 +50,8 @@ def main(logfile: str | Path) -> None:
     print_TI_summary(TI_cumulative)
 
     free_energy_gradients = get_precomputed_gradients(restraint, TI_traj, rest_name)
-    make_and_save_TI_figure(
-        TI_cumulative, TI_per_window, free_energy_gradients, logfile
-    )
+    fig, _ = make_TI_figure(TI_cumulative, TI_per_window, free_energy_gradients)
+    fig.savefig(Path(logfile).name.replace(".log", "_figures.png"))
 
 
 def get_precomputed_gradients(
@@ -189,25 +190,20 @@ def get_changing_bias(biases: list[dict]) -> dict:
     return restraint
 
 
-def make_and_save_TI_figure(
+def make_TI_figure(
     TI_cumulative: pd.Series,
     TI_per_window: pd.Series,
     free_energy_gradient: pd.Series,
-    logfile: Path | str,
-) -> None:
-    """Plot the TI results and save to a ..._figures.png file
+) -> tuple[Figure, Axes]:
+    """Plot the TI results
 
     Args:
         TI_cumulative (pd.Series): Cumulative free energies
         TI_per_window (pd.Series): Per window free energies
         free_energy_gradient (pd.Series): Free energy gradients
-        logfile (Path|str): Path to the logfile
 
     Returns:
-        None
-
-    Side effects:
-        Saves a png of the TI figure to ..._figures.png
+        tuple[Figure, Axes]: the figure and axes containing the TI plot
     """
     fig, axes = safep.plot_TI(TI_cumulative, TI_per_window, fontsize=20)
     axes[1].plot(
@@ -218,7 +214,8 @@ def make_and_save_TI_figure(
         color="red",
     )
     axes[1].legend()
-    fig.savefig(Path(logfile).name.replace(".log", "_figures.png"))
+
+    return fig, axes
 
 
 def get_cumulative_and_per_window_TI_data(
