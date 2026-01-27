@@ -36,36 +36,31 @@ def main(logfile: str | Path) -> None:
     restraint = get_changing_bias(biases)
     if restraint is None:
         raise ValueError("No changing bias found in the provided logfile.")
-    rest_name = restraint["name"]
-    cvs = restraint["colvar"]
-    print(f"Processing TI data for restraint {rest_name} on CVs {cvs}")
+    print(
+        f"Processing TI data for restraint {restraint["name"]} on CVs {restraint["colvar"]}"
+    )
 
     # We assume the colvars traj and log are in the same directory
-    path = logfile.parent
-    colvars_traj = get_colvars_traj_filename(global_conf, path)
+    colvars_traj = get_colvars_traj_filename(global_conf, logfile.parent)
 
-    TI_cumulative, TI_per_window = get_cumulative_and_per_window_TI_data(
-        restraint, colvars_traj
-    )
+    TI_cumulative, TI_per_window = read_colvars_traj(restraint, colvars_traj)
     print_TI_summary(TI_cumulative)
 
-    free_energy_gradients = get_precomputed_gradients(restraint, TI_traj, rest_name)
+    free_energy_gradients = get_precomputed_gradients(restraint, TI_traj)
     fig, _ = make_TI_figure(TI_cumulative, TI_per_window, free_energy_gradients)
     fig.savefig(Path(logfile).name.replace(".log", "_figures.png"))
 
 
-def get_precomputed_gradients(
-    restraint: dict, TI_traj: dict, rest_name: str
-) -> pd.Series:
+def get_precomputed_gradients(restraint: dict, TI_traj: dict) -> pd.Series:
     """Get precomputed gradients for a restraint.
     Args:
         restraint (dict): The restraint dictionary
         TI_traj (dict): Colvars trajectory file
-        rest_name (str): Name of restraint file
 
     Returns:
         pd.Series: Precomputed gradients for the restraint.
     """
+    rest_name = restraint["name"]
     free_energy_gradients = TI_traj[rest_name]["dAdL"]
     lambdas = TI_traj[rest_name]["L"]
     # if lambdaExponent >=2, set a zero derivative for lambda=0 (might be NaN in the data)
@@ -218,7 +213,7 @@ def make_TI_figure(
     return fig, axes
 
 
-def get_cumulative_and_per_window_TI_data(
+def read_colvars_traj(
     restraint: dict, colvars_traj: Path | str
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Extract TI data from a colvars trajectory file
