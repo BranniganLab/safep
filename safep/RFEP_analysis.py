@@ -9,7 +9,7 @@ import safep
 
 def main(logfile):
     logfile = Path(logfile)
-    global_conf, colvars, biases, TI_traj = safep.parse_Colvars_log(logfile)
+    global_conf, _, biases, TI_traj = safep.parse_Colvars_log(logfile)
 
     restraint = get_changing_bias(biases)
     rest_name = restraint['name']
@@ -41,18 +41,18 @@ def get_precomputed_gradients(restraint, TI_traj, rest_name):
 
 
 def get_colvar_column_names(colvars_traj):
-    with open(colvars_traj) as f:
+    with open(colvars_traj, 'r', encoding="UTF8") as f:
         first_line = f.readline()
     columns = re.split(' +', first_line)[1:-1]
     return columns
 
 
-def read_and_sanitize_TI_data(restraint, columns, colvarsTraj):
+def read_and_sanitize_TI_data(restraint, columns, colvars_traj):
     """
     trajectory could be read using colvartools (read multiple files etc)
     this might fail if vector variables are present
     """
-    data_TI = pd.read_csv(colvarsTraj, sep=r'\s+', names=columns, comment='#', index_col=0)
+    data_TI = pd.read_csv(colvars_traj, sep=r'\s+', names=columns, comment='#', index_col=0)
     # We could also take a user parameter to adjust this in post-processing, or do equilibration detection
     n_equil = restraint['targetEquilSteps']
     cv = restraint['colvar']
@@ -98,7 +98,7 @@ def make_and_save_TI_figure(TI_cumulative, TI_per_window, free_energy_gradient, 
     fig, axes = safep.plot_TI(TI_cumulative, TI_per_window, fontsize=20)
     axes[1].plot(free_energy_gradient.index, free_energy_gradient, marker='o', label='Colvars internal dA/dlambda', color='red')
     axes[1].legend()
-    plt.savefig(Path(logfile).name.replace('.log', '_figures.png'))
+    fig.savefig(Path(logfile).name.replace('.log', '_figures.png'))
 
 
 def get_cumulative_and_per_window_TI_data(restraint, colvars_traj):
