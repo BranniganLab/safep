@@ -50,11 +50,12 @@ def get_colvar_column_names(colvars_traj):
 
 def read_and_sanitize_TI_data(restraint, columns, colvars_traj):
     """
-    trajectory could be read using colvartools (read multiple files etc)
-    this might fail if vector variables are present
+    Trajectory could be read using colvartools (read multiple files etc)
+    This might fail if vector variables are present
+
+    We could also take a user parameter for n_equil or do equilibration detection
     """
     data_TI = pd.read_csv(colvars_traj, sep=r"\s+", names=columns, comment="#", index_col=0)
-    # We could also take a user parameter to adjust this in post-processing, or do equilibration detection
     n_equil = restraint["targetEquilSteps"]
     cv = restraint["colvar"]
     data_TI = data_TI.rename(columns={cv: "DBC"})
@@ -63,8 +64,10 @@ def read_and_sanitize_TI_data(restraint, columns, colvars_traj):
     # Remove first samples of each window from analysis
     data_TI = data_TI[data_TI.index >= n_equil][1:]
     data_TI.index = data_TI.index - n_equil
-    lambdas = np.minimum((data_TI.index.values - 1) // restraint['targetNumSteps'], len(schedule) - 1)
-    data_lambdas = np.round([schedule[i] for i in lambdas], 3)
+    max_possible_n_lambdas = (data_TI.index.values - 1) // restraint['targetNumSteps']
+    expected_n_lambdas = len(schedule) - 1
+    n_lambdas = np.minimum(max_possible_n_lambdas, expected_n_lambdas)
+    data_lambdas = np.round([schedule[i] for i in n_lambdas], 3)
     data_TI.loc[:, "L"] = data_lambdas
     data_TI = data_TI.iloc[1:]
     return data_TI
