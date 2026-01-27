@@ -168,7 +168,6 @@ def get_colvars_traj_filename(global_conf: dict, path: Path | str) -> Path:
 def get_changing_bias(biases: list[dict]) -> dict:
     """Identify the changing bias out of several (if present)
 
-    TODO look for harmonic wall with changing k
     Args:
         biases (list[dict]): List of colvars trajectory files
 
