@@ -42,13 +42,22 @@ def main(logfile: str|Path) -> None:
     make_and_save_TI_figure(TI_cumulative, TI_per_window, free_energy_gradients, logfile)
 
 
-def get_precomputed_gradients(restraint, TI_traj, rest_name):
+def get_precomputed_gradients(restraint: dict, TI_traj: dict, rest_name: str) -> pd.Series:
+    """Get precomputed gradients for a restraint.
+    Args:
+        restraint (dict): The restraint dictionary with at least the keys "decoupling" and "lambdaExponent"
+        TI_traj (dict): Colvars trajectory file
+        rest_name (str): Name of restraint file
+
+    Returns:
+        pd.Series: Precomputed gradients for the restraint.
+    """
     free_energy_gradients = TI_traj[rest_name]["dAdL"]
     lambdas = TI_traj[rest_name]["L"]
     # if lambdaExponent >=2, set a zero derivative for lambda=0 (might be NaN in the data)
-    if int(restraint["lambdaExponent"]) >= 2 and np.isnan(free_energy_gradients[-1]):
+    if int(restraint.get("lambdaExponent", 1)) >= 2 and np.isnan(free_energy_gradients[-1]):
         free_energy_gradients[-1] = 0.0
-    if restraint["decoupling"]:  # lambdas have opposite meaning
+    if bool(restraint.get("decoupling", False)):  # lambdas have opposite meaning
         # Convert to coupling
         free_energy_gradients = -np.array(free_energy_gradients)
         lambdas = 1.0 - np.array(lambdas)
