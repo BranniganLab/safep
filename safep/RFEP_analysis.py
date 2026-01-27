@@ -1,10 +1,15 @@
-"""Functions to support restraint free energy perturbation (RFEP) using TI and the colvars library"""
+"""Functions to support restraint free energy perturbation (RFEP)
 
+Inputs are expected to have used NAMD, TI, and the colvars library
+"""
+
+import argparse
 from pathlib import Path
 import re
+
 import numpy as np
 import pandas as pd
-import argparse
+
 import safep
 
 
@@ -27,6 +32,8 @@ def main(logfile: str|Path) -> None:
     global_conf, _, biases, TI_traj = safep.parse_Colvars_log(logfile)
 
     restraint = get_changing_bias(biases)
+    if restraint is None:
+        raise ValueError("No changing bias found in the provided logfile.")
     rest_name = restraint["name"]
     cvs = restraint["colvar"]
     print(f"Processing TI data for restraint {rest_name} on CVs {cvs}")
@@ -66,19 +73,36 @@ def get_precomputed_gradients(restraint: dict, TI_traj: dict, rest_name: str) ->
     return gradient_series
 
 
-def get_colvar_column_names(colvars_traj):
+def get_colvar_column_names(colvars_traj: Path|str) -> list[str]:
+    """Get column names from a colvars traj file
+
+    Args:
+        colvars_traj (Path|str): Path to the colvars trajectory file
+
+    Returns:
+        list[str]: List of column names
+    """
     with open(colvars_traj, "r", encoding="UTF8") as f:
         first_line = f.readline()
     columns = re.split(" +", first_line)[1:-1]
     return columns
 
 
-def read_and_sanitize_TI_data(restraint, columns, colvars_traj):
-    """
+def read_and_sanitize_TI_data(restraint: dict, columns: list[str], colvars_traj: Path|str) -> pd.DataFrame:
+    """Parse a colvars trajectory file and sanitize the column names.
+
     Trajectory could be read using colvartools (read multiple files etc)
     This might fail if vector variables are present
 
     We could also take a user parameter for n_equil or do equilibration detection
+
+    Args:
+        restraint (dict): Colvars trajectory file
+        columns (list[str]): List of column names
+        colvars_traj (Path|str): Path to the colvars trajectory file
+
+    Returns:
+        pd.DataFrame: Dataframe of colvars trajectory with column names sanitized
     """
     data_TI = pd.read_csv(colvars_traj, sep=r"\s+", names=columns, comment="#", index_col=0)
     n_equil = restraint["targetEquilSteps"]
@@ -98,14 +122,35 @@ def read_and_sanitize_TI_data(restraint, columns, colvars_traj):
     return data_TI
 
 
-def print_TI_summary(TI_cumulative):
+def print_TI_summary(TI_cumulative: pd.DataFrame) -> None:
+    """Print summary stats to stout
+
+    Args:
+        TI_cumulative (pd.DataFrame): Cumulative precomputed free energies
+
+    Returns:
+        None
+
+    Side effects:
+        Print summary to stout
+    """
     free_energy = np.round(TI_cumulative["dG"][1], 1)
     error = np.round(TI_cumulative["error"][1], 1)
     print(f"ΔG_DBC = {free_energy} kcal/mol")
     print(f"Standard Deviation: {error} kcal/mol")
 
 
-def get_colvars_traj_filename(global_conf, path):
+def get_colvars_traj_filename(global_conf: dict, path: Path|str) -> Path:
+    """Get the path to the colvars trajectory file
+
+    Args:
+        global_conf (dict): Global configuration
+        path (Path|str): Path to the parent directory
+
+    Returns:
+        Path: Path to the colvars trajectory file
+    """
+    path = Path(path)
     if "traj_file" in global_conf:
         colvars_traj = path / global_conf["traj_file"]
     else:
@@ -113,9 +158,17 @@ def get_colvars_traj_filename(global_conf, path):
     return colvars_traj
 
 
-def get_changing_bias(biases):
-    # Need to pick the right restraint if there are several
-    # TODO look for harmonic wall with changing k
+def get_changing_bias(biases: list[dict]) -> dict:
+    """Identify the changing bias out of several (if present)
+
+    TODO look for harmonic wall with changing k
+    Args:
+        biases (list[dict]): List of colvars trajectory files
+
+    Returns:
+        dict: Dictionary describing the bias of interest
+    """
+    restraint = None
     for b in biases:
         changing_k = float(b["targetForceConstant"]) >= 0
         decoupling_restraint = b["decoupling"] in ["on", "yes", "true"]
@@ -126,8 +179,22 @@ def get_changing_bias(biases):
 
 
 def make_and_save_TI_figure(
-    TI_cumulative, TI_per_window, free_energy_gradient, logfile
-):
+    TI_cumulative: pd.Series, TI_per_window: pd.Series, free_energy_gradient: pd.Series, logfile: Path|str
+) -> None:
+    """Plot the TI results and save to a ..._figures.png file
+
+    Args:
+        TI_cumulative (pd.Series): Cumulative free energies
+        TI_per_window (pd.Series): Per window free energies
+        free_energy_gradient (pd.Series): Free energy gradients
+        logfile (Path|str): Path to the logfile
+
+    Returns:
+        None
+
+    Side effects:
+        Saves a png of the TI figure to ..._figures.png
+    """
     fig, axes = safep.plot_TI(TI_cumulative, TI_per_window, fontsize=20)
     axes[1].plot(
         free_energy_gradient.index,
@@ -140,7 +207,16 @@ def make_and_save_TI_figure(
     fig.savefig(Path(logfile).name.replace(".log", "_figures.png"))
 
 
-def get_cumulative_and_per_window_TI_data(restraint, colvars_traj):
+def get_cumulative_and_per_window_TI_data(restraint: dict, colvars_traj: Path|str) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Extract TI data from a colvars trajectory file
+
+    Args:
+        restraint (dict): details of the restraint of interest
+        colvars_traj (Path|str): Path to the colvars trajectory file
+
+    Returns:
+        tuple[pd.DataFrame, pd.DataFrame]: Cumulative free energies and per window free energies
+    """
     columns = get_colvar_column_names(colvars_traj)
     data_TI = read_and_sanitize_TI_data(restraint, columns, colvars_traj)
     TI_per_window, TI_cumulative = safep.process_TI(data_TI, restraint, None)
