@@ -1,3 +1,5 @@
+"""Functions to support restraint free energy perturbation (RFEP) using TI and the colvars library"""
+
 from pathlib import Path
 import re
 import numpy as np
@@ -6,7 +8,21 @@ import pandas as pd
 import safep
 
 
-def main(logfile):
+def main(logfile: str|Path) -> None:
+    """Main RFEP function to read, parse, and process a TI calculation log file.
+
+    Requires a colvars trajectory file in the same directory.
+
+    Args:
+        logfile (str|Path): Path to the colvars trajectory file
+
+    Returns:
+        None
+
+    Side effects:
+        print summary stats to stout
+        save convergence figure
+    """
     logfile = Path(logfile)
     global_conf, _, biases, TI_traj = safep.parse_Colvars_log(logfile)
 
