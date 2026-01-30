@@ -11,10 +11,19 @@ These scripts and notebooks are broadly applicable to FEP analysis.
 
 
 ## Quickstart:
+
 In a terminal (tested on Linux and Mac):
 1. [Optional] Create and activate a conda environment `conda create -n safep` `conda activate safep`
 2. Install the latest version of the safep package `pip install git+https://github.com/BranniganLab/safep.git`
-3. Navigate to the root directory of your FEP results.
+3. Continue with either CLI or Notebook interfaces below
+
+### Notebook
+4a. For FEP results, open BAR_Estimator_Basic.ipynb
+4b. For RFEP, open RFEP_analysis.ipynb
+5. Follow the instructions in the relevant notebook
+
+### CLI (only available for FEP, not yet for RFEP)
+4. Navigate to the root directory of your FEP results.
 
 Given a file structure like:
 ```
@@ -28,7 +37,7 @@ Given a file structure like:
 |   ...
 ...
 ```
-4. Run `python -m safep.AFEP_parse --path . --fepoutre "*fepout --replicare "replica_*" --temperature 303.15 --detect_equilibrium True -- make_figures True`
+5. Run `python -m safep.AFEP_parse --path . --fepoutre "*fepout --replicare "replica_*" --temperature 303.15 --detect_equilibrium True -- make_figures True`
 
 More detailed explanations can be seen by running `python -m safep.AFEP_parse --help`
 
