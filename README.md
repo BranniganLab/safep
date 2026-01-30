@@ -18,8 +18,9 @@ In a terminal (tested on Linux and Mac):
 3. Continue with either CLI or Notebook interfaces below
 
 ### Notebook
-4a. For FEP results, open BAR_Estimator_Basic.ipynb
-4b. For RFEP, open RFEP_analysis.ipynb
+4. Open the relevant notebook
+  - For FEP results, open BAR_Estimator_Basic.ipynb
+  - For RFEP, open RFEP_analysis.ipynb
 5. Follow the instructions in the relevant notebook
 
 ### CLI (only available for FEP, not yet for RFEP)
