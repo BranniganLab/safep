@@ -1,3 +1,30 @@
+# tilt.tcl
+#
+### Abstract
+# This file contains implementation of a tilt metric consistent 
+# with the Colvars package.
+#
+# The primary use-case has been in restraining the orientation of
+# phospholipid acyl chains during decoupling from a bulk membrane,
+# but may also be used for the orientation of any well-ordered set
+# of atoms (e.g. an alpha helix)
+#
+# Based on fit_angle.tcl by Justin Gullingsrud:
+# https://www.ks.uiuc.edu/Research/vmd/mailing_list/vmd-l/att-2279/fit_angle.tcl
+#
+# Used in E Santiago-McRae, O Sheffer, WL Cheng, J Hénin, and GH Brannigan 2025 preprint:
+# https://chemrxiv.org/doi/full/10.26434/chemrxiv-2025-t53z0-v3
+#
+# See also Colvars documentation: https://colvars.github.io/
+#
+# Authors: JH, ES
+
+# Get the magnitude of an arbitrary vector
+#
+# Arguments:
+# vec: a vector represented as a list
+# Results:
+# The length of the vector
 proc get_magnitude {vec} {
     set magnitude 0.0
     foreach v $vec {
@@ -8,6 +35,12 @@ proc get_magnitude {vec} {
     return $magnitude
 }
 
+# Apply a unit normalization to an input vector
+#
+# Arguments:
+# vec: an arbitrary vector
+# Results:
+# A unit vector of the same dimensionality and direction as the input
 proc normalize_vector {vec} {
     set magnitude [get_magnitude $vec]
 
@@ -23,6 +56,14 @@ proc normalize_vector {vec} {
     return $normalized_vec
 }
 
+# Compute the coefficient for a one dimensional, ordered data set
+# That is, compute m s.t. x_i=m*i, where i is the index of the data point
+# Assumes the data points are ordered and equidistant
+#
+# Arguments:
+# x: a one-dimensional vector of data points
+# Results:
+# The optimal coefficient in the least-squares sense
 proc lsq { x } {
 	set N [llength $x]
 	set xtot 0
@@ -36,6 +77,15 @@ proc lsq { x } {
 	return $xtot
 }
 
+# "Slice" a vector by extracting every step'th value from
+# the start point to the end of the vector.
+#
+# Arguments:
+# vec: the vector to slice
+# start: the initial index (discard values before this point)
+# step: the N for selecting every Nth value
+# Results:
+# A new vector of length |vec|//step with only those selected values
 proc reslice_vector {vec start step} {
     set idcs [ generate_range $start [llength $vec] $step]
     set sliced {}
@@ -45,6 +95,16 @@ proc reslice_vector {vec start step} {
     }
     return $sliced
 }
+
+# Make a list of numbers from start to end counting by step
+# 
+# Arguments:
+# start: the initial number
+# end: the last number
+# step: the stride
+# Results:
+# A vector of length (end-start)//step
+# with counting numbers between start and end
 proc generate_range {start end step} {
     if { [expr $end < $start] } {
         return {}
@@ -57,9 +117,16 @@ proc generate_range {start end step} {
 }
 
 
-# Takes data in the form { x1 y1 z1 x2 y2 z2 ... xN yN zN }
-# and fits a vector to it
+# Fits a vector to an ordered data set
+# See assumptions of lsq
+#
 # JH - now returns unnormalized vector because it's needed for gradient computation
+#
+# Arguments:
+# data: a one-dimensional dataset in the form { x1 y1 z1 x2 y2 z2 ... xN yN zN }
+# Results:
+# An unnormalized vector that fits the data in the least squares fit*
+# (*if the assumptions are valid)
 proc fit_vec_to_cartesian { data } {
     set x [ reslice_vector $data 0 3 ]
     set y [ reslice_vector $data 1 3 ]
@@ -68,12 +135,25 @@ proc fit_vec_to_cartesian { data } {
     return $vector
 }
 
+# Calculate the cosine of the angle between a vector and the z axis
+# 
+# Arguments:
+# tail: a vector (that lies along a phospholipid acyl chain in this context)
+# Results:
+# cosine of the angle between the vector and the z axis
 proc calc_tilt { tail } {
     set unnormalized [ fit_vec_to_cartesian $tail ]
     set val [ normalize_vector $unnormalized ]
     return [lindex $val 2]
 }
 
+# Calculate the gradient of the tilt w.r.t. the z axis
+# See calc_tilt
+#
+# Arguments:
+# tail: a vector (that lies along a phospholipid acyl chain in this context)
+# Results:
+# the gradient of the tilt of that vector
 proc calc_tilt_gradient { tail } {
     set theta [ fit_vec_to_cartesian $tail ]
     set L [ get_magnitude $theta ]
