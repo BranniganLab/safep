@@ -20,7 +20,7 @@ def test_get_stages(pruned_traj):
     assert pruned_traj.loc[99800, "stage"] == 0
 
 def test_get_wall_position(pruned_traj):
-    config = {"stepsperstage": 5000000, "stages": 20, "initialWall": 5, "finalWall": 4}
+    config = {"stepsperstage": 5000000, "stages": 20, "initialWall": 5, "finalWall": 4, "initialequil": 250000}
     pruned_traj.get_wall_position(config)
     assert pruned_traj.wall_position.iloc[-1] == 4, "Initial wall position should be 4"
     assert pruned_traj.wall_position.iloc[0] == 5, "Final wall position should be 5"

@@ -57,9 +57,12 @@ class ColvarsTraj(pd.DataFrame):
         if np.any(self["stage"] > stages):
             print("WARNING: Found more steps than should be present given the number of stages")
 
-    def get_wall_position(traj: pd.DataFrame, config: dict) -> list:
-
+    def get_wall_position(self, config: dict) -> None:
+        if "stage" not in self.columns:
+            self.get_stages(config)
         initial_wall = config["initialWall"]
         final_wall = config["finalWall"]
+        stages = config["stages"]
+        self["wall_position"] = self.stage/stages * (final_wall - initial_wall) + initial_wall
 
 
