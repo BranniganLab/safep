@@ -29,8 +29,10 @@ def test_get_wall_position(pruned_traj, config):
     assert pruned_traj.wall_position.iloc[0] == 8, "Initial wall position should be 8"
     assert pruned_traj.wall_position.iloc[-1] == 6, "Final wall position should be 6"
 
-def test_get_gradient(pruned_traj, config):
-    pruned_traj.get_gradient(config)
-    assert pruned_traj.gradient.iloc[0] == 0, "Initial gradient should be 0, because initial DBC is less than the wall"
-    assert np.isclose(pruned_traj.gradient.loc[1229700], -4.19983056656), "Gradient when DBC=8.041... should be -4.19..."
-    assert np.isclose(pruned_traj.gradient.loc[104797700], -1.91812923503), "Gradient when DBC=6.02... and wall=6, should be -1.9..."
+def test_get_force(pruned_traj, config):
+    pruned_traj.get_force(config)
+    assert pruned_traj.force.iloc[0] == 0, "Initial Force should be 0, because initial DBC is less than the wall"
+    assert np.isclose(pruned_traj.force.loc[1229700], -4.19983056656), "Force when DBC=8.041... should be -4.19..."
+    assert np.isclose(pruned_traj.force.loc[104797700], -1.91812923503), "Force when DBC=6.02... and wall=6, should be -1.9..."
+
+

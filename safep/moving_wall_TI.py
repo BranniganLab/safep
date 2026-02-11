@@ -65,13 +65,13 @@ class ColvarsTraj(pd.DataFrame):
         stages = config["stages"]
         self["wall_position"] = self.stage/stages * (final_wall - initial_wall) + initial_wall
 
-    def get_gradient(self, config: dict) -> None:
+    def get_force(self, config: dict) -> None:
         if "wall_position" not in self.columns:
             self.get_wall_position(config)
         k = config["spring"]
         mask = self.DBC > self.wall_position
-        self["gradient"] = 0.0
-        compute_gradient = lambda sample: k/2 * (sample["wall_position"] - sample["DBC"])
-        self.loc[mask, "gradient"] = self.loc[mask].apply(compute_gradient, axis=1)
+        self["force"] = 0.0
+        compute_force = lambda sample: k/2 * (sample["wall_position"] - sample["DBC"])
+        self.loc[mask, "force"] = self.loc[mask].apply(compute_force, axis=1)
 
 
