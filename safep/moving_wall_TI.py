@@ -51,8 +51,7 @@ class ColvarsTraj(pd.DataFrame):
         steps = self.index
         self["stage"] = steps//steps_per_stage
         if np.any(self["stage"] > stages):
-            raise ValueError("Found more steps than should be present given the number of stages")
-
+            print("WARNING: Found more steps than should be present given the number of stages")
 
     def get_wall_position(traj: pd.DataFrame, config: dict) -> list:
 
