@@ -1,0 +1,7 @@
+    set equilsteps 0
+	set initialequil 0
+	set stepsperstage 10
+	set stages 1
+	set initialWall 5
+	set finalWall 6
+	set spring 200

@@ -41,3 +41,9 @@ def test_get_free_energy_gradients(pruned_traj, config):
     # Gradients are always in the expanding direction, so they should all be negative
     assert np.all(gradients.values <= 0), "Positive gradients found"
     assert len(gradients) == config["stages"]+1, "Too many stages with gradients"
+
+def test_toy_data():
+    traj = ColvarsTraj.read_colvars_traj(Path(__file__).parent/"data/toy.colvars.traj")
+    config = read_namd_conf_moving_wall(Path(__file__).parent/"data/toy.namd")
+    gradients = traj.get_free_energy_gradients(config)
+    assert gradients.sum() == -60, "Toy data is failing for some reason"
