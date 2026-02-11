@@ -48,8 +48,12 @@ class ColvarsTraj(pd.DataFrame):
     def get_stages(self, config: dict) -> None:
         steps_per_stage = config["stepsperstage"]
         stages = config["stages"]
-        steps = self.index
-        self["stage"] = steps//steps_per_stage
+        initialequil = config["initialequil"]
+        self["stage"] = 0
+
+        mask = self.index > initialequil
+        steps = self.index[mask]
+        self["stage"][mask] = (steps-initialequil)//steps_per_stage
         if np.any(self["stage"] > stages):
             print("WARNING: Found more steps than should be present given the number of stages")
 

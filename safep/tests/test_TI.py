@@ -14,9 +14,10 @@ def test_read_colvars_traj(pruned_traj):
     assert pruned_traj.loc[19800, "DBC"] == 4.70510005898365e+00
 
 def test_get_stages(pruned_traj):
-    config = {"stepsperstage": 1000, "stages": 20}
+    config = {"stepsperstage": 5000000, "stages": 20, "initialequil": 250000}
     pruned_traj.get_stages(config)
-    assert pruned_traj.loc[19800, "stage"] == 19
+    assert pruned_traj.loc[105247700, "stage"] == 20
+    assert pruned_traj.loc[99800, "stage"] == 0
 
 def test_get_wall_position(pruned_traj):
     config = {"stepsperstage": 5000000, "stages": 20, "initialWall": 5, "finalWall": 4}
