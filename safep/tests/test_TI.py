@@ -12,6 +12,6 @@ def test_read_colvars_traj():
 
 def test_get_stages():
     traj = ColvarsTraj.read_colvars_traj(Path(__file__).parent/"data/pruned.colvars.traj")
-    config = {"stepsperstage": 1000}
+    config = {"stepsperstage": 1000, "stages": 20}
     traj.get_stages(config)
     assert traj.loc[19800, "stage"] == 19
