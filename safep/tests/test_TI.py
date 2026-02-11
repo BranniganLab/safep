@@ -39,5 +39,5 @@ def test_get_force(pruned_traj, config):
 def test_get_free_energy_gradients(pruned_traj, config):
     gradients = pruned_traj.get_free_energy_gradients(config)
     # Gradients are always in the expanding direction, so they should all be negative
-    assert np.all(gradients.values) > 0, "Positive gradients found"
+    assert np.all(gradients.values <= 0), "Positive gradients found"
     assert len(gradients) == config["stages"]+1, "Too many stages with gradients"
