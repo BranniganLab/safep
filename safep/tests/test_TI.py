@@ -46,4 +46,10 @@ def test_toy_data():
     traj = ColvarsTraj.read_colvars_traj(Path(__file__).parent/"data/toy.colvars.traj")
     config = read_namd_conf_moving_wall(Path(__file__).parent/"data/toy.namd")
     gradients = traj.get_free_energy_gradients(config)
-    assert gradients.sum() == -60, "Toy data is failing for some reason"
+    assert gradients.sum() == -60, "One or more toy data gradients are wrong"
+
+def test_toy_dG_release():
+    traj = ColvarsTraj.read_colvars_traj(Path(__file__).parent/"data/toy.colvars.traj")
+    config = read_namd_conf_moving_wall(Path(__file__).parent/"data/toy.namd")
+    dG = traj.get_total_free_energy(config)
+    assert dG == -30, "Toy data is returning the wrong free energy."
