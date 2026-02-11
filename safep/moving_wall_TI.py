@@ -68,5 +68,10 @@ class ColvarsTraj(pd.DataFrame):
     def get_gradient(self, config: dict) -> None:
         if "wall_position" not in self.columns:
             self.get_wall_position(config)
+        k = config["spring"]
+        mask = self.DBC > self.wall_position
+        self["gradient"] = 0.0
+        compute_gradient = lambda sample: k/2 * (sample["wall_position"] - sample["DBC"])
+        self.loc[mask, "gradient"] = self.loc[mask].apply(compute_gradient, axis=1)
 
 
