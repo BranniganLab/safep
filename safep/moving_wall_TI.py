@@ -85,9 +85,10 @@ def main(config_path, colvars_traj_path):
     config = read_namd_conf_moving_wall(config_path)
     colvars_traj = ColvarsTraj.read_colvars_traj(colvars_traj_path)
     gradients = colvars_traj.get_free_energy_gradients(config)
+    dG = gradients.sum()
     minwall = min(config["initialWall"], config["finalWall"])
     maxwall = max(config["initialWall"], config["finalWall"])
-    print(f"The total free energy change going from {minwall} to {maxwall} is {gradients.sum()} kcal/mol")
+    print(f"The total free energy change going from {minwall} to {maxwall} is {dG} kcal/mol")
 
 if __name__ == "__main__":
     parser = ArgumentParser()
