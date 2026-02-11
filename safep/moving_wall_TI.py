@@ -41,7 +41,7 @@ class ColvarsTraj(pd.DataFrame):
         with open(traj_path, encoding="UTF8") as f:
             first_line = f.readline()
         header = first_line.strip().split()[1:]
-        traj = pd.read_csv(traj_path, sep="\s+", header=None, engine="python", comment="#")
+        traj = pd.read_csv(traj_path, sep="\\s+", header=None, engine="python", comment="#")
         traj.columns = header
         traj.set_index("step", inplace=True)
         return cls(traj)
