@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from safep.moving_wall_TI import read_namd_conf_moving_wall, ColvarsTraj
+from safep.moving_wall_TI import read_namd_conf_moving_wall, ColvarsTraj, get_free_energy_gradients
 from pathlib import Path
 
 def test_read_namd_conf():
@@ -37,7 +37,7 @@ def test_get_force(pruned_traj, config):
 
 
 def test_get_free_energy_gradients(pruned_traj, config):
-    gradients = pruned_traj.get_free_energy_gradients(config)
+    gradients = get_free_energy_gradients(pruned_traj, config)
     # Gradients are always in the expanding direction, so they should all be negative
     assert np.all(gradients.dUdw.values <= 0), "Positive gradients found"
     assert len(gradients) == config["stages"]+1, "Too many stages with gradients"
@@ -45,7 +45,7 @@ def test_get_free_energy_gradients(pruned_traj, config):
 def test_toy_data():
     traj = ColvarsTraj.read_colvars_traj(Path(__file__).parent/"data/toy.colvars.traj")
     config = read_namd_conf_moving_wall(Path(__file__).parent/"data/toy.namd")
-    gradients = traj.get_free_energy_gradients(config)
+    gradients = get_free_energy_gradients(traj, config)
     assert gradients.dUdw.sum() == -60, "One or more toy data gradients are wrong"
 
 def test_toy_dG_release():

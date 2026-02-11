@@ -75,13 +75,28 @@ class ColvarsTraj(pd.DataFrame):
         compute_force = lambda sample: k * (sample["wall_position"] - sample["DBC"])
         self.loc[mask, "force"] = self.loc[mask].apply(compute_force, axis=1)
 
-    def get_free_energy_gradients(self, config: dict) -> pd.Series:
-        if "force" not in self.columns:
-            self.get_force(config)
-        all_means = self.groupby("stage").mean()
-        gradients = all_means.loc[:, ["wall_position", "force"]]
-        gradients.rename(columns={"force": "dUdw"}, inplace=True)
-        return gradients
+
+class Gradients(pd.DataFrame):
+    def __init__(self, data: pd.DataFrame):
+        super().__init__(data)
+
+    # Specify attributes to be carried over to new instances
+    _metadata = []
+
+    @property
+    def _constructor(self):
+        """preserve custom class after operations like group"""
+        return Gradients
+    def get_total_free_energy(self) -> float:
+        pass
+
+def get_free_energy_gradients(colvars_traj: ColvarsTraj, config: dict) -> Gradients:
+    if "force" not in colvars_traj.columns:
+        colvars_traj.get_force(config)
+    all_means = colvars_traj.groupby("stage").mean()
+    gradients = all_means.loc[:, ["wall_position", "force"]]
+    gradients.rename(columns={"force": "dUdw"}, inplace=True)
+    return Gradients(gradients)
 
 def main(config_path, colvars_traj_path, output_prefix):
     config = read_namd_conf_moving_wall(config_path)
