@@ -1,4 +1,5 @@
 import pytest
+import numpy as np
 from safep.moving_wall_TI import read_namd_conf_moving_wall, ColvarsTraj
 from pathlib import Path
 
@@ -27,3 +28,8 @@ def test_get_wall_position(pruned_traj, config):
     pruned_traj.get_wall_position(config)
     assert pruned_traj.wall_position.iloc[0] == 8, "Initial wall position should be 8"
     assert pruned_traj.wall_position.iloc[-1] == 6, "Final wall position should be 6"
+
+def test_get_gradient(pruned_traj):
+    pruned_traj.get_gradient(config)
+    assert pruned_traj.gradient.iloc[0] == 0, "Initial gradient should be 0, because initial DBC is less than the wall"
+    assert np.isclose(pruned_traj.gradient.loc[1229700], -4.19983056656)

@@ -65,4 +65,8 @@ class ColvarsTraj(pd.DataFrame):
         stages = config["stages"]
         self["wall_position"] = self.stage/stages * (final_wall - initial_wall) + initial_wall
 
+    def get_gradient(self, config: dict) -> None:
+        if "wall_position" not in self.columns:
+            self.get_wall_position(config)
+
 
