@@ -24,8 +24,8 @@ def read_namd_conf_moving_wall(config: Path) -> dict:
     return config
 
 class ColvarsTraj(pd.DataFrame):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, data: pd.DataFrame):
+        super().__init__(data)
 
     # Specify attributes to be carried over to new instances
     _metadata = []
@@ -43,16 +43,18 @@ class ColvarsTraj(pd.DataFrame):
         traj = pd.read_csv(traj_path, sep="\s+", header=None, engine="python", comment="#")
         traj.columns = header
         traj.set_index("step", inplace=True)
-        return traj
+        return cls(traj)
 
-def get_stage_numbers(traj: pd.DataFrame) -> pd.DataFrame:
-    pass
+    def get_stages(self, config: dict) -> None:
+        steps_per_stage = config["stepsperstage"]
+        stages = config["stages"]
+        steps = self["step"]
+        self["stage"] = steps//steps_per_stage
 
-def get_wall_position(traj: pd.DataFrame, config: dict) -> list:
-    steps_per_stage = config["stepsperstage"]
-    stages = config["stages"]
-    initial_wall = config["initialWall"]
-    final_wall = config["finalWall"]
-    steps = traj["step"]
-    stage_numbers = steps//steps_per_stage
+
+    def get_wall_position(traj: pd.DataFrame, config: dict) -> list:
+
+        initial_wall = config["initialWall"]
+        final_wall = config["finalWall"]
+
 
