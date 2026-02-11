@@ -12,8 +12,7 @@ def pruned_traj() -> ColvarsTraj:
 
 @pytest.fixture(scope="module")
 def config() -> dict:
-    config = {"stepsperstage": 5000000, "stages": 20, "initialWall": 5, "finalWall": 4, "initialequil": 250000,
-              "spring": 200}
+    config = read_namd_conf_moving_wall(Path(__file__).parent / "data/job_1.namd")
     return config
 
 def test_read_colvars_traj(pruned_traj):
@@ -26,5 +25,5 @@ def test_get_stages(pruned_traj, config):
 
 def test_get_wall_position(pruned_traj, config):
     pruned_traj.get_wall_position(config)
-    assert pruned_traj.wall_position.iloc[-1] == 4, "Initial wall position should be 4"
-    assert pruned_traj.wall_position.iloc[0] == 5, "Final wall position should be 5"
+    assert pruned_traj.wall_position.iloc[0] == 8, "Initial wall position should be 8"
+    assert pruned_traj.wall_position.iloc[-1] == 6, "Final wall position should be 6"
