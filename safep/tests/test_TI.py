@@ -32,8 +32,8 @@ def test_get_wall_position(pruned_traj, config):
 def test_get_force(pruned_traj, config):
     pruned_traj.get_force(config)
     assert pruned_traj.force.iloc[0] == 0, "Initial Force should be 0, because initial DBC is less than the wall"
-    assert np.isclose(pruned_traj.force.loc[1229700], -4.19983056656), "Force when DBC=8.041... should be -4.19..."
-    assert np.isclose(pruned_traj.force.loc[104797700], -1.91812923503), "Force when DBC=6.02... and wall=6, should be -1.9..."
+    assert np.isclose(pruned_traj.force.loc[1229700], -8.39966113312), "Force when DBC=8.041... should be -8.4..."
+    assert np.isclose(pruned_traj.force.loc[104797700], -3.83625847005), "Force when DBC=6.02... and wall=6, should be -3.8..."
 
 
 def test_get_free_energy_gradients(pruned_traj, config):

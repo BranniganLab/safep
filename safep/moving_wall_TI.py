@@ -72,7 +72,7 @@ class ColvarsTraj(pd.DataFrame):
         k = config["spring"]
         mask = self.DBC > self.wall_position
         self["force"] = 0.0
-        compute_force = lambda sample: k/2 * (sample["wall_position"] - sample["DBC"])
+        compute_force = lambda sample: k * (sample["wall_position"] - sample["DBC"])
         self.loc[mask, "force"] = self.loc[mask].apply(compute_force, axis=1)
 
     def get_free_energy_gradients(self, config: dict) -> pd.Series:
