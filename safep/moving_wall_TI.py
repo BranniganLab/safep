@@ -78,7 +78,9 @@ class ColvarsTraj(pd.DataFrame):
     def get_free_energy_gradients(self, config: dict) -> pd.Series:
         if "force" not in self.columns:
             self.get_force(config)
-        gradients = self.groupby("stage")["force"].mean()
+        all_means = self.groupby("stage").mean()
+        gradients = all_means.loc[:, ["wall_position", "force"]]
+        gradients.rename(columns={"force": "dUdw"}, inplace=True)
         return gradients
 
 def main(config_path, colvars_traj_path, output_prefix):
