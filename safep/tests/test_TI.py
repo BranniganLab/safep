@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from safep.moving_wall_TI import read_namd_conf_moving_wall, ColvarsTraj, get_free_energy_gradients
+from safep.moving_wall_TI import read_namd_conf_moving_wall, ColvarsTraj, get_free_energy_gradients, get_total_free_energy
 from pathlib import Path
 
 def test_read_namd_conf():
@@ -52,5 +52,5 @@ def test_toy_dG_release():
     traj = ColvarsTraj.read_colvars_traj(Path(__file__).parent/"data/toy.colvars.traj")
     config = read_namd_conf_moving_wall(Path(__file__).parent/"data/toy.namd")
     gradients = get_free_energy_gradients(traj, config)
-    dG = gradients.get_total_free_energy()
+    dG = get_total_free_energy(gradients)
     assert dG == -30, "Toy data is returning the wrong free energy."
