@@ -74,4 +74,10 @@ class ColvarsTraj(pd.DataFrame):
         compute_force = lambda sample: k/2 * (sample["wall_position"] - sample["DBC"])
         self.loc[mask, "force"] = self.loc[mask].apply(compute_force, axis=1)
 
+    def get_free_energy_gradients(self, config: dict) -> pd.Series:
+        if "force" not in self.columns:
+            self.get_force(config)
+        gradients = self.groupby("stage")["force"].mean()
+        return gradients
+
 
