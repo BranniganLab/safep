@@ -1,0 +1,110 @@
+Charm++> No provisioning arguments specified. Running with a single PE.
+         Use +auto-provision to fully subscribe resources or +p1 to silence this message.
+Charm++: standalone mode (not using charmrun)
+Charm++> Running in Multicore mode: 1 threads (PEs)
+Charm++> Using recursive bisection (scheme 3) for topology aware partitions
+Converse/Charm++ Commit ID: 
+CharmLB> Load balancer assumes all CPUs are same.
+Charm++> Running on 1 hosts (1 sockets x 8 cores x 2 PUs = 16-way SMP)
+Charm++> cpu topology info is gathered in 0.000 seconds.
+Info: Built with CUDA version 11080
+Did not find +devices i,j,k,... argument, using all
+Pe 0 physical rank 0 binding to CUDA device 0 on arduinna.ccib.rutgers.edu: 'NVIDIA GeForce RTX 3060'  Mem: 12044MB  Rev: 8.6  PCI: 0:1:0
+CharmLB> Load balancing instrumentation for communication is off.
+Info: NAMD 3.0.2 for Linux-x86_64-multicore-CUDA
+Info: 
+Info: Please visit http://www.ks.uiuc.edu/Research/namd/
+Info: for updates, documentation, and support information.
+Info: 
+Info: Please cite Phillips et al., J. Chem. Phys. 153:044130 (2020) doi:10.1063/5.0014475
+Info: in all publications reporting results obtained with NAMD.
+Info: 
+Info: Based on Charm++/Converse 80000 for multicore-linux-x86_64-gcc
+Info: Built Wed Aug 27 15:48:11 CDT 2025 by dhardy on athine.ks.uiuc.edu
+Info: 1 NAMD  3.0.2  Linux-x86_64-multicore-CUDA  1    arduinna.ccib.rutgers.edu  ems363
+Info: Running on 1 processors, 1 nodes, 1 physical nodes.
+Info: CPU topology information available.
+Info: Charm++/Converse parallel runtime startup completed at 0.0466092 s
+CkLoopLib is used in SMP with simple dynamic scheduling (converse-level notification)
+Info: 0 MB of memory in use based on /proc/self/stat
+Info: Configuration file is job_1.namd
+Info: Working in the current directory /home/ems363/Projects/Lipid_ABFE_Gas_Phase/RFEP_reruns/step2-moving_wall/contracting/job_1/inputs
+TCL: Suspending until startup complete.
+Warning: Option "1-4scaling" has been deprecated. Instead use "oneFourScaling".
+Warning: Always using force tables for GPU nonbonded kernel due to unsupported config parameters.
+Info: SIMULATION PARAMETERS:
+Info: TIMESTEP               2
+Info: NUMBER OF STEPS        0
+Info: STEPS PER CYCLE        20
+Info: LOAD BALANCER  Centralized
+Info: LOAD BALANCING STRATEGY  New Load Balancers -- DEFAULT
+Info: LDB PERIOD             4000 steps
+Info: FIRST LDB TIMESTEP     100
+Info: LAST LDB TIMESTEP     -1
+Info: LDB BACKGROUND SCALING 1
+Info: HOM BACKGROUND SCALING 1
+Info: MIN ATOMS PER PATCH    40
+Info: EMPTY PATCH LOAD       40 ATOMS
+Info: INITIAL TEMPERATURE    303.15
+Info: CENTER OF MASS MOVING INITIALLY? NO
+Info: DIELECTRIC             1
+Info: EXCLUDE                SCALED ONE-FOUR
+Info: 1-4 ELECTROSTATICS SCALED BY 1
+Info: MODIFIED 1-4 VDW PARAMETERS WILL BE USED
+Info: DCD FILENAME           /home/sheffer/moving_wall/contracting/job_1/outputs/job_1.dcd
+Info: DCD FREQUENCY          10000
+Info: DCD FIRST STEP         10000
+Info: XST FILENAME           /home/sheffer/moving_wall/contracting/job_1/outputs/job_1.xst
+Info: XST FREQUENCY          10000
+Info: NO VELOCITY DCD OUTPUT
+Info: NO FORCE DCD OUTPUT
+Info: OUTPUT FILENAME        /home/sheffer/moving_wall/contracting/job_1/outputs/job_1
+Info: BINARY OUTPUT FILES WILL BE USED
+Info: RESTART FILENAME       /home/sheffer/moving_wall/contracting/job_1/outputs/job_1.restart
+Info: RESTART FREQUENCY      100000
+Info: BINARY RESTART FILES WILL BE USED
+Info: SWITCHING ACTIVE
+Info: VDW FORCE SWITCHING ACTIVE
+Info: SWITCHING ON           10
+Info: SWITCHING OFF          12
+Info: PAIRLIST DISTANCE      16
+Info: PAIRLIST SHRINK RATE   0.01
+Info: PAIRLIST GROW RATE     0.01
+Info: PAIRLIST TRIGGER       0.3
+Info: PAIRLISTS PER CYCLE    2
+Info: PAIRLISTS ENABLED
+Info: MARGIN                 0
+Info: HYDROGEN GROUP CUTOFF  2.5
+Info: PATCH DIMENSION        18.5
+Info: ENERGY OUTPUT STEPS    10000
+Info: ENERGY EVALUATION STEPS    10000
+Info: OUTPUT ENERGY PRECISION 4
+Info: CROSSTERM ENERGY INCLUDED IN DIHEDRAL
+Info: TIMING OUTPUT STEPS    10000
+Info: PRESSURE OUTPUT STEPS  10000
+Info: COLLECTIVE VARIABLES CALCULATION REQUESTED
+Info: COLLECTIVE VARIABLES CONFIGURATION   /home/sheffer/ezry-files/RFEP.colvars
+Info: LANGEVIN DYNAMICS ACTIVE
+Info: LANGEVIN TEMPERATURE   303.15
+Info: LANGEVIN USING BBK INTEGRATOR
+Info: LANGEVIN DAMPING COEFFICIENT IS 10 INVERSE PS
+Info: LANGEVIN DYNAMICS APPLIED TO HYDROGENS
+Info: USING VERLET I (r-RESPA) MTS SCHEME.
+Info: C1 SPLITTING OF LONG RANGE ELECTROSTATICS
+Info: PLACING ATOMS IN PATCHES BY HYDROGEN GROUPS
+Info: RANDOM NUMBER SEED     11665
+Info: USE HYDROGEN BONDS?    NO
+Info: COORDINATE PDB         /home/sheffer/ezry-files/gas_phase.pdb
+Info: STRUCTURE FILE         /home/sheffer/ezry-files/gas_phase.psf
+Info: PARAMETER file: CHARMM format! 
+Info: PARAMETERS             /data/sheffer/FFs/CHARMM36m_FF/par_all36_na.prm
+Info: PARAMETERS             /data/sheffer/FFs/CHARMM36m_FF/par_all36_prot.prm
+Info: PARAMETERS             /data/sheffer/FFs/CHARMM36m_FF/par_all36_carb.prm
+Info: PARAMETERS             /data/sheffer/FFs/CHARMM36m_FF/par_all36_lipid.prm
+Info: PARAMETERS             /data/sheffer/FFs/CHARMM36m_FF/par_all36_cgenff.prm
+Info: PARAMETERS             /data/sheffer/FFs/CHARMM36m_FF/toppar_water_ions_namd.str
+Info: PARAMETERS             /data/sheffer/FFs/CHARMM36m_FF/toppar_all36_lipid_cationpi_wyf.str
+Info: USING ARITHMETIC MEAN TO COMBINE L-J SIGMA PARAMETERS
+FATAL ERROR: UNABLE TO OPEN CHARMM PARAMETER FILE /data/sheffer/FFs/CHARMM36m_FF/par_all36_na.prm
+
+[Partition 0][Node 0] End of program
