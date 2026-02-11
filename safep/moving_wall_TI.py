@@ -2,6 +2,7 @@ import numpy as np
 
 import pandas as pd
 from pathlib import Path
+from argparse import ArgumentParser
 
 def read_namd_conf_moving_wall(config: Path) -> dict:
     with open(config, encoding="UTF8") as f:
@@ -80,4 +81,19 @@ class ColvarsTraj(pd.DataFrame):
         gradients = self.groupby("stage")["force"].mean()
         return gradients
 
+def main(config_path, colvars_traj_path):
+    config = read_namd_conf_moving_wall(config_path)
+    colvars_traj = ColvarsTraj.read_colvars_traj(colvars_traj_path)
+    gradients = colvars_traj.get_free_energy_gradients(config)
+    minwall = min(config["initialWall"], config["finalWall"])
+    maxwall = max(config["initialWall"], config["finalWall"])
+    print(f"The total free energy change going from {minwall} to {maxwall} is {gradients.sum()} kcal/mol")
+
+if __name__ == "__main__":
+    parser = ArgumentParser()
+    parser.add_argument("config_path", type=Path)
+    parser.add_argument("colvars_traj_path", type=Path)
+    args = parser.parse_args()
+
+    main(args.config_path, args.colvars_traj_path)
 
