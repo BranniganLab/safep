@@ -51,5 +51,6 @@ def test_toy_data():
 def test_toy_dG_release():
     traj = ColvarsTraj.read_colvars_traj(Path(__file__).parent/"data/toy.colvars.traj")
     config = read_namd_conf_moving_wall(Path(__file__).parent/"data/toy.namd")
-    dG = traj.get_total_free_energy(config)
+    gradients = get_free_energy_gradients(traj, config)
+    dG = gradients.get_total_free_energy()
     assert dG == -30, "Toy data is returning the wrong free energy."
