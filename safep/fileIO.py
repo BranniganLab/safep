@@ -145,12 +145,10 @@ def parse_Colvars_log(filename):
     colvars[0]['children'][0] is the first component of the first colvar
     colvars[0]['children'][0]['children'][0] is the first atom group of that component
     '''
-    global_conf = {}
     level = prev_level = 0
 
     colvars = list()
     biases = list()
-    current = global_conf
 
     TI_traj = {}
 
@@ -158,11 +156,8 @@ def parse_Colvars_log(filename):
         lines = file.readlines()
 
     # Header: get version and output prefix, then break
-    for line in lines:
-        match = re.match(r'^colvars: Initializing the collective variables module, version (.*).$', line)
-        if match:
-            global_conf['version'] = match.group(1).strip()
-            break
+    global_conf = initialize_global_conf(lines)
+    current = global_conf
 
     # Parse rest of file for more config data
     for line in lines:
@@ -262,3 +257,13 @@ def parse_Colvars_log(filename):
             continue
 
     return global_conf, colvars, biases, TI_traj
+
+
+def initialize_global_conf(lines):
+    global_conf = {}
+    for line in lines:
+        match = re.match(r'^colvars: Initializing the collective variables module, version (.*).$', line)
+        if match:
+            global_conf['version'] = match.group(1).strip()
+            break
+    return global_conf
