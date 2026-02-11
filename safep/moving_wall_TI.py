@@ -94,8 +94,8 @@ def get_free_energy_gradients(colvars_traj: ColvarsTraj, config: dict) -> pd.Dat
 def main(config_path, colvars_traj_path, output_prefix):
     config = read_namd_conf_moving_wall(config_path)
     colvars_traj = ColvarsTraj.read_colvars_traj(colvars_traj_path)
-    gradients = colvars_traj.get_free_energy_gradients(config)
-    dG = gradients.sum()
+    gradients = get_free_energy_gradients(colvars_traj, config)
+    dG = get_total_free_energy(gradients)
     minwall = min(config["initialWall"], config["finalWall"])
     maxwall = max(config["initialWall"], config["finalWall"])
     print(f"The total free energy change going from {minwall} to {maxwall} is {dG} kcal/mol")
