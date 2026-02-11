@@ -1,3 +1,4 @@
+import pytest
 from safep.moving_wall_TI import read_namd_conf_moving_wall, ColvarsTraj
 from pathlib import Path
 
@@ -8,3 +9,9 @@ def test_read_namd_conf():
 def test_read_colvars_traj():
     traj = ColvarsTraj.read_colvars_traj(Path(__file__).parent/"data/pruned.colvars.traj")
     assert traj.loc[19800, "DBC"] == 4.70510005898365e+00
+
+def test_get_stages():
+    traj = ColvarsTraj.read_colvars_traj(Path(__file__).parent/"data/pruned.colvars.traj")
+    config = {"stepsperstage": 1000}
+    traj.get_stages(config)
+    assert traj.loc[19800, "stage"] == 19
