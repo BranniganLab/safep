@@ -22,3 +22,6 @@ def read_namd_conf_moving_wall(config: Path) -> dict:
         except ValueError:
             continue
     return config
+
+def read_colvars_traj(traj_path: Path) -> pd.DataFrame:
+    return pd.DataFrame()
