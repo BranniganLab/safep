@@ -36,3 +36,8 @@ def test_get_force(pruned_traj, config):
     assert np.isclose(pruned_traj.force.loc[104797700], -1.91812923503), "Force when DBC=6.02... and wall=6, should be -1.9..."
 
 
+def test_get_free_energy_gradients(pruned_traj, config):
+    gradients = pruned_traj.get_free_energy_gradients(config)
+    # Gradients are always in the expanding direction, so they should all be negative
+    assert np.all(gradients.values) > 0, "Positive gradients found"
+    assert len(gradients) == config["stages"], "Too many stages with gradients"
