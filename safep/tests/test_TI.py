@@ -32,4 +32,4 @@ def test_get_wall_position(pruned_traj, config):
 def test_get_gradient(pruned_traj):
     pruned_traj.get_gradient(config)
     assert pruned_traj.gradient.iloc[0] == 0, "Initial gradient should be 0, because initial DBC is less than the wall"
-    assert np.isclose(pruned_traj.gradient.loc[1229700], -4.19983056656)
+    assert np.isclose(pruned_traj.gradient.loc[1229700], -4.19983056656), "Gradient when DBC=8.041... should be -4.19..."
