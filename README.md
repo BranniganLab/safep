@@ -18,10 +18,12 @@ In a terminal (tested on Linux and Mac):
 3. Continue with either CLI or Notebook interfaces below
 
 ### Notebook
-4. Open the relevant notebook
+4. Download one or more example notebooks from the GitHub: https://github.com/BranniganLab/safep/tree/main/Sample_Notebooks
+5. [Optional] or clone the repository with `git clone https://github.com/BranniganLab/safep.git`
+6. Open the relevant notebook
   - For FEP results, open BAR_Estimator_Basic.ipynb
-  - For RFEP, open RFEP_analysis.ipynb
-5. Follow the instructions in the relevant notebook
+  - For RFEP/thermodynamic integration, open RFEP_analysis.ipynb
+7. Follow the instructions in the notebook
 
 ### CLI (only available for FEP, not yet for RFEP)
 4. Navigate to the root directory of your FEP results.
