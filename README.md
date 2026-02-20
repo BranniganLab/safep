@@ -12,21 +12,27 @@ These scripts and notebooks are broadly applicable to FEP analysis.
 
 ## Quickstart:
 
+### Installation
 In a terminal (tested on Linux and Mac):
-1. [Optional] Create and activate a conda environment `conda create -n safep` `conda activate safep`
-2. Install the latest version of the safep package `pip install git+https://github.com/BranniganLab/safep.git`
-3. Continue with either CLI or Notebook interfaces below
+0. [Optional] Create and activate a conda environment `conda create -n safep` `conda activate safep`
+**Option 1 (includes sample notebooks):**
+1. Clone this repository using 
+2. Enter the repository directory
+3. Run ``` pip install . ```
 
-### Notebook
-4. Download one or more example notebooks from the GitHub: https://github.com/BranniganLab/safep/tree/main/Sample_Notebooks
-5. [Optional] or clone the repository with `git clone https://github.com/BranniganLab/safep.git`
-6. Open the relevant notebook
+**Option 2 (only provides CLI):**
+1. Run ``` pip install git+https://github.com/BranniganLab/safep.git ```
+
+### Running in a Jupyter Notebook
+1. Download one or more example notebooks from the GitHub: https://github.com/BranniganLab/safep/tree/main/Sample_Notebooks
+2. [Optional] or clone the repository with `git clone https://github.com/BranniganLab/safep.git`
+3. Open the relevant notebook
   - For FEP results, open BAR_Estimator_Basic.ipynb
   - For RFEP/thermodynamic integration, open RFEP_analysis.ipynb
-7. Follow the instructions in the notebook
+4. Follow the instructions in the notebook
 
 ### CLI (only available for FEP, not yet for RFEP)
-4. Navigate to the root directory of your FEP results.
+1. Navigate to the root directory of your FEP results.
 
 Given a file structure like:
 ```
@@ -40,16 +46,9 @@ Given a file structure like:
 |   ...
 ...
 ```
-5. Run `python -m safep.AFEP_parse --path . --fepoutre "*fepout --replicare "replica_*" --temperature 303.15 --detect_equilibrium True -- make_figures True`
+2. Run `python -m safep.AFEP_parse --path . --fepoutre "*fepout --replicare "replica_*" --temperature 303.15 --detect_equilibrium True -- make_figures True`
 
 More detailed explanations can be seen by running `python -m safep.AFEP_parse --help`
 
 
-## Installation:
-0. Clone this repository
-1. Enter the repository directory
-2. Run ``` pip install . ```
 
-OR
-
-0. Run ``` pip install git+https://github.com/BranniganLab/safep.git ```
