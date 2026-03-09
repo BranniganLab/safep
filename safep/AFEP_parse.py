@@ -114,9 +114,9 @@ class AFEPArgumentParser(argparse.ArgumentParser):
         )
         self.add_argument(
             "--detect_equilibrium",
-            type=bool,
             help="Flag for automated equilibrium detection.",
-            default=True,
+            default=False,
+            action="store_true",
         )
         self.add_argument(
             "--fittingMethod",
@@ -134,9 +134,9 @@ class AFEPArgumentParser(argparse.ArgumentParser):
         )
         self.add_argument(
             "--make_figures",
-            type=bool,
-            help="Run additional diagnostics and save figures to the directory. default: False",
-            default=0,
+            help="Flag to generate figures with additional diagnostics.",
+            default=False,
+            action="store_true",
         )
 
 
