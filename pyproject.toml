@@ -13,7 +13,7 @@ dependencies = [
     ]
 
 name = 'safep'
-version = "0.1.4"
+version = "0.1.5"
 
 authors = [{name='Brannigan Lab', email='grace.brannigan@rutgers.edu'}]
 
