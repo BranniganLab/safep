@@ -37,7 +37,7 @@ def test_sterr_of_five_numbers_is_correct():
     errors = [1,1,1,1,1]
     sterr = get_sterr(dGs, errors)
     assert not np.isclose(sterr, 1.58113883), "Got standard deviation, not standard error"
-    assert np.isclose(sterr, 0.7071067812), "Wrong standard error"
+    assert np.isclose(sterr, 0.7071067812), f"Got: {sterr}. Expected: 0.7071067812"
 
 def test_sterr_of_two_numbers_propagates_error():
     dGs = [3,4]
