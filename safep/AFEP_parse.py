@@ -432,15 +432,33 @@ def get_summary_statistics(args, fepruns):
 
     # If there are only a few replicas,
     # the MBAR estimated error will be more reliable, albeit underestimated
+    sterr, toprint = get_sterr(dGs, errors, mean, toprint)
+    if np.isnan(mean):
+        raise RuntimeError("Free energy average is NaN")
+    return toprint, dGs, mean, sterr
+
+
+def get_sterr(dGs, errors, mean=None, toprint=""):
+    """Get the standard error of the dGs
+
+    args:
+        dGs (list): list of free energies
+        errors (list): list of errors corresponding to dGs
+        mean (float): mean free energy across replicas. Default None.
+        toprint (str): log string. Default empty.
+
+    returns:
+        float, str: the standard error of the dGs and an updated print string
+    """
     if len(dGs) < 3:
         sterr = np.sqrt(np.sum(np.square(errors)))
         # Nothing new to print
     else:
         sterr = np.round(np.std(dGs), 1)
+        if mean is None:
+            mean = np.mean(dGs)
         toprint += f"mean: {mean} kcal/mol\n" + f"sterr: {sterr} kcal/mol"
-    if np.isnan(mean):
-        raise RuntimeError("Free energy average is NaN")
-    return toprint, dGs, mean, sterr
+    return sterr, toprint
 
 
 def main():
