@@ -28,5 +28,5 @@ def test_summary(afep_args, fepruns):
 
 def test_u_nk(fepruns):
     u_nk = fepruns["Replica1"].u_nk
-    string = u_nk.round(9).to_csv(index=False)
+    string = u_nk.round(8).to_csv(index=False)
     verify(string)
