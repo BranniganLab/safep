@@ -455,7 +455,7 @@ def get_sterr(dGs, errors):
         sterr = np.sqrt(np.sum(np.square(errors)))
         print("Warning: Not enough replicas for a standard error. Propagating BAR errors.")
     else:
-        sterr = np.std(dGs)
+        sterr = np.std(dGs, ddof=1)/np.sqrt(len(dGs))
     return sterr
 
 
