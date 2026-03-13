@@ -24,4 +24,4 @@ jobs:
 
      - name: Pytest
        run: |
-         pytest -n2 safep/tests
+         pytest -n2 --approvaltests-use-reporter='PythonNative' safep/tests
