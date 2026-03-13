@@ -24,7 +24,7 @@ jobs:
 
      - name: Pytest
        run: |
-         pytest -n2 --approvaltests-use-reporter='PythonNative' safep/tests
+         pytest -n2 --approvaltests-use-reporter='PythonNativeReporter' safep/tests
      - name: upload-failed-tests
        uses: actions/upload-artifact@v4
        with:
