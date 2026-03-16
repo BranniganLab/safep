@@ -28,6 +28,14 @@ def test_summary(afep_args, fepruns):
     verify(summary)
 
 def test_u_nk(fepruns):
+    """
+    This is both a test and an example for testing numerical data with numpy allclose while
+    remaining consistent with the approvaltests paradigm of having an "approved" vs "received" file.
+
+    Given: A set of energy differences, u_nk
+    When: compared to an approved array
+    Expect: the two arrays to be within machine tolerance (numpy allclose)
+    """
     u_nk = fepruns["Replica1"].u_nk
     received = np.asarray(u_nk)
     received = np.concatenate([[list(u_nk.columns)], received], 0)
