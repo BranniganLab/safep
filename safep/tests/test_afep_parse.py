@@ -1,3 +1,4 @@
+import numpy as np
 from approvaltests import verify
 from safep.AFEP_parse import  COLORS, get_summary_statistics, AFEPArguments
 from safep.fepruns import process_replicas
@@ -28,5 +29,12 @@ def test_summary(afep_args, fepruns):
 
 def test_u_nk(fepruns):
     u_nk = fepruns["Replica1"].u_nk
-    string = u_nk.to_csv(index=False)
-    verify(string)
+    received = np.asarray(u_nk)
+    received = np.concatenate([[list(u_nk.columns)], received], 0)
+    np.savetxt(Path(__file__).parent/"test_afep_parse.test_u_nk.received.txt", received, delimiter=",")
+    approved = np.genfromtxt(Path(__file__).parent/"test_afep_parse.test_u_nk.approved.txt", delimiter=",")
+    assert np.allclose(approved, received, equal_nan=True), (
+         f"U_nk does not match approved. Max error: {np.max(np.abs(approved - received))}. "
+         f"To approve the current version, rename "
+         f"test_afep_parse.test_u_nk.received.txt to test_afep_parse.test_u_nk.approved.txt "
+         f"and commit the result")
