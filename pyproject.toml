@@ -34,3 +34,9 @@ classifiers = [
 [project.urls]
 Homepage = "https://github.com/BranniganLab/safep"
 Issues = "https://github.com/BranniganLab/safep/issues"
+
+[dependency-groups]
+dev = [
+    "approvaltests>=17.2.1",
+    "pytest>=9.0.2",
+]
