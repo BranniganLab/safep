@@ -17,6 +17,6 @@ def test_RFEP_main_err(capsys):
 def test_RFEP_figure():
     main(Path(__file__).parent / "RFEP_decouple.log")
     ref = Path(__file__).parent / "test_rfep_parse.test_RFEP_figure.approved.png"
-    actual = Path(__file__).parent / "RFEP_decouple_figures.png"
+    actual = Path("RFEP_decouple_figures.png")
     compare_images(ref, actual, tol=1e-5)
     actual.unlink()
