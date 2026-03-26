@@ -1,3 +1,5 @@
+
+import pandas as pd
 from approvaltests import verify
 from safep.AFEP_parse import  COLORS, get_summary_statistics, AFEPArguments
 from safep.fepruns import process_replicas
@@ -28,5 +30,18 @@ def test_summary(afep_args, fepruns):
 
 def test_u_nk(fepruns):
     u_nk = fepruns["Replica1"].u_nk
-    string = u_nk.to_csv(index=False)
-    verify(string)
+    ref_path = Path(__file__).parent / "test_afep_parse.test_u_nk.approved.txt"
+    # Fro updating reference data
+    # if not ref_path.exists():
+    #     u_nk.to_csv(ref_path, index=False)
+    #     pytest.fail(f"Reference file created at {ref_path}. Inspect it and re-run test.")
+
+    expected_u_nk = pd.read_csv(ref_path)
+    expected_u_nk.columns = expected_u_nk.columns.astype(float)
+
+    pd.testing.assert_frame_equal(
+        u_nk.reset_index(drop=True), # Ensure index doesn't block comparison
+        expected_u_nk,
+        atol=1e-6,
+        check_column_type=False
+    )
