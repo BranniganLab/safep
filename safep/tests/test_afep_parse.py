@@ -1,7 +1,8 @@
 
 import pandas as pd
+import numpy as np
 from approvaltests import verify
-from safep.AFEP_parse import  COLORS, get_summary_statistics, AFEPArguments
+from safep.AFEP_parse import  COLORS, get_summary_statistics, AFEPArguments, get_sterr
 from safep.fepruns import process_replicas
 import pytest
 from pathlib import Path
@@ -45,3 +46,18 @@ def test_u_nk(fepruns):
         atol=1e-6,
         check_column_type=False
     )
+
+def test_sterr_of_five_numbers_is_correct():
+    dGs = [1,2,3,4,5]
+    errors = [1,1,1,1,1]
+    sterr = get_sterr(dGs, errors)
+    assert not np.isclose(sterr, 1.58113883), "Got standard deviation, not standard error"
+    assert np.isclose(sterr, 0.7071067812), f"Got: {sterr}. Expected: 0.7071067812"
+
+def test_sterr_of_two_numbers_propagates_error():
+    dGs = [3,4]
+    errors = [1,2]
+    sterr = get_sterr(dGs, errors)
+    assert not np.isclose(sterr, 0.7071067812), "Got standard deviation, not propagated error"
+    assert not np.isclose(sterr, 0.5), "Got standard error. Standard error of two numbers is a math crime. The authorities have been informed."
+    assert np.isclose(sterr, 2.236067977), "Error not propagated correctly."
