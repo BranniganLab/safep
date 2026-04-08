@@ -6,6 +6,7 @@ from safep.AFEP_parse import  COLORS, get_summary_statistics, AFEPArguments, get
 from safep.fepruns import process_replicas
 import pytest
 from pathlib import Path
+import shutil
 
 @pytest.fixture
 def itcolors():
@@ -13,11 +14,23 @@ def itcolors():
 
 @pytest.fixture
 def test_data_path():
-    return Path(__file__).parent/"../../Sample_Notebooks"
+    return Path(__file__).parent/"../../Sample_Notebooks/Sample_Data"
 
 @pytest.fixture
-def afep_args(test_data_path):
-    return AFEPArguments(dataroot = test_data_path,
+def afep_args(test_data_path, tmp_path):
+    test_directory = Path(tmp_path)/"test"
+    replica1 = test_directory/"Replica1"
+
+    shutil.copytree(test_data_path, replica1)
+    cached_file = replica1 / "decorrelated.csv"
+    if cached_file.exists():
+        Path.unlink(cached_file)
+
+    replica2 = test_directory/"Replica2"
+    replica2.symlink_to(replica1)
+    replica3 = test_directory/"Replica3"
+    replica3.symlink_to(replica1)
+    return AFEPArguments(dataroot = test_directory,
                         replica_pattern = "Replica*",
                         replicas = None,
                         filename_pattern = "idws*.fep*",
@@ -26,16 +39,8 @@ def afep_args(test_data_path):
                         make_figures = False)
 
 @pytest.fixture
-def fepruns(afep_args, itcolors, test_data_path):
-    cached_file = test_data_path / "decorrelated.csv"
-    clean_slate(cached_file)
-    yield process_replicas(afep_args, itcolors)
-    clean_slate(cached_file)
-
-
-def clean_slate(cached_file):
-    if cached_file.exists():
-        Path.unlink(cached_file)
+def fepruns(afep_args, itcolors):
+    return process_replicas(afep_args, itcolors)
 
 
 def test_summary(afep_args, fepruns):
