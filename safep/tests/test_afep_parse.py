@@ -2,6 +2,7 @@
 import pandas as pd
 import numpy as np
 from approvaltests import verify
+from approvaltests.namer import NamerFactory
 from safep.AFEP_parse import  COLORS, get_summary_statistics, AFEPArguments, get_sterr
 from safep.fepruns import process_replicas
 import pytest
@@ -45,15 +46,16 @@ def fepruns(afep_args, itcolors):
     return process_replicas(afep_args, itcolors)
 
 
-def test_summary(afep_args, fepruns):
+def test_summary(afep_args, fepruns, request):
     summary, dGs, mean, sterr = get_summary_statistics(afep_args, fepruns)
-    verify(summary)
+    test_id = request.node.callspec.id
+    verify(summary, options=NamerFactory.with_parameters(test_id))
 
 def test_u_nk(fepruns, request):
     test_id = request.node.callspec.id
     u_nk = fepruns["Replica1"].u_nk
     ref_path = Path(__file__).parent / f"test_afep_parse.test_u_nk.{test_id}.approved.txt"
-    # Fro updating reference data
+    # For updating reference data
     # if not ref_path.exists():
     #     u_nk.to_csv(ref_path, index=False)
     #     pytest.fail(f"Reference file created at {ref_path}. Inspect it and re-run test.")
