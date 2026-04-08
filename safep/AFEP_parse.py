@@ -40,13 +40,17 @@ def do_agg_data(dataax, plotax):
     for line in lines:
         agg_data.append(line.get_ydata())
     flat = np.array(agg_data).flatten()
-    kernel = sp.stats.gaussian_kde(flat)
-    pdf_x = np.linspace(-1, 1, 1000)
-    pdf_y = kernel(pdf_x)
+    if np.allclose(flat, 0):
+        warnings.warn("Kernel density estimation failed. All data are 0.")
+        mode = 0
+    else:
+        kernel = sp.stats.gaussian_kde(flat)
+        pdf_x = np.linspace(-1, 1, 1000)
+        pdf_y = kernel(pdf_x)
+        temp = pd.Series(pdf_y, index=pdf_x)
+        mode = temp.idxmax()
     std = np.std(flat)
     average = np.average(flat)
-    temp = pd.Series(pdf_y, index=pdf_x)
-    mode = temp.idxmax()
 
     textstr = (
         r"$\rm mode=$"
