@@ -188,7 +188,8 @@ def plot_general(cumulative,
         cumulative_dG = cumulative.BAR.f * RT
         cumulative_errors = cumulative.BAR.errors
     else:
-        warn("BAR failed for some reason. Plotting forward exponential estimate instead.")
+        warn("BAR failed for some reason. Plotting forward exponential estimate instead."
+             "This is often due to missing data.")
         lambdas = cumulative.index
         cumulative_dG = cumulative.EXP.ff * RT
         cumulative_errors = np.nan
@@ -287,7 +288,7 @@ def plot_hysteresis(axes,
     hyst_ax.set_xlabel(xlabel=xtxt, fontsize=fontsize)
 
     if np.allclose(diff, 0):
-        warn("Hysteresis could not be computed.")
+        warn("Hysteresis could not be computed. Do you have both forward and backward data?")
     elif pdf_type=='KDE':
         kernel = sp.stats.gaussian_kde(diff)
         pdf_x = np.linspace(xlim[0], xlim[1], 1000)

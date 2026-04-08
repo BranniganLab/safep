@@ -103,7 +103,7 @@ def do_estimation(u_nk, method='both'):
         
         perWindow[('EXP','dG_f')] = dG_fs
         perWindow[('EXP','dG_b')] = dG_bs
-        perWindow[('EXP', 'difference')] = np.array(dG_fs)+np.array(dG_bs)        
+        perWindow[('EXP', 'difference')] = np.array(dG_fs)+np.array(dG_bs)
         perWindow.index = expmid
         
     
