@@ -183,7 +183,17 @@ def plot_general(cumulative,
         cumul_ax, each_ax, hyst_ax, pdf_ax = axes
 
     # Cumulative change in kcal/mol
-    cumul_ax.errorbar(cumulative.index, cumulative.BAR.f*RT, yerr=cumulative.BAR.errors, marker=None, linewidth=1, label=label, color=color)
+    if not np.allclose(cumulative.BAR.f, 0):
+        lambdas = cumulative.index
+        cumulative_dG = cumulative.BAR.f * RT
+        cumulative_errors = cumulative.BAR.errors
+    else:
+        warn("BAR failed for some reason. Plotting forward exponential estimate instead.")
+        lambdas = cumulative.index
+        cumulative_dG = cumulative.EXP.ff * RT
+        cumulative_errors = np.nan
+    cumul_ax.errorbar(lambdas, cumulative_dG, yerr=cumulative_errors, marker=None, linewidth=1, label=label,
+                      color=color)
     cumul_ax.set(ylabel=r'Cumulative $\mathrm{\Delta} G_{\lambda}$'+'\n(kcal/mol)', ylim=cumulative_ylim)
 
     # Per-window change in kcal/mol
