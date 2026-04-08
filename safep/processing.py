@@ -89,6 +89,10 @@ def detect_equilibrium_u_nk(u_nk: pd.DataFrame):
     groups = u_nk.groupby("fep-lambda")
     EQ = pd.DataFrame([])
     for key, group in groups:
+        if group.isnull().all().all():
+            # nothing to do with an empty array
+            EQ = pd.concat([EQ, group])
+            continue
         group = group[~group.index.duplicated(keep="first")]
         grp_sorted = group.sort_index(level="time")
         if key < 1:
