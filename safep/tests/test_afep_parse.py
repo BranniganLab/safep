@@ -16,7 +16,7 @@ def afep_args():
     return AFEPArguments(dataroot = Path(__file__).parent/"../../Sample_Notebooks",
                         replica_pattern = "Replica*",
                         replicas = None,
-                        filename_pattern = "*.fep*",
+                        filename_pattern = "idws*.fep*",
                         temperature = 303.15,
                         detect_equilibrium = True,
                         make_figures = False)
