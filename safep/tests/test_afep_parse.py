@@ -16,7 +16,7 @@ def itcolors():
 def test_data_path():
     return Path(__file__).parent/"../../Sample_Notebooks/Sample_Data"
 
-@pytest.fixture(scope="function", params=["idws"])
+@pytest.fixture(scope="function", params=["idws", "forward"])
 def afep_args(test_data_path, tmp_path, request):
     test_directory = Path(tmp_path)/"test"
     replica1 = test_directory/"Replica1"
