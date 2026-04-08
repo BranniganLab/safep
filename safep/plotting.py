@@ -1,5 +1,6 @@
 # Import block
 import matplotlib.pyplot as plt
+from warnings import warn
 import numpy as np
 import scipy as sp
 import pandas as pd
@@ -275,7 +276,9 @@ def plot_hysteresis(axes,
     xtxt = r'$\lambda$'
     hyst_ax.set_xlabel(xlabel=xtxt, fontsize=fontsize)
 
-    if pdf_type=='KDE':
+    if np.allclose(diff, 0):
+        warn("Hysteresis could not be computed.")
+    elif pdf_type=='KDE':
         kernel = sp.stats.gaussian_kde(diff)
         pdf_x = np.linspace(xlim[0], xlim[1], 1000)
         pdf_y = kernel(pdf_x)
@@ -289,7 +292,7 @@ def plot_hysteresis(axes,
 
     pdf_ax.set_xlabel(pdf_type, fontsize=fontsize)
 
-    if textbox:
+    if textbox and 'pdf_x' in locals():
         pdf_ax = add_hyst_textbox(diff, pdf_x, pdf_y, pdf_ax)
 
     return hyst_ax, pdf_ax
