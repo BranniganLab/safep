@@ -12,8 +12,12 @@ def itcolors():
     return iter(COLORS)
 
 @pytest.fixture
-def afep_args():
-    return AFEPArguments(dataroot = Path(__file__).parent/"../../Sample_Notebooks",
+def test_data_path():
+    return Path(__file__).parent/"../../Sample_Notebooks"
+
+@pytest.fixture
+def afep_args(test_data_path):
+    return AFEPArguments(dataroot = test_data_path,
                         replica_pattern = "Replica*",
                         replicas = None,
                         filename_pattern = "idws*.fep*",
@@ -22,8 +26,17 @@ def afep_args():
                         make_figures = False)
 
 @pytest.fixture
-def fepruns(afep_args, itcolors):
-    return process_replicas(afep_args, itcolors)
+def fepruns(afep_args, itcolors, test_data_path):
+    cached_file = test_data_path / "decorrelated.csv"
+    clean_slate(cached_file)
+    yield process_replicas(afep_args, itcolors)
+    clean_slate(cached_file)
+
+
+def clean_slate(cached_file):
+    if cached_file.exists():
+        Path.unlink(cached_file)
+
 
 def test_summary(afep_args, fepruns):
     summary, dGs, mean, sterr = get_summary_statistics(afep_args, fepruns)
