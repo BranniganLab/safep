@@ -418,6 +418,11 @@ def get_summary_statistics(args, fepruns):
         cumulative = feprun.cumulative
         dG = np.round(cumulative.BAR.f.iloc[-1] * args.RT_kcal_per_mol, 1)
         error = np.round(cumulative.BAR.errors.iloc[-1] * args.RT_kcal_per_mol, 1)
+        if (dG == 0 or dG == np.nan) and error == 0:
+            dG = np.round(cumulative.EXP.ff.iloc[-1] * args.RT_kcal_per_mol, 1)
+            error = np.nan
+            warnings.warn("BAR estimation appears to have failed. Reporting exponential estimates."
+                          "Standard error could not be estimated.", RuntimeWarning)
         dGs.append(dG)
         errors.append(error)
 
