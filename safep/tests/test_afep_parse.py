@@ -16,8 +16,8 @@ def itcolors():
 def test_data_path():
     return Path(__file__).parent/"../../Sample_Notebooks/Sample_Data"
 
-@pytest.fixture
-def afep_args(test_data_path, tmp_path):
+@pytest.fixture(scope="function", params=["idws"])
+def afep_args(test_data_path, tmp_path, request):
     test_directory = Path(tmp_path)/"test"
     replica1 = test_directory/"Replica1"
 
@@ -30,10 +30,12 @@ def afep_args(test_data_path, tmp_path):
     replica2.symlink_to(replica1)
     replica3 = test_directory/"Replica3"
     replica3.symlink_to(replica1)
+
+    prefix = request.param
     return AFEPArguments(dataroot = test_directory,
                         replica_pattern = "Replica*",
                         replicas = None,
-                        filename_pattern = "idws*.fep*",
+                        filename_pattern = f"{prefix}*.fep*",
                         temperature = 303.15,
                         detect_equilibrium = True,
                         make_figures = False)
@@ -47,9 +49,10 @@ def test_summary(afep_args, fepruns):
     summary, dGs, mean, sterr = get_summary_statistics(afep_args, fepruns)
     verify(summary)
 
-def test_u_nk(fepruns):
+def test_u_nk(fepruns, request):
+    test_id = request.node.callspec.id
     u_nk = fepruns["Replica1"].u_nk
-    ref_path = Path(__file__).parent / "test_afep_parse.test_u_nk.approved.txt"
+    ref_path = Path(__file__).parent / f"test_afep_parse.test_u_nk.{test_id}.approved.txt"
     # Fro updating reference data
     # if not ref_path.exists():
     #     u_nk.to_csv(ref_path, index=False)
