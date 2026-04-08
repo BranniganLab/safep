@@ -285,7 +285,7 @@ def plot_hysteresis(axes,
         pdf_x = pdf_x[:-1]+(pdf_x[1]-pdf_x[0])/2
         pdf_ax.plot(pdf_y, pdf_x,  label="Estimated Distribution", color=color)
     else:
-        raise f"Error: PDFtype {pdf_type} not recognized"
+        raise ValueError(f"Error: PDFtype {pdf_type} not recognized")
 
     pdf_ax.set_xlabel(pdf_type, fontsize=fontsize)
 
