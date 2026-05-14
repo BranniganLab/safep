@@ -260,3 +260,24 @@ def parse_Colvars_log(filename):
                 continue
 
     return global_conf, colvars, biases, TI_traj
+
+def get_num_regex(regex, fname, grp=2):
+    """
+    Extracts a number from a file using a regular expression.
+
+    Args:
+        regex (str): The regular expression pattern to search for.
+        fname (str): The name of the file to search in.
+        grp (int, optional): The group number to extract from the regex match. Defaults to 2.
+
+    Returns:
+        str: The matched number as a string.
+    """
+    with open(fname, "r", encoding="UTF8") as fin:
+        fstring = fin.read()
+        found = re.search(regex, fstring)
+        if found is not None:
+            toreturn = found.group(grp)
+        else:
+            toreturn = None
+        return toreturn

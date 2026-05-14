@@ -371,6 +371,61 @@ def plot_general_legacy(cumulative,
 
     return fig, [cumulative_ax,each_ax,hysteresis_ax,pdf_ax, ddG_ax]
 
+def plot_titration(axis, concentrations, binding_free_energy, error_binding, RT):
+    """
+    Plot the titration curve for a given set of concentrations and binding energies,
+    including a 95% confidence interval.
+
+    Args:
+        axis (matplotlib.axes.Axes): The matplotlib axis object where the plot will be drawn.
+        concentrations (array-like): Array of ligand concentrations in microMolar.
+        delta_g_binding (float): The Gibbs free energy change in kcal/mol for binding.
+        error_binding (float): The standard error of the Gibbs free energy change.
+        RT (float): The product of the gas constant (R) and temperature (T) in kcal/mol.
+
+    Returns:
+        matplotlib.axes.Axes: The axis object with the titration plot.
+
+    """
+    k_dissociation = get_dissociation_constant(binding_free_energy, RT)
+
+    axis.plot(
+        concentrations,
+        binding_probability(k_dissociation, concentrations),
+        label="Binding Curve",
+    )
+
+    probability_lower_bound = binding_probability(
+        get_dissociation_constant(binding_free_energy - error_binding * 1.96, RT),
+        concentrations,
+    )
+    probability_upper_bound = binding_probability(
+        get_dissociation_constant(binding_free_energy + error_binding * 1.96, RT),
+        concentrations,
+    )
+    axis.fill_between(
+        concentrations,
+        probability_lower_bound,
+        alpha=0.25,
+        label="95% Confidence Interval",
+    )
+    plt.xscale("log")
+    axis.set_xlabel("Concentration of Phenol " + r"($\mathrm{\mu}$M)", fontsize=20)
+    axis.set_ylabel("Fraction of Sites Occupied", fontsize=20)
+    axis.set_xticklabels(axis.get_xticklabels(), fontsize=16)
+    axis.set_yticklabels(axis.get_yticklabels(), fontsize=16)
+    axis.vlines(
+        k_dissociation,
+        0,
+        1,
+        linestyles="dashed",
+        color="black",
+        label="Dissociation Constant",
+    )
+    axis.legend(loc="lower right", fontsize=20 * 0.75)
+
+    return axis
+
 
 
 
