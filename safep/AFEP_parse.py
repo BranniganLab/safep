@@ -114,9 +114,9 @@ class AFEPArgumentParser(argparse.ArgumentParser):
         )
         self.add_argument(
             "--detect_equilibrium",
-            type=bool,
             help="Flag for automated equilibrium detection.",
-            default=True,
+            default=False,
+            action="store_true",
         )
         self.add_argument(
             "--fittingMethod",
@@ -134,9 +134,9 @@ class AFEPArgumentParser(argparse.ArgumentParser):
         )
         self.add_argument(
             "--make_figures",
-            type=bool,
-            help="Run additional diagnostics and save figures to the directory. default: False",
-            default=0,
+            help="Flag to generate figures with additional diagnostics.",
+            default=False,
+            action="store_true",
         )
 
 
@@ -432,15 +432,31 @@ def get_summary_statistics(args, fepruns):
 
     # If there are only a few replicas,
     # the MBAR estimated error will be more reliable, albeit underestimated
-    if len(dGs) < 3:
-        sterr = np.sqrt(np.sum(np.square(errors)))
-        # Nothing new to print
-    else:
-        sterr = np.round(np.std(dGs), 1)
-        toprint += f"mean: {mean} kcal/mol\n" + f"sterr: {sterr} kcal/mol"
+    sterr = np.round(get_sterr(dGs, errors), 1)
+    toprint += f"mean: {mean} kcal/mol\n" + f"sterr: {sterr} kcal/mol"
     if np.isnan(mean):
         raise RuntimeError("Free energy average is NaN")
     return toprint, dGs, mean, sterr
+
+
+def get_sterr(dGs, errors):
+    """Get the standard error of the dGs
+
+    args:
+        dGs (list): list of free energies
+        errors (list): list of errors corresponding to dGs
+        mean (float): mean free energy across replicas. Default None.
+        toprint (str): log string. Default empty.
+
+    returns:
+        float, str: the standard error of the dGs and an updated print string
+    """
+    if len(dGs) < 3:
+        sterr = np.sqrt(np.sum(np.square(errors)))
+        print("Warning: Not enough replicas for a standard error. Propagating BAR errors.")
+    else:
+        sterr = np.std(dGs, ddof=1)/np.sqrt(len(dGs))
+    return sterr
 
 
 def main():
