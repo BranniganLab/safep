@@ -48,7 +48,11 @@ def test_u_nk(fepruns):
         atol=1e-6,
         check_column_type=False,
     )
-    print(f"U_nk does not match approved. Max error: {np.max(np.abs(approved - received))}. "
+    try:
+        max_error = ((expected_u_nk - received).abs()).max().max()
+    except ValueError:
+        max_error = "incalculable"
+    print(f"U_nk does not match approved. Max error: {max_error}. "
          f"To approve the current version, rename "
          f"test_afep_parse.test_u_nk.received.txt to test_afep_parse.test_u_nk.approved.txt "
          f"and commit the result")
