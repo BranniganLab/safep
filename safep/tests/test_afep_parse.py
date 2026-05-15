@@ -38,7 +38,10 @@ def test_u_nk(fepruns):
     Expect: the two arrays to be within machine tolerance (numpy allclose)
     """
     received = fepruns["Replica1"].u_nk
-    ref_path = Path(__file__).parent / "test_afep_parse.test_u_nk.approved.txt"
+    test_directory = Path(__file__).parent
+    received.to_csv(test_directory / "test_afep_parse.test_u_nk.received.txt", index=False)
+
+    ref_path = test_directory / "test_afep_parse.test_u_nk.approved.txt"
     expected_u_nk = pd.read_csv(ref_path)
     expected_u_nk.columns = expected_u_nk.columns.astype(float)
 
