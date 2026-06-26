@@ -159,7 +159,7 @@ else:
         plt.plot(x, col, label=label)
 plt.xlabel(r"$x_{\mathrm{CHOL}}$")
 plt.legend(fontsize="x-small", loc=0)
-plt.show()
+#plt.show()
 
 # Print half-saturation ratios for each protein
 print("\nCholesterol fractions for 50% occupancy (x50)")
@@ -179,7 +179,7 @@ predictions_list = [
     pocc[:, 1],
     pocc[:, 2],
 ]
-predictions_flat = [np.asarray(val) for val in predictions_list]
+predictions_flat = [np.asarray(val).flatten() for val in predictions_list]
 np.savetxt("predictions.csv", np.asarray(predictions_flat).T, delimiter=",")
 normalized_data_list = [
     np.log10(sim_x),
@@ -187,7 +187,7 @@ normalized_data_list = [
     inv_Px_sim / inv_P0,
     inv_Px_err / inv_P0,
 ]
-normalized_data_flat = [np.asarray(val) for val in normalized_data_list]
+normalized_data_flat = [np.asarray(val).flatten() for val in normalized_data_list]
 np.savetxt(
     "normalized_data.csv",
     np.asarray(normalized_data_flat).T,
