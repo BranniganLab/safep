@@ -27,7 +27,7 @@ def inv_mix_model(x, invP0, h0):
 
 def get_x50(x, y):
     # Determine x value for which y = 1/2
-    x50 = x[(np.abs(y - 0.5)).argmin()]
+    x50 = x[(np.abs(y - 0.5)).argmin()].item()
     if (np.max(y) < 0.5) or (np.min(y) > 0.5):
         print("Warning: Predicted occupancy does not cross 0.5, will print x for which occupancy is closest to 0.5:")
     return x50
@@ -136,13 +136,15 @@ plt.gca().axes.get_yaxis().set_major_locator(ticker.MultipleLocator(tick_spacing
 pocc = 1. / (1. + 1. / (x * kappa))
 plt.subplot(5, 1, 5)
 plt.ylabel(r'$p_{occ}$')
+labels = [r'$\beta_2$-adrenergic', 'serotonin', r'$\mu$-opioid']
 if logxscale:
-    plt.semilogx(x, pocc)
+    for col, label in zip(pocc.T, labels):
+        plt.semilogx(x, col, label=label)
 else:
-    plt.plot(x, pocc)
+    for col, label in zip(pocc.T, labels):
+        plt.plot(x, col, label=label)
 plt.xlabel(r'$x_{\mathrm{CHOL}}$')
-plt.gca().legend((r'$\beta_2$-adrenergic', 'serotonin', r'$\mu$-opioid'), fontsize='x-small', loc=0)
-plt.legend()
+plt.legend(fontsize='x-small', loc=0)
 plt.show()
 
 # Print half-saturation ratios for each protein
