@@ -176,6 +176,6 @@ normalized_data_list = [
 normalized_data_flat = [np.asarray(val) for val in normalized_data_list]
 np.savetxt(
     "normalized_data.csv",
-    np.asarray([np.log10(sim_x), sim_x, inv_Px_sim / inv_P0, inv_Px_err / inv_P0]).T,
+    np.asarray(normalized_data_flat).T,
     delimiter=",",
 )
