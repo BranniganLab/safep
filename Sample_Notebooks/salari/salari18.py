@@ -15,7 +15,7 @@ def mix_model(x, P0, h0):
     # Quadratic mixture model
     # P0: ideal bulk/gas partition coefficient
     # h0: enthalpy of mixing
-    return P0 * np.exp(-(1 - x) ** 2 * h0 / kT)
+    return P0 * np.exp(-((1 - x) ** 2) * h0 / kT)
 
 
 def inv_mix_model(x, invP0, h0):
@@ -29,25 +29,31 @@ def get_x50(x, y):
     # Determine x value for which y = 1/2
     x50 = x[(np.abs(y - 0.5)).argmin()].item()
     if (np.max(y) < 0.5) or (np.min(y) > 0.5):
-        print("Warning: Predicted occupancy does not cross 0.5, will print x for which occupancy is closest to 0.5:")
+        print(
+            "Warning: Predicted occupancy does not cross 0.5, will print x for which occupancy is closest to 0.5:"
+        )
     return x50
 
 
 ################### Plotting PARAMETERS
 logxscale = 1  # for shared logarithmic x-axis, set to 0 for linear
-xdecades, xmax, nx = 12., 1.0, 200
-x = (10 ** (np.linspace(-xdecades, 0, nx)) * xmax).reshape(nx, 1)  # desired concentration range for prediction
+xdecades, xmax, nx = 12.0, 1.0, 200
+x = (10 ** (np.linspace(-xdecades, 0, nx)) * xmax).reshape(
+    nx, 1
+)  # desired concentration range for prediction
 np.set_printoptions(precision=5)
 
 ################### PARAMETERS used in MD Simulation
-kT = 0.59          # kBT in kcal/mol
-totLipid = 230.    # desired total number of lipids per receptor
-alpha = 0.3        # fraction of total number in bulk restraint volume
-sim_x = np.array([0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4])  # cholesterol fractions used during decoupling from membrane
+kT = 0.59  # kBT in kcal/mol
+totLipid = 230.0  # desired total number of lipids per receptor
+alpha = 0.3  # fraction of total number in bulk restraint volume
+sim_x = np.array(
+    [0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]
+)  # cholesterol fractions used during decoupling from membrane
 thetaR = 0.14 * np.pi  # maximum angle for bulk orientation restraint in radians
-zR = 11.           # height of bulk restraint in Angstrom
-A = 3600.          # typical box area for bulk simulation in Angstrom^2
-rR = 5.            # radius of coarse restraint in Angstrom
+zR = 11.0  # height of bulk restraint in Angstrom
+A = 3600.0  # typical box area for bulk simulation in Angstrom^2
+rR = 5.0  # radius of coarse restraint in Angstrom
 
 ################### RESULTS from MD Simulation
 
@@ -67,10 +73,14 @@ AFEP2 = np.array([np.average(AFEP_3D4S), np.average(AFEP_4CN3), np.average(AFEP_
 
 ################### Prediction: Bulk/Gas Partition coefficient & non-ideality of bulk ##############
 
-Px_sim = np.exp(AFEP1 / kT)           # Simulated values of the bulk/gas partition coefficient
-inv_Px_sim = np.exp(-AFEP1 / kT)      # Simulated values of the gas/bulk partition coefficient
+Px_sim = np.exp(AFEP1 / kT)  # Simulated values of the bulk/gas partition coefficient
+inv_Px_sim = np.exp(
+    -AFEP1 / kT
+)  # Simulated values of the gas/bulk partition coefficient
 inv_Px_err = inv_Px_sim * (AFEP1_err / kT)  # Propagated error
-popt, pcov = curve_fit(inv_mix_model, sim_x, inv_Px_sim)  # Fit to quadratic mixture model;
+popt, pcov = curve_fit(
+    inv_mix_model, sim_x, inv_Px_sim
+)  # Fit to quadratic mixture model;
 # numerically fitting the gas/bulk coefficient seems more robust than the bulk/gas coefficient
 inv_P0, h0 = popt[0], popt[1]
 P0 = 1 / inv_P0
@@ -82,18 +92,18 @@ inv_Px = inv_mix_model(x, inv_P0, h0)  # Prediction based on curve fit parameter
 
 ### Plot Gas-Bulk Partition Coefficient (Figure 3A, Row 2 of Table 5)
 plt.subplot(5, 1, 1)
-plt.ylabel(r'$1/P_x$')
+plt.ylabel(r"$1/P_x$")
 plt.errorbar(sim_x, inv_Px_sim, yerr=inv_Px_err)
 if logxscale:
-    plt.semilogx(x, inv_Px, 'k')
+    plt.semilogx(x, inv_Px, "k")
 else:
-    plt.plot(x, inv_Px, 'k')
+    plt.plot(x, inv_Px, "k")
 plt.gca().axes.get_xaxis().set_visible(False)
 
 ### Plot Chemical Potential
 mu = kT * np.log(x) + h0 * (1 - x) ** 2
 plt.subplot(5, 1, 2)
-plt.ylabel(r'$\mu - \mu^0$' + '\n(kcal/mol)', multialignment='center')
+plt.ylabel(r"$\mu - \mu^0$" + "\n(kcal/mol)", multialignment="center")
 if logxscale:
     plt.semilogx(x, mu)
 else:
@@ -105,7 +115,7 @@ plt.gca().axes.get_yaxis().set_major_locator(ticker.MultipleLocator(tick_spacing
 ### Plot x Derivative of Chemical Potential
 dmu = kT / x - 2 * h0 * (1 - x)
 plt.subplot(5, 1, 3)
-plt.ylabel(r'$d\mu/dx$' + '\n(kcal/mol)', multialignment='center')
+plt.ylabel(r"$d\mu/dx$" + "\n(kcal/mol)", multialignment="center")
 if logxscale:
     plt.semilogx(x, dmu)
 else:
@@ -114,16 +124,20 @@ plt.gca().axes.get_xaxis().set_visible(False)
 
 ################### Prediction: OCCUPATION PROBABILITIES ######################
 # Calculate quantities in Table 5 and Table 6
-ratio1 = x * totLipid * alpha                                   # Table 5, Row 1
-ratio2 = inv_Px                                                  # Table 5, Row 2
-ratio3 = (2. / 3. * np.pi) * (rR ** 3. / zR / A) / (1 - np.cos(thetaR))  # Table 5, Row 3
-ratio4 = np.exp(-RFEP / kT)                                     # Table 6, Row 1
-ratio5 = np.exp(AFEP2 / kT).reshape(1, 3)                       # Table 6, Row 2
+ratio1 = x * totLipid * alpha  # Table 5, Row 1
+ratio2 = inv_Px  # Table 5, Row 2
+ratio3 = (
+    (2.0 / 3.0 * np.pi) * (rR**3.0 / zR / A) / (1 - np.cos(thetaR))
+)  # Table 5, Row 3
+ratio4 = np.exp(-RFEP / kT)  # Table 6, Row 1
+ratio5 = np.exp(AFEP2 / kT).reshape(1, 3)  # Table 6, Row 2
 
 ## Plot kappa
-kappa = ratio1 * ratio2 * ratio3 * ratio4 * ratio5 / x  # kappa for each protein - Table 6, Row 4
+kappa = (
+    ratio1 * ratio2 * ratio3 * ratio4 * ratio5 / x
+)  # kappa for each protein - Table 6, Row 4
 plt.subplot(5, 1, 4)
-plt.ylabel(r'$\log\kappa$')
+plt.ylabel(r"$\log\kappa$")
 if logxscale:
     plt.semilogx(x, np.log10(kappa))
 else:
@@ -133,18 +147,18 @@ tick_spacing = 3
 plt.gca().axes.get_yaxis().set_major_locator(ticker.MultipleLocator(tick_spacing))
 
 ## Plot occupation probabilities (Figure 3B)
-pocc = 1. / (1. + 1. / (x * kappa))
+pocc = 1.0 / (1.0 + 1.0 / (x * kappa))
 plt.subplot(5, 1, 5)
-plt.ylabel(r'$p_{occ}$')
-labels = [r'$\beta_2$-adrenergic', 'serotonin', r'$\mu$-opioid']
+plt.ylabel(r"$p_{occ}$")
+labels = [r"$\beta_2$-adrenergic", "serotonin", r"$\mu$-opioid"]
 if logxscale:
     for col, label in zip(pocc.T, labels):
         plt.semilogx(x, col, label=label)
 else:
     for col, label in zip(pocc.T, labels):
         plt.plot(x, col, label=label)
-plt.xlabel(r'$x_{\mathrm{CHOL}}$')
-plt.legend(fontsize='x-small', loc=0)
+plt.xlabel(r"$x_{\mathrm{CHOL}}$")
+plt.legend(fontsize="x-small", loc=0)
 plt.show()
 
 # Print half-saturation ratios for each protein
