@@ -159,7 +159,8 @@ else:
         plt.plot(x, col, label=label)
 plt.xlabel(r"$x_{\mathrm{CHOL}}$")
 plt.legend(fontsize="x-small", loc=0)
-#plt.show()
+plt.savefig("approved.pdf")
+plt.show()
 
 # Print half-saturation ratios for each protein
 print("\nCholesterol fractions for 50% occupancy (x50)")
