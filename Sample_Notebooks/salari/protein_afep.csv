@@ -1,0 +1,4 @@
+protein,pdb_id,label,replica_1,replica_2,replica_3
+beta2_adrenergic,3D4S,$\beta_2$-adrenergic,34.4,33.9,34.5
+serotonin,4CN3,serotonin,25.6,25.2,27.0
+mu_opioid,5C1M,$\mu$-opioid,23.1,25.7,25.7

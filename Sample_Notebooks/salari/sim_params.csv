@@ -1,0 +1,13 @@
+parameter,value,units,description
+kT,0.59,kcal/mol,Thermal energy kBT
+totLipid,230.0,count,Total number of lipids per receptor
+alpha,0.3,dimensionless,Fraction of total lipids in bulk restraint volume
+thetaR_pi_factor,0.14,dimensionless,thetaR as multiple of pi (thetaR = factor * pi)
+zR,11.0,Angstrom,Height of bulk restraint
+A,3600.0,Angstrom^2,Typical box area for bulk simulation
+rR,5.0,Angstrom,Radius of coarse restraint
+RFEP,4.6,kcal/mol,Delta G for imposing DBC restraints on decoupled cholesterol
+xdecades,12.0,decades,Number of log decades for prediction x-axis
+xmax,1.0,dimensionless,Maximum x value for prediction range
+nx,200,count,Number of points in prediction x-axis
+logxscale,1,bool,Use logarithmic x-axis (1=yes 0=no)
