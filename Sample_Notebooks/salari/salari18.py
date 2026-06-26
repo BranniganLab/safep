@@ -154,12 +154,21 @@ print(f"  5HT-2B (4NC3): {get_x50(x, pocc[:, 1]):.1g}")
 print(f"  mu-opioid (5C1M): {get_x50(x, pocc[:, 2]):.2g}")
 
 # Output predictions to file
-np.savetxt('predictions.csv',
-           np.asarray([np.log10(x), x, inv_Px,
-                       kappa[:, 0], kappa[:, 1], kappa[:, 2],
-                       pocc[:, 0], pocc[:, 1], pocc[:, 2]]).T,
-           delimiter=',')
-np.savetxt('normalized_data.csv',
-           np.asarray([np.log10(sim_x), sim_x,
-                       inv_Px_sim / inv_P0, inv_Px_err / inv_P0]).T,
-           delimiter=',')
+predictions_list = [
+    np.log10(x),
+    x,
+    inv_Px,
+    kappa[:, 0],
+    kappa[:, 1],
+    kappa[:, 2],
+    pocc[:, 0],
+    pocc[:, 1],
+    pocc[:, 2],
+]
+predictions_flat = [np.asarray(val) for val in predictions_list]
+np.savetxt("predictions.csv", np.asarray(predictions_flat).T, delimiter=",")
+np.savetxt(
+    "normalized_data.csv",
+    np.asarray([np.log10(sim_x), sim_x, inv_Px_sim / inv_P0, inv_Px_err / inv_P0]).T,
+    delimiter=",",
+)
