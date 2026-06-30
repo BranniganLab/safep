@@ -37,7 +37,7 @@ def main(logfile: str | Path) -> None:
     if restraint is None:
         raise ValueError("No changing bias found in the provided logfile.")
     print(
-        f"Processing TI data for restraint {restraint["name"]} on CVs {restraint["colvar"]}"
+        f"Processing TI data for restraint {restraint['name']} on CVs {restraint['colvar']}"
     )
 
     # We assume the colvars traj and log are in the same directory
