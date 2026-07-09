@@ -260,6 +260,15 @@ def parse_Colvars_log(filename):
 
 
 def initialize_global_conf(lines):
+    """New colvars initialization
+
+    Args:
+        lines (list[str]): The config file
+
+    Returns:
+        dict: initialized colvars config dictionary
+
+    """
     global_conf = {}
     for line in lines:
         match = re.match(r'^colvars: Initializing the collective variables module, version (.*).$', line)
