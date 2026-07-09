@@ -1,6 +1,7 @@
 import pytest
 import numpy as np
-from safep.moving_wall_TI import read_namd_conf_moving_wall, ColvarsTraj, get_free_energy_gradients, get_total_free_energy
+from safep.moving_wall_TI import read_namd_conf_moving_wall, ColvarsTraj, get_free_energy_gradients, \
+    get_total_free_energy, main as moving_wall
 from pathlib import Path
 
 def test_read_namd_conf():
@@ -54,3 +55,14 @@ def test_toy_dG_release():
     gradients = get_free_energy_gradients(traj, config)
     dG = get_total_free_energy(gradients)
     assert dG == -30, "Toy data is returning the wrong free energy."
+
+
+def test_moving_wall(capsys):
+    config = Path(__file__).parent / "data" / "job_1.namd"
+    colvars_traj = Path(__file__).parent / "data" / "pruned.colvars.traj"
+    output_prefix = "tmp.moving_wall"
+    moving_wall(config, colvars_traj, output_prefix)
+    captured = capsys.readouterr()
+    lines = captured.out.split('\n')
+    assert "0.5954" in lines[-2], "Expected total free energy to be about 0.5954"
+    assert "6.0 to 8.0" in lines[-2], "Expected the wall to move from 6 to 8"
