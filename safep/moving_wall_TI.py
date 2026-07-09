@@ -1,3 +1,16 @@
+"""Utilities for analyzing moving-wall thermodynamic integration (TI) from NAMD colvars trajectories.
+
+This module provides helpers to:
+- Read a NAMD-style moving wall configuration file.
+- Load a Colvars trajectory into a pandas DataFrame subclass with convenience methods
+  for computing stages, wall positions, and restraint forces.
+- Compute per-stage free energy gradients and integrate them to obtain the total
+  free energy change using the trapezoidal rule.
+
+The public entrypoint `main` can be used as a CLI to produce a gradients CSV and
+print the total free energy change.
+"""
+
 import numpy as np
 
 import pandas as pd
