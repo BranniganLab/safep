@@ -20,3 +20,13 @@ def test_RFEP_figure():
     actual = Path("RFEP_decouple_figures.png")
     compare_images(ref, actual, tol=1e-5)
     actual.unlink()
+
+def test_moving_wall(capsys):
+    config = Path(__file__).parent / "data" / "job_1.namd"
+    colvars_traj = Path(__file__).parent / "data" / "pruned.colvars.traj"
+    output_prefix = Path(__file__).parent / "tmp.moving_wall"
+    main(config, colvars_traj, output_prefix)
+    captured = capsys.readouterr()
+    lines = captured.out.split('\n')
+    assert "0.5954" in lines[-1], "Expected total free energy to be about 0.5954"
+    assert "6.0 to 8.0" in lines[-1], "Expected the wall to move from 6 to 8"
