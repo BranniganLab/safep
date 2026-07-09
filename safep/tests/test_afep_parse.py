@@ -1,4 +1,4 @@
-
+from approvaltests import verify
 import pandas as pd
 import numpy as np
 from approvaltests import verify
@@ -52,23 +52,34 @@ def test_summary(afep_args, fepruns, request):
     verify(summary, options=NamerFactory.with_parameters(test_id))
 
 def test_u_nk(fepruns, request):
-    test_id = request.node.callspec.id
-    u_nk = fepruns["Replica1"].u_nk
-    ref_path = Path(__file__).parent / f"test_afep_parse.test_u_nk.{test_id}.approved.txt"
-    # For updating reference data
-    # if not ref_path.exists():
-    #     u_nk.to_csv(ref_path, index=False)
-    #     pytest.fail(f"Reference file created at {ref_path}. Inspect it and re-run test.")
+    """
+    This is both a test and an example for testing numerical data with numpy allclose while
+    remaining consistent with the approvaltests paradigm of having an "approved" vs "received" file.
 
+    Given: A set of energy differences, u_nk
+    When: compared to an approved array
+    Expect: the two arrays to be within machine tolerance (numpy allclose)
+    """
+    test_id = request.node.callspec.id
+    received = fepruns["Replica1"].u_nk
+    ref_path = Path(__file__).parent / f"test_afep_parse.test_u_nk.{test_id}.approved.txt"
     expected_u_nk = pd.read_csv(ref_path)
     expected_u_nk.columns = expected_u_nk.columns.astype(float)
 
     pd.testing.assert_frame_equal(
-        u_nk.reset_index(drop=True), # Ensure index doesn't block comparison
+        received.reset_index(drop=True), # Ensure index doesn't block comparison
         expected_u_nk,
         atol=1e-6,
-        check_column_type=False
+        check_column_type=False,
     )
+    try:
+        max_error = ((expected_u_nk - received).abs()).max().max()
+    except ValueError:
+        max_error = "incalculable"
+    print(f"U_nk does not match approved. Max error: {max_error}. "
+         f"To approve the current version, rename "
+         f"test_afep_parse.test_u_nk.received.txt to test_afep_parse.test_u_nk.approved.txt "
+         f"and commit the result")
 
 def test_sterr_of_five_numbers_is_correct():
     dGs = [1,2,3,4,5]

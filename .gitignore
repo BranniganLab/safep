@@ -10,3 +10,4 @@ safep.egg-info*
 .DS_Store
 .vscode
 .qodo
+.idea
