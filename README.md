@@ -48,7 +48,7 @@ Given a file structure like:
 |   ...
 ...
 ```
-2. Run `python -m safep.AFEP_parse --path . --fepoutre "*fepout --replicare "replica_*" --temperature 303.15 --detect_equilibrium True -- make_figures True`
+2. Run `python -m safep.AFEP_parse --path . --fepoutre "*fepout" --replicare "replica_*" --temperature 303.15 --detect_equilibrium True -- make_figures True`
 
 More detailed explanations can be seen by running `python -m safep.AFEP_parse --help`
 
