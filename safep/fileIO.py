@@ -271,9 +271,13 @@ def initialize_global_conf(lines):
 
     """
     global_conf = {}
+    if len(lines) == 0:
+        raise ValueError("NAMD log file is empty.")
     for line_number, line in enumerate(lines):
         match = re.match(r'^colvars: Initializing the collective variables module, version (.*).$', line)
         if match:
             global_conf['version'] = match.group(1).strip()
             break
+    if line_number-1 == len(lines):
+        raise ValueError("Colvars information not found in NAMD log.")
     return global_conf, line_number
