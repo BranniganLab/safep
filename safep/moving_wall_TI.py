@@ -48,6 +48,18 @@ def read_namd_conf_moving_wall(config_path: Path) -> dict:
     return config
 
 class ColvarsTraj(pd.DataFrame):
+    """Container for a Colvars trajectory for moving wall TI
+
+    Public Methods:
+        read_colvars_traj(cls, traj_path)
+        get_stages(self, config)
+        get_wall_position(self, config)
+        get_force(self, config)
+        see also pandas.DataFrame
+
+    Attributes:
+        see pandas.DataFrame
+    """
     def __init__(self, data: pd.DataFrame):
         super().__init__(data)
 
@@ -61,6 +73,14 @@ class ColvarsTraj(pd.DataFrame):
 
     @classmethod
     def read_colvars_traj(cls, traj_path: Path) -> pd.DataFrame:
+        """Parse a colvars trajectory file
+
+        Arguments:
+            traj_path (Path): path to the trajectory file
+
+        Returns:
+            ColvarsTraj: the trajectory with step as index and each CV as a column
+        """
         with open(traj_path, encoding="UTF8") as f:
             first_line = f.readline()
         header = first_line.strip().split()[1:]
@@ -70,6 +90,17 @@ class ColvarsTraj(pd.DataFrame):
         return cls(traj)
 
     def get_stages(self, config: dict) -> None:
+        """Determine moving wall position using a NAMD config dictionary
+
+        Args:
+            config (dict): moving wall parameters including
+
+        Returns:
+            None
+
+        Side Effects:
+            Adds a stage column to self and populates it with the presumptive stage number
+        """
         steps_per_stage = config["stepsperstage"]
         stages = config["stages"]
         initialequil = config["initialequil"]
