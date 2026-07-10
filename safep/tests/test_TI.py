@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from safep.moving_wall_TI import read_namd_conf_moving_wall, ColvarsTraj, get_free_energy_gradients, \
+from safep.moving_wall_TI import from_namd_config_file, ColvarsTraj, get_free_energy_gradients, \
     get_total_free_energy, main as moving_wall
 from pathlib import Path
 
@@ -10,7 +10,7 @@ def test_read_namd_conf():
     When parsed
     Expect a dictionary with the key `stepsperstage` with value 5000000
     """
-    config = read_namd_conf_moving_wall(Path(__file__).parent/"data/job_1.namd")
+    config = from_namd_config_file(Path(__file__).parent / "data/job_1.namd")
     assert config['stepsperstage'] == 5000000
 
 @pytest.fixture(scope="module")
@@ -21,7 +21,7 @@ def pruned_traj() -> ColvarsTraj:
 @pytest.fixture(scope="module")
 def config() -> dict:
     """Parsed namd config"""
-    config = read_namd_conf_moving_wall(Path(__file__).parent / "data/job_1.namd")
+    config = from_namd_config_file(Path(__file__).parent / "data/job_1.namd")
     return config
 
 def test_read_colvars_traj(pruned_traj):
@@ -67,7 +67,7 @@ def test_toy_data():
     Expect the sum of gradients to be correct
     """
     traj = ColvarsTraj.read_colvars_traj(Path(__file__).parent/"data/toy.colvars.traj")
-    config = read_namd_conf_moving_wall(Path(__file__).parent/"data/toy.namd")
+    config = from_namd_config_file(Path(__file__).parent / "data/toy.namd")
     gradients = get_free_energy_gradients(traj, config)
     assert gradients.dUdw.sum() == -60, "One or more toy data gradients are wrong"
 
@@ -78,7 +78,7 @@ def test_toy_dG_release():
     Expect the total free energy to be correct
     """
     traj = ColvarsTraj.read_colvars_traj(Path(__file__).parent/"data/toy.colvars.traj")
-    config = read_namd_conf_moving_wall(Path(__file__).parent/"data/toy.namd")
+    config = from_namd_config_file(Path(__file__).parent / "data/toy.namd")
     gradients = get_free_energy_gradients(traj, config)
     dG = get_total_free_energy(gradients)
     assert dG == -30, "Toy data is returning the wrong free energy."
