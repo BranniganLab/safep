@@ -121,7 +121,7 @@ class ColvarsTraj(pd.DataFrame):
         """Determine moving wall position using a NAMD config dictionary
 
         Args:
-            config (dict): moving wall parameters including
+            config (MovingWallConfig): moving wall parameters
 
         Returns:
             None
@@ -141,6 +141,19 @@ class ColvarsTraj(pd.DataFrame):
             print("WARNING: Found more steps than should be present given the number of stages")
 
     def get_wall_position(self, config: MovingWallConfig) -> None:
+        """Guess the wall position based on stage
+
+        Assumes a linear schedule
+
+        Arguments:
+            config (MovingWallConfig): NAMD config parameters
+
+        Returns:
+            None
+
+        Side Effects:
+            Creates the wall_position column
+        """
         if "stage" not in self.columns:
             self.get_stages(config)
         initial_wall = config["initialWall"]
@@ -149,6 +162,17 @@ class ColvarsTraj(pd.DataFrame):
         self["wall_position"] = self.stage/stages * (final_wall - initial_wall) + initial_wall
 
     def get_force(self, config: MovingWallConfig) -> None:
+        """Calculate the force due to the moving restraint
+
+        Arguments:
+            config (MovingWallConfig): the NAMD config parameters
+
+        Returns:
+            None
+
+        Side Effects:
+            Creates the force column
+        """
         if "wall_position" not in self.columns:
             self.get_wall_position(config)
         k = config["spring"]
@@ -158,7 +182,15 @@ class ColvarsTraj(pd.DataFrame):
         self.loc[mask, "force"] = self.loc[mask].apply(compute_force, axis=1)
 
 
-def get_total_free_energy(gradients) -> float:
+def get_total_free_energy(gradients: pd.DataFrame) -> float:
+    """Integrate the gradients using the trapezoid rule
+
+    Arguments:
+        gradients (pd.DataFrame): containing wall_position and dUdw columns
+
+    Returns:
+        float: The total free energy difference from gradient[0] to gradient[-1]
+    """
     total = 0
     for i in range(1, len(gradients)):
         dw = gradients.wall_position.iloc[i] - gradients.wall_position.iloc[i-1]
@@ -166,6 +198,15 @@ def get_total_free_energy(gradients) -> float:
     return total
 
 def get_free_energy_gradients(colvars_traj: ColvarsTraj, config: MovingWallConfig) -> pd.DataFrame:
+    """Compute average free energy gradients for each stage
+
+    Arguments:
+        colvars_traj (ColvarsTraj): the colvar trajectory
+        config (MovingWallConfig): the NAMD config parameters
+
+    Returns:
+        pd.DataFrame: A dataframe containing the wall positions and FE gradients
+    """
     if "force" not in colvars_traj.columns:
         colvars_traj.get_force(config)
     all_means = colvars_traj.groupby("stage").mean()
@@ -174,6 +215,20 @@ def get_free_energy_gradients(colvars_traj: ColvarsTraj, config: MovingWallConfi
     return gradients
 
 def main(config_path, colvars_traj_path, output_prefix):
+    """Compute the overall free energy due to a moving wall and log results.
+
+    Arguments:
+        config_path (str|Path): path to the NAMD config file
+        colvars_traj_path (str|Path): path to the colvars trajectory file
+        output_prefix (str): prefix for writing logs
+
+    Returns:
+        None
+
+    Side Effects:
+        Prints the total dG to stdout
+        Saves gradients to [output_prefix]_gradients.csv
+    """
     config = MovingWallConfig.from_namd_config_file(config_path)
     colvars_traj = ColvarsTraj.read_colvars_traj(colvars_traj_path)
     gradients = get_free_energy_gradients(colvars_traj, config)
