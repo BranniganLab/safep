@@ -156,7 +156,9 @@ def parse_Colvars_log(filename):
         lines = file.readlines()
 
     # Header: get version and output prefix, then break
-    global_conf = initialize_global_conf(lines)
+    global_conf, line_number = initialize_global_conf(lines)
+    # truncate log to start of colvars configuration
+    lines = lines[line_number:]
     current = global_conf
 
     # Parse rest of file for more config data
@@ -270,9 +272,9 @@ def initialize_global_conf(lines):
 
     """
     global_conf = {}
-    for line in lines:
+    for line_number, line in enumerate(lines):
         match = re.match(r'^colvars: Initializing the collective variables module, version (.*).$', line)
         if match:
             global_conf['version'] = match.group(1).strip()
             break
-    return global_conf
+    return global_conf, line_number
