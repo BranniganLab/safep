@@ -21,12 +21,33 @@ from argparse import ArgumentParser
 class MovingWallConfig(dict):
     """Contract specification for moving wall infrastructure.
 
-    This is a labile class that will be replaced when we move to the newer
+    This is a labile class - it will be replaced when we move to the newer
     moving walls infrastructure in Colvars.
 
+    Caution: only validates inputs on read.
+    Switch to UserDict if this gets expanded to other uses.
+
+    Public Methods:
+        from_namd_config_file(cls, config_path)
     """
+    _required_keys = [
+        "stepsperstage",
+        "stages",
+        "initialequil",
+        "initialWall",
+        "finalWall",
+    ]
+    def __init__(self, input_dict: dict):
+        super().__init__(input_dict)
+        self._validate()
+
+    def _validate(self):
+        for key in self._required_keys:
+            if key not in self.keys():
+                raise ValueError(f"NAMD config missing {key}")
+
     @classmethod
-    def from_namd_config_file(cls, config_path: Path) -> dict:
+    def from_namd_config_file(cls, config_path: Path|str) -> dict:
         """Parse a namd config file (or tcl file) to get variable name-value pairs
 
         Parses all `set VarName VarVal` pairs into a dictionary.
@@ -98,7 +119,7 @@ class ColvarsTraj(pd.DataFrame):
         traj.set_index("step", inplace=True)
         return cls(traj)
 
-    def get_stages(self, config: dict) -> None:
+    def get_stages(self, config: MovingWallConfig) -> None:
         """Determine moving wall position using a NAMD config dictionary
 
         Args:
@@ -121,7 +142,7 @@ class ColvarsTraj(pd.DataFrame):
         if np.any(self["stage"] > stages):
             print("WARNING: Found more steps than should be present given the number of stages")
 
-    def get_wall_position(self, config: dict) -> None:
+    def get_wall_position(self, config: MovingWallConfig) -> None:
         if "stage" not in self.columns:
             self.get_stages(config)
         initial_wall = config["initialWall"]
@@ -129,7 +150,7 @@ class ColvarsTraj(pd.DataFrame):
         stages = config["stages"]
         self["wall_position"] = self.stage/stages * (final_wall - initial_wall) + initial_wall
 
-    def get_force(self, config: dict) -> None:
+    def get_force(self, config: MovingWallConfig) -> None:
         if "wall_position" not in self.columns:
             self.get_wall_position(config)
         k = config["spring"]
@@ -146,7 +167,7 @@ def get_total_free_energy(gradients) -> float:
         total += 0.5 * dw * (gradients.dUdw.iloc[i]+gradients.dUdw.iloc[i-1])
     return total
 
-def get_free_energy_gradients(colvars_traj: ColvarsTraj, config: dict) -> pd.DataFrame:
+def get_free_energy_gradients(colvars_traj: ColvarsTraj, config: MovingWallConfig) -> pd.DataFrame:
     if "force" not in colvars_traj.columns:
         colvars_traj.get_force(config)
     all_means = colvars_traj.groupby("stage").mean()
