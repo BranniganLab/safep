@@ -16,7 +16,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 from argparse import ArgumentParser
-
+import re
 
 class MovingWallConfig(dict):
     """Contract specification for moving wall infrastructure.
@@ -37,6 +37,8 @@ class MovingWallConfig(dict):
         "initialWall",
         "finalWall",
     ]
+
+    _SET_RE = re.compile(r"^\s*set\s+(\S+)\s+(\S+)")
     def __init__(self, input_dict: dict):
         super().__init__(input_dict)
         self._validate()
@@ -62,13 +64,10 @@ class MovingWallConfig(dict):
             lines = f.readlines()
         config = {}
         for line in lines:
-            if "set" in line:
-                try:
-                    _, key, value = line.strip().split(" ")
-                    config[key] = value
-                except ValueError:
-                    print(f"bad line: {line}")
-                    continue
+            match = cls._SET_RE.match(line)
+            if match:
+                key, value = match.groups()
+                config[key] = value
 
         for key, value in config.items():
             if value.isnumeric():
