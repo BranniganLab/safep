@@ -17,8 +17,18 @@ import pandas as pd
 from pathlib import Path
 from argparse import ArgumentParser
 
-def read_namd_conf_moving_wall(config: Path) -> dict:
-    with open(config, encoding="UTF8") as f:
+def read_namd_conf_moving_wall(config_path: Path) -> dict:
+    """Parse a namd config file (or tcl file) to get variable name-value pairs
+
+    Parses all `set VarName VarVal` pairs into a dictionary.
+
+    Arguments:
+         config (Path): path to the NAMD config file
+
+    Returns:
+        dict: dictionary of all Var: Val pairs
+    """
+    with open(config_path, encoding="UTF8") as f:
         lines = f.readlines()
     config = {}
     for line in lines:
