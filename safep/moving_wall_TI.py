@@ -155,6 +155,8 @@ class ColvarsTraj(pd.DataFrame):
         Side Effects:
             Creates the wall_position column
         """
+        if config.get("exponent", 1) != 1:
+            raise NotImplementedError("Non-linear schedules are not yet supported.")
         if "stage" not in self.columns:
             self.get_stages(config)
         initial_wall = config["initialWall"]
