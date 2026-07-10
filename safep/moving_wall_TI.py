@@ -70,8 +70,10 @@ class MovingWallConfig(dict):
                 config[key] = value
 
         for key, value in config.items():
-            if value.isnumeric():
+            try:
                 config[key] = float(value)
+            except ValueError:
+                pass
         return cls(config)
 
 class ColvarsTraj(pd.DataFrame):
