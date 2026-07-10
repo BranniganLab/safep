@@ -155,7 +155,6 @@ def parse_Colvars_log(filename):
     with open(filename) as file:
         lines = file.readlines()
 
-    # Header: get version and output prefix, then break
     global_conf, line_number = initialize_global_conf(lines)
     # truncate log to start of colvars configuration
     lines = lines[line_number:]
