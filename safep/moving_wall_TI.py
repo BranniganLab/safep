@@ -17,35 +17,44 @@ import pandas as pd
 from pathlib import Path
 from argparse import ArgumentParser
 
-def from_namd_config_file(config_path: Path) -> dict:
-    """Parse a namd config file (or tcl file) to get variable name-value pairs
 
-    Parses all `set VarName VarVal` pairs into a dictionary.
+class MovingWallConfig(dict):
+    """Contract specification for moving wall infrastructure.
 
-    Arguments:
-         config (Path): path to the NAMD config file
+    This is a labile class that will be replaced when we move to the newer
+    moving walls infrastructure in Colvars.
 
-    Returns:
-        dict: dictionary of all Var: Val pairs
     """
-    with open(config_path, encoding="UTF8") as f:
-        lines = f.readlines()
-    config = {}
-    for line in lines:
-        if "set" in line:
-            try:
-                _, key, value = line.strip().split(" ")
-                config[key] = value
-            except ValueError:
-                print(f"bad line: {line}")
-                continue
+    @classmethod
+    def from_namd_config_file(cls, config_path: Path) -> dict:
+        """Parse a namd config file (or tcl file) to get variable name-value pairs
 
-    for key, value in config.items():
-        try:
-            config[key] = float(value)
-        except ValueError:
-            continue
-    return config
+        Parses all `set VarName VarVal` pairs into a dictionary.
+
+        Arguments:
+             config (Path): path to the NAMD config file
+
+        Returns:
+            dict: dictionary of all Var: Val pairs
+        """
+        with open(config_path, encoding="UTF8") as f:
+            lines = f.readlines()
+        config = {}
+        for line in lines:
+            if "set" in line:
+                try:
+                    _, key, value = line.strip().split(" ")
+                    config[key] = value
+                except ValueError:
+                    print(f"bad line: {line}")
+                    continue
+
+        for key, value in config.items():
+            try:
+                config[key] = float(value)
+            except ValueError:
+                continue
+        return cls(config)
 
 class ColvarsTraj(pd.DataFrame):
     """Container for a Colvars trajectory for moving wall TI
@@ -146,7 +155,7 @@ def get_free_energy_gradients(colvars_traj: ColvarsTraj, config: dict) -> pd.Dat
     return gradients
 
 def main(config_path, colvars_traj_path, output_prefix):
-    config = from_namd_config_file(config_path)
+    config = MovingWallConfig.from_namd_config_file(config_path)
     colvars_traj = ColvarsTraj.read_colvars_traj(colvars_traj_path)
     gradients = get_free_energy_gradients(colvars_traj, config)
     dG = get_total_free_energy(gradients)
