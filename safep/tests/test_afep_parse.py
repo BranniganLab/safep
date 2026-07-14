@@ -73,7 +73,7 @@ def test_sterr_of_two_numbers_propagates_error():
     assert not np.isclose(sterr, 0.5), "Got standard error. Standard error of two numbers is a math crime. The authorities have been informed."
     assert np.isclose(sterr, 2.236067977), "Error not propagated correctly."
 
-def test_cached_fepruns_match_expectations(fepruns: dict[FepRun], tmp_path: Path):
+def test_cached_fepruns_match_expectations(fepruns: dict[str, FepRun], tmp_path: Path):
     """
     Given a set of fepruns
     When written to file and read back
