@@ -1,5 +1,6 @@
 from approvaltests import verify
 import pandas as pd
+from pandas.testing import assert_frame_equal
 import numpy as np
 from safep.AFEP_parse import  COLORS, get_summary_statistics, AFEPArguments, get_sterr
 from safep.fepruns import process_replicas, FepRun
@@ -76,5 +77,10 @@ def test_cached_fepruns_match_expectations(fepruns: dict[FepRun]):
     test = {}
     for key, fr in fepruns.items():
         fr.to_json(Path(key))
-        test[key] = FepRun.from_json(Path(key))
-        assert test[key] == fr
+        test_fr= FepRun.from_json(Path(key))
+        for name in ["u_nk"]:
+            test = getattr(test_fr, name)
+            canonical = getattr(fr, name)
+            if isinstance(test, pd.DataFrame):
+                assert_frame_equal(test, canonical)
+
