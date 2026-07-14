@@ -2,7 +2,7 @@ from approvaltests import verify
 import pandas as pd
 import numpy as np
 from safep.AFEP_parse import  COLORS, get_summary_statistics, AFEPArguments, get_sterr
-from safep.fepruns import process_replicas
+from safep.fepruns import process_replicas, FepRun
 import pytest
 from pathlib import Path
 
@@ -71,3 +71,10 @@ def test_sterr_of_two_numbers_propagates_error():
     assert not np.isclose(sterr, 0.7071067812), "Got standard deviation, not propagated error"
     assert not np.isclose(sterr, 0.5), "Got standard error. Standard error of two numbers is a math crime. The authorities have been informed."
     assert np.isclose(sterr, 2.236067977), "Error not propagated correctly."
+
+def test_cached_fepruns_match_expectations(fepruns):
+    test = {}
+    for key, fr in fepruns.items():
+        fr.to_json(Path(key))
+        test[key] = FepRun.from_json(Path(key))
+        assert test[key] == fr
