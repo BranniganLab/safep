@@ -89,8 +89,8 @@ class FepRun:
             self.per_lambda_convergence = safep.do_per_lambda_convergence(self.u_nk)
 
         for field in fields(self):
-            if field.name != 'color':
-                attr = getattr(self, field.name)
+            attr = getattr(self, field.name)
+            if field.name != 'color' and not isinstance(attr, pd.DataFrame):
                 setattr(self, field.name, pd.DataFrame(attr))
 
     def to_dir(self, root: Path):
