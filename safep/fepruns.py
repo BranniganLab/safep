@@ -63,10 +63,10 @@ class FepRun:
     u_nk: pd.DataFrame
     per_window: pd.DataFrame|None = None
     cumulative: pd.DataFrame|None = None
-    forward: pd.DataFrame|None = None
-    forward_error: pd.DataFrame|None = None
-    backward: pd.DataFrame|None = None
-    backward_error: pd.DataFrame|None = None
+    forward: np.ndarray|None = None
+    forward_error: np.ndarray|None = None
+    backward: np.ndarray|None = None
+    backward_error: np.ndarray|None = None
     per_lambda_convergence: pd.DataFrame|None = None
     color: str = "k"
 
@@ -90,8 +90,15 @@ class FepRun:
 
         for field in fields(self):
             attr = getattr(self, field.name)
-            if field.name != 'color' and not isinstance(attr, pd.DataFrame):
-                setattr(self, field.name, pd.DataFrame(attr))
+            if not isinstance(attr, field.type):
+                if field.type == pd.DataFrame:
+                    setattr(self, field.name, pd.DataFrame(attr))
+                elif field.type == np.ndarray:
+                    setattr(self, field.name, np.asarray(attr))
+                elif field.type == str:
+                    setattr(self, field.name, str(attr))
+                else:
+                    raise ValueError(f"FepRun can't process type {field.type}")
 
     def to_dir(self, root: Path):
         """Write FepRun to a directory
