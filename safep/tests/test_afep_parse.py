@@ -74,13 +74,14 @@ def test_sterr_of_two_numbers_propagates_error():
     assert np.isclose(sterr, 2.236067977), "Error not propagated correctly."
 
 def test_cached_fepruns_match_expectations(fepruns: dict[FepRun]):
-    test = {}
     for key, fr in fepruns.items():
         fr.to_json(Path(key))
         test_fr= FepRun.from_json(Path(key))
-        for name in ["u_nk"]:
+        for name in ["u_nk", "per_window", "cumulative", "forward", "forward_error", "backward", "backward_error", "per_lambda_convergence", "color"]:
             test = getattr(test_fr, name)
             canonical = getattr(fr, name)
             if isinstance(test, pd.DataFrame):
                 assert_frame_equal(test, canonical)
+            else:
+                assert test == canonical
 
