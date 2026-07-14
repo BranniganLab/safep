@@ -21,7 +21,7 @@ def afep_args():
                         make_figures = False)
 
 @pytest.fixture
-def fepruns(afep_args, itcolors):
+def fepruns(afep_args, itcolors) -> dict[FepRun]:
     return process_replicas(afep_args, itcolors)
 
 def test_summary(afep_args, fepruns):
@@ -72,7 +72,7 @@ def test_sterr_of_two_numbers_propagates_error():
     assert not np.isclose(sterr, 0.5), "Got standard error. Standard error of two numbers is a math crime. The authorities have been informed."
     assert np.isclose(sterr, 2.236067977), "Error not propagated correctly."
 
-def test_cached_fepruns_match_expectations(fepruns):
+def test_cached_fepruns_match_expectations(fepruns: dict[FepRun]):
     test = {}
     for key, fr in fepruns.items():
         fr.to_json(Path(key))
