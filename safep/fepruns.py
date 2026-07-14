@@ -71,6 +71,8 @@ class FepRun:
     color: str = "k"
 
     def __post_init__(self):
+        self.u_nk.columns = self.u_nk.columns.astype(float)
+
         # Run the BAR estimator on the fep data
         if self.per_window is None:
             self.per_window, self.cumulative = safep.do_estimation(self.u_nk)
