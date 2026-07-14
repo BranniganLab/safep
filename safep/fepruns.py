@@ -110,24 +110,17 @@ class FepRun:
         nacent_dict = {}
         key = "u_nk"
         nacent_dict[key] = pd.read_csv(root/f"{key}.csv", header=[0], index_col=[0,1], dtype=float)
-        key = "per_window"
-        nacent_dict[key] = pd.read_csv(root / f"{key}.csv", header=[0, 1], index_col=[0], dtype=float)
-        key = "cumulative"
-        nacent_dict[key] = pd.read_csv(root / f"{key}.csv", header=[0, 1], index_col=[0], dtype=float)
-        key = "forward"
-        nacent_dict[key] = pd.read_csv(root / f"{key}.csv", usecols=[1], dtype=float)
-        nacent_dict[key].columns = nacent_dict[key].columns.astype(int)
-        key = "forward_error"
-        nacent_dict[key] = pd.read_csv(root / f"{key}.csv", usecols=[1], dtype=float)
-        nacent_dict[key].columns = nacent_dict[key].columns.astype(int)
-        key = "backward"
-        nacent_dict[key] = pd.read_csv(root / f"{key}.csv", usecols=[1], dtype=float)
-        nacent_dict[key].columns = nacent_dict[key].columns.astype(int)
-        key = "backward_error"
-        nacent_dict[key] = pd.read_csv(root / f"{key}.csv", usecols=[1], dtype=float)
-        nacent_dict[key].columns = nacent_dict[key].columns.astype(int)
+
+        for key in ["per_window", "cumulative"]:
+            nacent_dict[key] = pd.read_csv(root / f"{key}.csv", header=[0, 1], index_col=[0], dtype=float)
+
+        for key in ["forward", "forward_error", "backward", "backward_error"]:
+            nacent_dict[key] = pd.read_csv(root / f"{key}.csv", usecols=[1], dtype=float)
+            nacent_dict[key].columns = nacent_dict[key].columns.astype(int)
+
         key = "per_lambda_convergence"
         nacent_dict[key] = pd.read_csv(root / f"{key}.csv", header=[0, 1], index_col=[0], dtype=float)
+
         with open(root/"color.txt", 'r') as f:
             lines = f.read()
         nacent_dict["color"] = lines
