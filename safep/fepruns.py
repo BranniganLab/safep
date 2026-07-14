@@ -93,7 +93,18 @@ class FepRun:
                 attr = getattr(self, field.name)
                 setattr(self, field.name, pd.DataFrame(attr))
 
-    def to_json(self, root: Path):
+    def to_dir(self, root: Path):
+        """Write FepRun to a directory
+
+        Arguments:
+            root (Path): the directory to write to
+
+        Returns:
+            None
+
+        Side Effects:
+            Creates and populates the root directory with the fields of a FepRun
+        """
         root.mkdir(parents=True, exist_ok=True)
         for field in fields(self):
             attr = getattr(self, field.name)
@@ -106,7 +117,15 @@ class FepRun:
                     f.write(attr)
 
     @classmethod
-    def from_json(cls, root: Path):
+    def from_dir(cls, root: Path):
+        """Read FepRun from directory
+
+        Arguments:
+            root (Path): directory to read
+
+        Returns:
+            FepRun: populated from csvs and text files in the directory
+        """
         nacent_dict = {}
         key = "u_nk"
         nacent_dict[key] = pd.read_csv(root/f"{key}.csv", header=[0], index_col=[0,1], dtype=float)
