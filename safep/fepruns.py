@@ -108,13 +108,24 @@ class FepRun:
     @classmethod
     def from_json(cls, root: Path):
         nacent_dict = {}
-        for field in fields(cls):
-            if field.type == pd.DataFrame:
-                nacent_dict[field.name] = pd.read_csv(root/f'{field.name}.csv')
-            else:
-                with open(root/f'{field.name}.txt', 'r') as f:
-                    lines = f.read()
-                nacent_dict[field.name] = lines
+        key = "u_nk"
+        nacent_dict[key] = pd.read_csv(root/f"{key}.csv", header=[0], index_col=[0,1], dtype=float)
+        key = "per_window"
+        nacent_dict[key] = pd.read_csv(root / f"{key}.csv", header=[0, 1], index_col=[0], dtype=float)
+        key = "cumulative"
+        nacent_dict[key] = pd.read_csv(root / f"{key}.csv", header=[0, 1], index_col=[0], dtype=float)
+        key = "forward"
+        nacent_dict[key] = pd.read_csv(root / f"{key}.csv", skiprows=1, usecols=[1], dtype=float)
+        key = "forward_error"
+        nacent_dict[key] = pd.read_csv(root / f"{key}.csv", skiprows=1, usecols=[1], dtype=float)
+        key = "backward"
+        nacent_dict[key] = pd.read_csv(root / f"{key}.csv", skiprows=1, usecols=[1], dtype=float)
+        key = "backward_error"
+        nacent_dict[key] = pd.read_csv(root / f"{key}.csv", skiprows=1, usecols=[1], dtype=float)
+        key = "per_lambda_convergence"
+        nacent_dict[key] = pd.read_csv(root / f"{key}.csv", header=[0, 1], index_col=[0], dtype=float)
+        nacent_dict["color"] = "k"
+
         return cls(**nacent_dict)
 
 
