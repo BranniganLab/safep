@@ -61,13 +61,13 @@ class FepRun:
         free energies
         and associated metrics"""
     u_nk: pd.DataFrame
-    per_window: pd.DataFrame = None
-    cumulative: pd.DataFrame = None
-    forward: pd.DataFrame = None
-    forward_error: pd.DataFrame = None
-    backward: pd.DataFrame = None
-    backward_error: pd.DataFrame = None
-    per_lambda_convergence: pd.DataFrame = None
+    per_window: pd.DataFrame|None = None
+    cumulative: pd.DataFrame|None = None
+    forward: pd.DataFrame|None = None
+    forward_error: pd.DataFrame|None = None
+    backward: pd.DataFrame|None = None
+    backward_error: pd.DataFrame|None = None
+    per_lambda_convergence: pd.DataFrame|None = None
     color: str = "k"
 
     def __post_init__(self):
