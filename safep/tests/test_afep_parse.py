@@ -74,6 +74,11 @@ def test_sterr_of_two_numbers_propagates_error():
     assert np.isclose(sterr, 2.236067977), "Error not propagated correctly."
 
 def test_cached_fepruns_match_expectations(fepruns: dict[FepRun]):
+    """
+    Given a set of fepruns
+    When written to file and read back
+    Expect the feprun as-read to be identical to the feprun as-written
+    """
     for key, fr in fepruns.items():
         fr.to_dir(Path(key))
         test_fr= FepRun.from_dir(Path(key))
