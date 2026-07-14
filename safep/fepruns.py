@@ -115,16 +115,22 @@ class FepRun:
         key = "cumulative"
         nacent_dict[key] = pd.read_csv(root / f"{key}.csv", header=[0, 1], index_col=[0], dtype=float)
         key = "forward"
-        nacent_dict[key] = pd.read_csv(root / f"{key}.csv", skiprows=1, usecols=[1], dtype=float)
+        nacent_dict[key] = pd.read_csv(root / f"{key}.csv", usecols=[1], dtype=float)
+        nacent_dict[key].columns = nacent_dict[key].columns.astype(int)
         key = "forward_error"
-        nacent_dict[key] = pd.read_csv(root / f"{key}.csv", skiprows=1, usecols=[1], dtype=float)
+        nacent_dict[key] = pd.read_csv(root / f"{key}.csv", usecols=[1], dtype=float)
+        nacent_dict[key].columns = nacent_dict[key].columns.astype(int)
         key = "backward"
-        nacent_dict[key] = pd.read_csv(root / f"{key}.csv", skiprows=1, usecols=[1], dtype=float)
+        nacent_dict[key] = pd.read_csv(root / f"{key}.csv", usecols=[1], dtype=float)
+        nacent_dict[key].columns = nacent_dict[key].columns.astype(int)
         key = "backward_error"
-        nacent_dict[key] = pd.read_csv(root / f"{key}.csv", skiprows=1, usecols=[1], dtype=float)
+        nacent_dict[key] = pd.read_csv(root / f"{key}.csv", usecols=[1], dtype=float)
+        nacent_dict[key].columns = nacent_dict[key].columns.astype(int)
         key = "per_lambda_convergence"
         nacent_dict[key] = pd.read_csv(root / f"{key}.csv", header=[0, 1], index_col=[0], dtype=float)
-        nacent_dict["color"] = "k"
+        with open(root/"color.txt", 'r') as f:
+            lines = f.read()
+        nacent_dict["color"] = lines
 
         return cls(**nacent_dict)
 
