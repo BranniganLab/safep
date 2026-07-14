@@ -81,6 +81,19 @@ class FepRun:
         self.per_lambda_convergence = safep.do_per_lambda_convergence(
             self.u_nk)
 
+    def to_json(self, root: Path):
+        root.mkdir(parents=True, exist_ok=True)
+        for field in fields(self):
+            attr = getattr(self, field.name)
+            if isinstance(attr, np.ndarray):
+                attr = pd.DataFrame(attr)
+            if isinstance(attr, pd.DataFrame):
+                attr.to_csv(root/f'{field.name}.csv')
+            else:
+                with open(root/f'{field.name}.txt', 'w') as f:
+                    f.write(attr)
+
+
 
 def report_number_and_size_of_fepout_files(fepout_files):
     """Check the number and size of all fepout files.
