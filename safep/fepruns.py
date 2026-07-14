@@ -87,7 +87,7 @@ class FepRun:
 
         if self.per_lambda_convergence is None:
             self.per_lambda_convergence = safep.do_per_lambda_convergence(self.u_nk)
-        
+
         for field in fields(self):
             if field.name != 'color':
                 attr = getattr(self, field.name)
@@ -113,7 +113,7 @@ class FepRun:
             if isinstance(attr, pd.DataFrame):
                 attr.to_csv(root/f'{field.name}.csv')
             else:
-                with open(root/f'{field.name}.txt', 'w') as f:
+                with open(root/f'{field.name}.txt', 'w', encoding="UTF8") as f:
                     f.write(attr)
 
     @classmethod
@@ -131,16 +131,19 @@ class FepRun:
         nacent_dict[key] = pd.read_csv(root/f"{key}.csv", header=[0], index_col=[0,1], dtype=float)
 
         for key in ["per_window", "cumulative"]:
-            nacent_dict[key] = pd.read_csv(root / f"{key}.csv", header=[0, 1], index_col=[0], dtype=float)
+            fname = root / f"{key}.csv"
+            nacent_dict[key] = pd.read_csv(fname, header=[0, 1], index_col=[0], dtype=float)
 
         for key in ["forward", "forward_error", "backward", "backward_error"]:
-            nacent_dict[key] = pd.read_csv(root / f"{key}.csv", usecols=[1], dtype=float)
+            fname = root / f"{key}.csv"
+            nacent_dict[key] = pd.read_csv(fname, usecols=[1], dtype=float)
             nacent_dict[key].columns = nacent_dict[key].columns.astype(int)
 
         key = "per_lambda_convergence"
-        nacent_dict[key] = pd.read_csv(root / f"{key}.csv", header=[0, 1], index_col=[0], dtype=float)
+        fname = root / f"{key}.csv"
+        nacent_dict[key] = pd.read_csv(fname, header=[0, 1], index_col=[0], dtype=float)
 
-        with open(root/"color.txt", 'r') as f:
+        with open(root/"color.txt", 'r', encoding="UTF8") as f:
             lines = f.read()
         nacent_dict["color"] = lines
 
