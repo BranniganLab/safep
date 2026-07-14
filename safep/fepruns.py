@@ -1,7 +1,8 @@
 """Organize all the data associated with a FEP replica"""
 
 import os
-from dataclasses import dataclass
+from pathlib import Path
+from dataclasses import dataclass, fields
 
 import numpy as np
 import pandas as pd
@@ -102,6 +103,17 @@ class FepRun:
                 with open(root/f'{field.name}.txt', 'w') as f:
                     f.write(attr)
 
+    @classmethod
+    def from_json(cls, root: Path):
+        nacent_dict = {}
+        for field in fields(cls):
+            if field.type == pd.DataFrame:
+                nacent_dict[field.name] = pd.read_csv(root/f'{field.name}.csv')
+            else:
+                with open(root/f'{field.name}.txt', 'r') as f:
+                    lines = f.read()
+                nacent_dict[field.name] = lines
+        return cls(**nacent_dict)
 
 
 def report_number_and_size_of_fepout_files(fepout_files):
