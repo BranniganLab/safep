@@ -60,26 +60,35 @@ class FepRun:
         free energies
         and associated metrics"""
     u_nk: pd.DataFrame
-    per_window: pd.DataFrame
-    cumulative: pd.DataFrame
-    forward: pd.DataFrame
-    forward_error: pd.DataFrame
-    backward: pd.DataFrame
-    backward_error: pd.DataFrame
-    per_lambda_convergence: pd.DataFrame
-    color: str
+    per_window: pd.DataFrame = None
+    cumulative: pd.DataFrame = None
+    forward: pd.DataFrame = None
+    forward_error: pd.DataFrame = None
+    backward: pd.DataFrame = None
+    backward_error: pd.DataFrame = None
+    per_lambda_convergence: pd.DataFrame = None
+    color: str = "k"
 
     def __post_init__(self):
         # Run the BAR estimator on the fep data
-        self.per_window, self.cumulative = safep.do_estimation(self.u_nk)
-        (
-            self.forward,
-            self.forward_error,
-            self.backward,
-            self.backward_error,
-        ) = safep.do_convergence(self.u_nk)  # Used later in the convergence plot
-        self.per_lambda_convergence = safep.do_per_lambda_convergence(
-            self.u_nk)
+        if self.per_window is None:
+            self.per_window, self.cumulative = safep.do_estimation(self.u_nk)
+
+        if self.forward is None:
+            (
+                self.forward,
+                self.forward_error,
+                self.backward,
+                self.backward_error,
+            ) = safep.do_convergence(self.u_nk)  # Used later in the convergence plot
+
+        if self.per_lambda_convergence is None:
+            self.per_lambda_convergence = safep.do_per_lambda_convergence(self.u_nk)
+        
+        for field in fields(self):
+            if field.name != 'color':
+                attr = getattr(self, field.name)
+                setattr(self, field.name, pd.DataFrame(attr))
 
     def to_json(self, root: Path):
         root.mkdir(parents=True, exist_ok=True)
