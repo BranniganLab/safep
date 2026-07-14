@@ -144,10 +144,9 @@ class FepRun:
         nacent_dict[key] = pd.read_csv(fname, header=[0, 1], index_col=[0], dtype=float)
 
         with open(root/"color.txt", 'r', encoding="UTF8") as f:
-            lines = f.read()
-        nacent_dict["color"] = lines
+            color = f.read()
 
-        return cls(**nacent_dict)
+        return cls(color = color, **nacent_dict)
 
 
 def report_number_and_size_of_fepout_files(fepout_files):
