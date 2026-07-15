@@ -1,9 +1,9 @@
 """Organize all the data associated with a FEP replica"""
 
 import os
-from typing import get_args
+from typing import get_args, get_type_hints
 from pathlib import Path
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, fields, field
 
 import numpy as np
 import pandas as pd
@@ -54,6 +54,11 @@ def process_replicas(args, itcolors):
                                            next(itcolors))
     return fepruns
 
+_COERCERS = {
+    pd.DataFrame: pd.DataFrame,
+    np.ndarray: lambda v: np.asarray(v).flatten(),
+    str: str,
+}
 
 @dataclass
 class FepRun:
@@ -61,7 +66,7 @@ class FepRun:
         energies (u_nk)
         free energies
         and associated metrics"""
-    u_nk: pd.DataFrame
+    u_nk: pd.DataFrame = field(metadata={"skip_sanitize": True})
     per_window: pd.DataFrame|None = None
     cumulative: pd.DataFrame|None = None
     forward: np.ndarray|None = None
@@ -89,20 +94,39 @@ class FepRun:
         if self.per_lambda_convergence is None:
             self.per_lambda_convergence = safep.do_per_lambda_convergence(self.u_nk)
 
-        for field in fields(self):
-            attr = getattr(self, field.name)
-            if field.name == "u_nk":
+        self._sanitize_attributes()
+
+    def _sanitize_attributes(self):
+        """Coerce each attribute to be consistent with the type hints.
+
+        Args:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            After running, all attributes are of the correct type.
+        """
+        hints = get_type_hints(type(self))
+        for fld in fields(self):
+            if fld.metadata.get("skip_sanitize"):
                 continue
-            main_type = get_args(field.type)[0]
-            if not isinstance(attr, main_type):
-                if main_type is pd.DataFrame:
-                    setattr(self, field.name, pd.DataFrame(attr))
-                elif main_type is np.ndarray:
-                    setattr(self, field.name, np.asarray(attr).flatten())
-                elif main_type is str:
-                    setattr(self, field.name, str(attr))
-                else:
-                    raise ValueError(f"FepRun can't process type {field.type}")
+
+            attr = getattr(self, fld.name)
+            hint = hints[fld.name]
+            args = get_args(hint)  # unwrap Optional[X]/Union[X, ...]
+            main_type = args[0] if args else hint
+
+            if isinstance(attr, main_type) or attr is None:
+                continue
+
+            coerce = _COERCERS.get(main_type)
+            if coerce is None:
+                raise TypeError(
+                    f"{type(self).__name__}.{fld.name} can't process type {hint}"
+                )
+            setattr(self, fld.name, coerce(attr))
 
     def to_dir(self, root: Path):
         """Write FepRun to a directory
