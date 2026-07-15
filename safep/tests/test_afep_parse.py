@@ -87,6 +87,8 @@ def test_cached_fepruns_match_expectations(fepruns: dict[str, FepRun], tmp_path:
             canonical = getattr(fr, name)
             if isinstance(test, pd.DataFrame):
                 assert_frame_equal(test, canonical)
+            elif isinstance(test, np.ndarray):
+                assert np.allclose(test, canonical)
             else:
                 assert test == canonical
 
