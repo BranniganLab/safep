@@ -1,6 +1,7 @@
 """Organize all the data associated with a FEP replica"""
 
 import os
+from typing import get_args
 from pathlib import Path
 from dataclasses import dataclass, fields
 
@@ -68,7 +69,7 @@ class FepRun:
     backward: np.ndarray|None = None
     backward_error: np.ndarray|None = None
     per_lambda_convergence: pd.DataFrame|None = None
-    color: str = "k"
+    color: str|None = "k"
 
     def __post_init__(self):
         self.u_nk.columns = self.u_nk.columns.astype(float)
@@ -90,12 +91,15 @@ class FepRun:
 
         for field in fields(self):
             attr = getattr(self, field.name)
-            if not isinstance(attr, field.type):
-                if field.type == pd.DataFrame:
+            if field.name == "u_nk":
+                continue
+            main_type = get_args(field.type)[0]
+            if not isinstance(attr, main_type):
+                if main_type is pd.DataFrame:
                     setattr(self, field.name, pd.DataFrame(attr))
-                elif field.type == np.ndarray:
-                    setattr(self, field.name, np.asarray(attr))
-                elif field.type == str:
+                elif main_type is np.ndarray:
+                    setattr(self, field.name, np.asarray(attr).flatten())
+                elif main_type is str:
                     setattr(self, field.name, str(attr))
                 else:
                     raise ValueError(f"FepRun can't process type {field.type}")
