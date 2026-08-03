@@ -1,0 +1,169 @@
+#############################################################
+## JOB DESCRIPTION                                        
+
+# Run a DBC TI calculation
+
+#############################################################
+## ADJUSTABLE PARAMETERS                                   
+        set mainpath /home/sheffer/moving_wall/contracting
+        set struct /home/sheffer/ezry-files/gas_phase.psf
+	set coords /home/sheffer/ezry-files/gas_phase.pdb
+        set CVconf /home/sheffer/ezry-files/RFEP.colvars
+
+	set temp 303.15
+	
+	set timestp 2
+    	set equilsteps 0
+	set initialequil 250000
+	set stepsperstage 5000000
+	set stages 20
+	set initialWall 8
+	set finalWall 6
+	set spring 200
+	set exponent 1
+	set substages 0
+	set substages_steps 0
+
+	set Colvar_name DBC 
+	
+
+############################################################
+
+temperature        $temp
+structure          $struct
+coordinates        $coords
+outputName         $mainpath/job_1/outputs/job_1
+
+seed 11665
+
+set continuing		0
+
+# Continuing a job from the restart files
+if {$continuing} {
+	set inputname      [your inputname here]
+} 
+
+#############################################################
+## SIMULATION PARAMETERS                                   
+
+# Periodic boundaries should not be used in this case
+# PME is off by default and should not be used in this case
+# We're in vacuum so there is no pressure coupling
+
+set NPT	0
+
+# Integrator Parameters
+
+# fs per step 
+timestep            $timestp
+
+# RESPA settings for multistepping
+fullElectFrequency  2
+nonbondedFreq       1
+
+# output frequencies in steps
+restartfreq        100000     
+dcdfreq            10000 	 
+xstFreq            10000
+outputEnergies     10000
+outputPressure     10000
+outputTiming       10000
+
+#############################################################
+## GENERAL SETTINGS                                        
+
+# Force-Field Parameters
+paraTypeCharmm          on;
+set parpath             /data/sheffer/FFs/CHARMM36m_FF
+parameters              $parpath/par_all36_na.prm
+parameters              $parpath/par_all36_prot.prm
+parameters              $parpath/par_all36_carb.prm
+parameters              $parpath/par_all36_lipid.prm
+parameters              $parpath/par_all36_cgenff.prm
+parameters              $parpath/toppar_water_ions_namd.str
+parameters		$parpath/toppar_all36_lipid_cationpi_wyf.str
+
+# These are specified by CHARMM
+ exclude                 scaled1-4           
+ 1-4scaling              1.0
+ switching               on
+ vdwForceSwitching       yes              
+#
+# # You have some freedom choosing the cutoff
+ cutoff                  12.0            
+ switchdist              10.0              
+ pairlistdist            16.0               
+ stepspercycle           20               
+ pairlistsPerCycle       2               
+
+# In Vaccuum
+ langevinPiston 		off
+
+# Constant Temperature Control
+ langevin                on
+ langevinDamping         10.0
+ langevinTemp            $temp
+ #langevinHydrogen        on
+ #source ../../common/common_config.namd
+
+#############################################################
+## COLVARS                                                
+
+colvars                 on 
+
+colvarsConfig           $CVconf
+
+if {!$continuing} {
+	minimize            100
+	reinitvels          $temp
+}
+
+set ts 0
+
+cv config "harmonicwalls {
+    name                rest_DBC
+    colvars             $Colvar_name
+    upperWalls          $initialWall
+    forceConstant       $spring
+}"
+
+run $initialequil
+
+cv bias rest_DBC delete
+
+for {set i 0} {$i <= $stages} {incr i} {
+
+	set upperWall [expr {($finalWall - $initialWall) * pow(double($i)/$stages, $exponent) + $initialWall}]
+	print "upperWall: $upperWall at step $ts"
+
+	cv config "harmonicwalls {
+	    name                rest_DBC
+	    colvars             $Colvar_name
+	    upperWalls          $upperWall
+	    forceConstant       $spring
+	}"
+
+	run [expr $stepsperstage + $equilsteps]
+	
+	cv bias rest_DBC delete
+	
+	for {set j 1} {$j <= $substages} {incr j} {
+
+
+                cv config "harmonicwalls {
+                        name                rest_DBC
+                        colvars             $Colvar_name
+                        upperWalls          [expr {$upperWall + $j*(($finalWall - $initialWall)/$stages)/$substages}]
+                        forceConstant       $spring
+                }"
+
+                run $substages_steps
+
+                cv bias rest_DBC delete
+
+        }
+
+	set ts [expr $ts + $stepsperstage + $equilsteps + {$substages_steps * $substages}]
+}
+
+
