@@ -140,3 +140,33 @@ def get_dG_from_data(data, temperature):
     dG_b = dG_b.dG.dropna()
 
     return dG_f, dG_b
+
+def binding_probability(dissociation_constant, concentrations):
+    """
+    Calculate the fraction of binding sites occupied given the dissociation constant
+    and ligand concentration.
+
+    Args:
+        dissociation_constant (float): The dissociation constant of the ligand.
+        concentrations (float or array-like): The concentration of the ligand.
+
+    Returns:
+        float or array-like: The fraction of binding sites occupied, calculated
+        using the formula L / (K + L).
+    """
+    return concentrations / (dissociation_constant + concentrations)
+
+
+def get_dissociation_constant(delta_g, RT):
+    """
+    Calculate the dissociation constant (Kd) from the Gibbs free energy change (delta_g)
+    and the product of the gas constant and temperature (RT).
+
+    Args:
+        delta_g (float): The Gibbs free energy change in kcal/mol.
+        RT (float): The product of the gas constant (R) and temperature (T) in kcal/mol.
+
+    Returns:
+        float: The dissociation constant (Kd) in microMolar (µM).
+    """
+    return np.exp(delta_g / RT) * 1000000
