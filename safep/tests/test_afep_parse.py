@@ -22,7 +22,7 @@ def afep_args():
                         make_figures = False)
 
 @pytest.fixture
-def fepruns(afep_args, itcolors) -> dict[FepRun]:
+def fepruns(afep_args, itcolors) -> dict[str, FepRun]:
     return process_replicas(afep_args, itcolors)
 
 def test_summary(afep_args, fepruns):
