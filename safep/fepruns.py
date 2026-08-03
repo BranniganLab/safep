@@ -80,10 +80,13 @@ class FepRun:
         self.u_nk.columns = self.u_nk.columns.astype(float)
 
         # Run the BAR estimator on the fep data
-        if self.per_window is None:
+        if self.per_window is None or self.cumulative is None:
             self.per_window, self.cumulative = safep.do_estimation(self.u_nk)
 
-        if self.forward is None:
+        if (self.forward is None or
+                self.forward_error is None or
+                self.backward is None or
+                self.backward_error is None):
             (
                 self.forward,
                 self.forward_error,
