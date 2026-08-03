@@ -206,6 +206,12 @@ def plot_general(cumulative,
     each_ax.plot(per_window.index, per_window.EXP.dG_f*RT, marker=None, linewidth=1, alpha=0.5, color=color, label="forward EXP")
     each_ax.plot(per_window.index, -per_window.EXP.dG_b*RT, marker=None, linewidth=1, alpha=0.5, linestyle='--', color=color, label="backward EXP")
 
+    if each_ax.get_legend() is None:
+        line_bar, = each_ax.plot([],[], marker=None, linewidth=1, color="k", label="BAR")
+        line_fwd, = each_ax.plot([],[], marker=None, linewidth=1, alpha=0.5, color="k",label="forward EXP")
+        line_bwd, = each_ax.plot([],[], marker=None, linewidth=1, alpha=0.5, linestyle='--',color="k", label="backward EXP")
+        each_ax.legend(handles=[line_bar, line_fwd, line_bwd])
+
     each_ax.set(ylabel=r'$\mathrm{\Delta} G_\lambda$'+'\n'+r'$\left(\mathrm{kcal}/\mathrm{mol}\right)$', ylim=per_window_ylim)
 
     #Hysteresis Plots

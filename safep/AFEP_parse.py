@@ -169,7 +169,6 @@ def initialize_general_figure(RT_kcal_per_mol, key, feprun):
         label=key,
         color=feprun.color,
     )
-    axes[1].legend()
 
     return fig, axes
 
