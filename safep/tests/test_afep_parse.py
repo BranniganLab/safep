@@ -1,9 +1,9 @@
-
-import pandas as pd
-import numpy as np
 from approvaltests import verify
+import pandas as pd
+from pandas.testing import assert_frame_equal
+import numpy as np
 from safep.AFEP_parse import  COLORS, get_summary_statistics, AFEPArguments, get_sterr
-from safep.fepruns import process_replicas
+from safep.fepruns import process_replicas, FepRun
 import pytest
 from pathlib import Path
 
@@ -22,7 +22,7 @@ def afep_args():
                         make_figures = False)
 
 @pytest.fixture
-def fepruns(afep_args, itcolors):
+def fepruns(afep_args, itcolors) -> dict[str, FepRun]:
     return process_replicas(afep_args, itcolors)
 
 def test_summary(afep_args, fepruns):
@@ -30,22 +30,33 @@ def test_summary(afep_args, fepruns):
     verify(summary)
 
 def test_u_nk(fepruns):
-    u_nk = fepruns["Replica1"].u_nk
-    ref_path = Path(__file__).parent / "test_afep_parse.test_u_nk.approved.txt"
-    # Fro updating reference data
-    # if not ref_path.exists():
-    #     u_nk.to_csv(ref_path, index=False)
-    #     pytest.fail(f"Reference file created at {ref_path}. Inspect it and re-run test.")
+    """
+    This is both a test and an example for testing numerical data with numpy allclose while
+    remaining consistent with the approvaltests paradigm of having an "approved" vs "received" file.
 
+    Given: A set of energy differences, u_nk
+    When: compared to an approved array
+    Expect: the two arrays to be within machine tolerance (numpy allclose)
+    """
+    received = fepruns["Replica1"].u_nk
+    ref_path = Path(__file__).parent / "test_afep_parse.test_u_nk.approved.txt"
     expected_u_nk = pd.read_csv(ref_path)
     expected_u_nk.columns = expected_u_nk.columns.astype(float)
 
     pd.testing.assert_frame_equal(
-        u_nk.reset_index(drop=True), # Ensure index doesn't block comparison
+        received.reset_index(drop=True), # Ensure index doesn't block comparison
         expected_u_nk,
         atol=1e-6,
-        check_column_type=False
+        check_column_type=False,
     )
+    try:
+        max_error = ((expected_u_nk - received).abs()).max().max()
+    except ValueError:
+        max_error = "incalculable"
+    print(f"U_nk does not match approved. Max error: {max_error}. "
+         f"To approve the current version, rename "
+         f"test_afep_parse.test_u_nk.received.txt to test_afep_parse.test_u_nk.approved.txt "
+         f"and commit the result")
 
 def test_sterr_of_five_numbers_is_correct():
     dGs = [1,2,3,4,5]
@@ -61,3 +72,23 @@ def test_sterr_of_two_numbers_propagates_error():
     assert not np.isclose(sterr, 0.7071067812), "Got standard deviation, not propagated error"
     assert not np.isclose(sterr, 0.5), "Got standard error. Standard error of two numbers is a math crime. The authorities have been informed."
     assert np.isclose(sterr, 2.236067977), "Error not propagated correctly."
+
+def test_cached_fepruns_match_expectations(fepruns: dict[str, FepRun], tmp_path: Path):
+    """
+    Given a set of fepruns
+    When written to file and read back
+    Expect the feprun as-read to be identical to the feprun as-written
+    """
+    for key, fr in fepruns.items():
+        fr.to_dir(tmp_path/key)
+        test_fr= FepRun.from_dir(tmp_path/key)
+        for name in ["u_nk", "per_window", "cumulative", "forward", "forward_error", "backward", "backward_error", "per_lambda_convergence", "color"]:
+            test = getattr(test_fr, name)
+            canonical = getattr(fr, name)
+            if isinstance(test, pd.DataFrame):
+                assert_frame_equal(test, canonical)
+            elif isinstance(test, np.ndarray):
+                assert np.allclose(test, canonical)
+            else:
+                assert test == canonical
+
