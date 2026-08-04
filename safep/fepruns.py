@@ -1,7 +1,9 @@
 """Organize all the data associated with a FEP replica"""
 
 import os
-from dataclasses import dataclass
+from typing import get_args, get_type_hints
+from pathlib import Path
+from dataclasses import dataclass, fields, field
 
 import numpy as np
 import pandas as pd
@@ -52,6 +54,11 @@ def process_replicas(args, itcolors):
                                            next(itcolors))
     return fepruns
 
+_COERCERS = {
+    pd.DataFrame: pd.DataFrame,
+    np.ndarray: lambda v: np.asarray(v).flatten(),
+    str: str,
+}
 
 @dataclass
 class FepRun:
@@ -59,27 +66,125 @@ class FepRun:
         energies (u_nk)
         free energies
         and associated metrics"""
-    u_nk: pd.DataFrame
-    per_window: pd.DataFrame
-    cumulative: pd.DataFrame
-    forward: pd.DataFrame
-    forward_error: pd.DataFrame
-    backward: pd.DataFrame
-    backward_error: pd.DataFrame
-    per_lambda_convergence: pd.DataFrame
-    color: str
+    u_nk: pd.DataFrame = field(metadata={"skip_sanitize": True})
+    per_window: pd.DataFrame|None = None
+    cumulative: pd.DataFrame|None = None
+    forward: np.ndarray|None = None
+    forward_error: np.ndarray|None = None
+    backward: np.ndarray|None = None
+    backward_error: np.ndarray|None = None
+    per_lambda_convergence: pd.DataFrame|None = None
+    color: str|None = "k"
 
     def __post_init__(self):
+        self.u_nk.columns = self.u_nk.columns.astype(float)
+
         # Run the BAR estimator on the fep data
-        self.per_window, self.cumulative = safep.do_estimation(self.u_nk)
-        (
-            self.forward,
-            self.forward_error,
-            self.backward,
-            self.backward_error,
-        ) = safep.do_convergence(self.u_nk)  # Used later in the convergence plot
-        self.per_lambda_convergence = safep.do_per_lambda_convergence(
-            self.u_nk)
+        if self.per_window is None or self.cumulative is None:
+            self.per_window, self.cumulative = safep.do_estimation(self.u_nk)
+
+        if (self.forward is None or
+                self.forward_error is None or
+                self.backward is None or
+                self.backward_error is None):
+            (
+                self.forward,
+                self.forward_error,
+                self.backward,
+                self.backward_error,
+            ) = safep.do_convergence(self.u_nk)  # Used later in the convergence plot
+
+        if self.per_lambda_convergence is None:
+            self.per_lambda_convergence = safep.do_per_lambda_convergence(self.u_nk)
+
+        self._sanitize_attributes()
+
+    def _sanitize_attributes(self):
+        """Coerce each attribute to be consistent with the type hints.
+
+        Args:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            After running, all attributes are of the correct type.
+        """
+        hints = get_type_hints(type(self))
+        for fld in fields(self):
+            if fld.metadata.get("skip_sanitize"):
+                continue
+
+            attr = getattr(self, fld.name)
+            hint = hints[fld.name]
+            args = get_args(hint)  # unwrap Optional[X]/Union[X, ...]
+            main_type = args[0] if args else hint
+
+            if isinstance(attr, main_type) or attr is None:
+                continue
+
+            coerce = _COERCERS.get(main_type)
+            if coerce is None:
+                raise TypeError(
+                    f"{type(self).__name__}.{fld.name} can't process type {hint}"
+                )
+            setattr(self, fld.name, coerce(attr))
+
+    def to_dir(self, root: Path):
+        """Write FepRun to a directory
+
+        Arguments:
+            root (Path): the directory to write to
+
+        Returns:
+            None
+
+        Side Effects:
+            Creates and populates the root directory with the fields of a FepRun
+        """
+        root.mkdir(parents=True, exist_ok=True)
+        for field in fields(self):
+            attr = getattr(self, field.name)
+            if isinstance(attr, np.ndarray):
+                attr = pd.DataFrame(attr)
+            if isinstance(attr, pd.DataFrame):
+                attr.to_csv(root/f'{field.name}.csv')
+            else:
+                with open(root/f'{field.name}.txt', 'w', encoding="UTF8") as f:
+                    f.write(attr)
+
+    @classmethod
+    def from_dir(cls, root: Path):
+        """Read FepRun from directory
+
+        Arguments:
+            root (Path): directory to read
+
+        Returns:
+            FepRun: populated from csvs and text files in the directory
+        """
+        nacent_dict = {}
+        key = "u_nk"
+        nacent_dict[key] = pd.read_csv(root/f"{key}.csv", header=[0], index_col=[0,1], dtype=float)
+
+        for key in ["per_window", "cumulative"]:
+            fname = root / f"{key}.csv"
+            nacent_dict[key] = pd.read_csv(fname, header=[0, 1], index_col=[0], dtype=float)
+
+        for key in ["forward", "forward_error", "backward", "backward_error"]:
+            fname = root / f"{key}.csv"
+            nacent_dict[key] = pd.read_csv(fname, usecols=[1], dtype=float)
+            nacent_dict[key].columns = nacent_dict[key].columns.astype(int)
+
+        key = "per_lambda_convergence"
+        fname = root / f"{key}.csv"
+        nacent_dict[key] = pd.read_csv(fname, header=[0, 1], index_col=[0], dtype=float)
+
+        with open(root/"color.txt", 'r', encoding="UTF8") as f:
+            color = f.read()
+
+        return cls(color = color, **nacent_dict)
 
 
 def report_number_and_size_of_fepout_files(fepout_files):
