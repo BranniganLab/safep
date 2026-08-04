@@ -1,5 +1,6 @@
 # Import block
 import matplotlib.pyplot as plt
+from warnings import warn
 import numpy as np
 import scipy as sp
 import pandas as pd
@@ -182,7 +183,18 @@ def plot_general(cumulative,
         cumul_ax, each_ax, hyst_ax, pdf_ax = axes
 
     # Cumulative change in kcal/mol
-    cumul_ax.errorbar(cumulative.index, cumulative.BAR.f*RT, yerr=cumulative.BAR.errors, marker=None, linewidth=1, label=label, color=color)
+    if not np.allclose(cumulative.BAR.f, 0):
+        lambdas = cumulative.index
+        cumulative_dG = cumulative.BAR.f * RT
+        cumulative_errors = cumulative.BAR.errors
+    else:
+        warn("BAR failed for some reason. Plotting forward exponential estimate instead."
+             "This is often due to missing data.")
+        lambdas = cumulative.index
+        cumulative_dG = cumulative.EXP.ff * RT
+        cumulative_errors = np.nan
+    cumul_ax.errorbar(lambdas, cumulative_dG, yerr=cumulative_errors, marker=None, linewidth=1, label=label,
+                      color=color)
     cumul_ax.set(ylabel=r'Cumulative $\mathrm{\Delta} G_{\lambda}$'+'\n(kcal/mol)', ylim=cumulative_ylim)
 
     # Per-window change in kcal/mol
@@ -281,7 +293,9 @@ def plot_hysteresis(axes,
     xtxt = r'$\lambda$'
     hyst_ax.set_xlabel(xlabel=xtxt, fontsize=fontsize)
 
-    if pdf_type=='KDE':
+    if np.allclose(diff, 0):
+        warn("Hysteresis could not be computed. Do you have both forward and backward data?")
+    elif pdf_type=='KDE':
         kernel = sp.stats.gaussian_kde(diff)
         pdf_x = np.linspace(xlim[0], xlim[1], 1000)
         pdf_y = kernel(pdf_x)
@@ -291,11 +305,11 @@ def plot_hysteresis(axes,
         pdf_x = pdf_x[:-1]+(pdf_x[1]-pdf_x[0])/2
         pdf_ax.plot(pdf_y, pdf_x,  label="Estimated Distribution", color=color)
     else:
-        raise f"Error: PDFtype {pdf_type} not recognized"
+        raise ValueError(f"Error: PDFtype {pdf_type} not recognized")
 
     pdf_ax.set_xlabel(pdf_type, fontsize=fontsize)
 
-    if textbox:
+    if textbox and 'pdf_x' in locals():
         pdf_ax = add_hyst_textbox(diff, pdf_x, pdf_y, pdf_ax)
 
     return hyst_ax, pdf_ax
