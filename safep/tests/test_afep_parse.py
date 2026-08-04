@@ -1,10 +1,11 @@
 from approvaltests import verify
 import pandas as pd
+from pandas.testing import assert_frame_equal
 import numpy as np
 from approvaltests import verify
 from approvaltests.namer import NamerFactory
 from safep.AFEP_parse import  COLORS, get_summary_statistics, AFEPArguments, get_sterr
-from safep.fepruns import process_replicas
+from safep.fepruns import process_replicas, FepRun
 import pytest
 from pathlib import Path
 import shutil
@@ -42,7 +43,7 @@ def afep_args(test_data_path, tmp_path, request):
                         make_figures = False)
 
 @pytest.fixture
-def fepruns(afep_args, itcolors):
+def fepruns(afep_args, itcolors) -> dict[str, FepRun]:
     return process_replicas(afep_args, itcolors)
 
 
@@ -95,3 +96,23 @@ def test_sterr_of_two_numbers_propagates_error():
     assert not np.isclose(sterr, 0.7071067812), "Got standard deviation, not propagated error"
     assert not np.isclose(sterr, 0.5), "Got standard error. Standard error of two numbers is a math crime. The authorities have been informed."
     assert np.isclose(sterr, 2.236067977), "Error not propagated correctly."
+
+def test_cached_fepruns_match_expectations(fepruns: dict[str, FepRun], tmp_path: Path):
+    """
+    Given a set of fepruns
+    When written to file and read back
+    Expect the feprun as-read to be identical to the feprun as-written
+    """
+    for key, fr in fepruns.items():
+        fr.to_dir(tmp_path/key)
+        test_fr= FepRun.from_dir(tmp_path/key)
+        for name in ["u_nk", "per_window", "cumulative", "forward", "forward_error", "backward", "backward_error", "per_lambda_convergence", "color"]:
+            test = getattr(test_fr, name)
+            canonical = getattr(fr, name)
+            if isinstance(test, pd.DataFrame):
+                assert_frame_equal(test, canonical)
+            elif isinstance(test, np.ndarray):
+                assert np.allclose(test, canonical)
+            else:
+                assert test == canonical
+
