@@ -1,6 +1,7 @@
 """Organize all the data associated with a FEP replica"""
 
 import os
+import warnings
 from typing import get_args, get_type_hints
 from pathlib import Path
 from dataclasses import dataclass, fields, field
@@ -9,8 +10,86 @@ import numpy as np
 import pandas as pd
 from alchemlyb.parsing import namd
 from matplotlib import pyplot as plt
+from safep.moving_wall_TI import ColvarsTraj
 
 import safep
+
+
+def colvars_path_for_fepout(fepout_file: Path) -> Path:
+    """Return the exact same-basename colvars trajectory for a fepout file."""
+    fepout_file = Path(fepout_file)
+    if fepout_file.suffix != ".fepout":
+        raise ValueError(f"Expected a .fepout file, got {fepout_file}")
+    return fepout_file.with_suffix(".colvars.traj")
+
+
+def filter_u_nk_by_dbc(
+    u_nk: pd.DataFrame,
+    dbc: pd.Series,
+    fepout_file: Path | str,
+    dbc_min: float | None,
+    dbc_max: float | None,
+) -> pd.DataFrame:
+    """Align energy samples to DBC values and apply optional inclusive bounds."""
+    times = u_nk.index.get_level_values("time")
+    # Discard trajectory-only rows before checking duplicate values.
+    relevant_dbc = dbc[dbc.index.isin(times)]
+    duplicates = relevant_dbc[relevant_dbc.index.duplicated(keep=False)]
+    for step, values in duplicates.groupby(level=0):
+        values = values.dropna()
+        if len(values) > 1 and not np.allclose(values, values.iloc[0]):
+            raise ValueError(f"Conflicting DBC values found for timestep {step}")
+    relevant_dbc = relevant_dbc.groupby(level=0).first()
+    aligned_dbc = relevant_dbc.reindex(times)
+    missing = aligned_dbc.isna()
+    missing_count = int(missing.sum())
+    if missing_count:
+        warnings.warn(
+            f"Discarding {missing_count} fepout samples from {fepout_file} "
+            "because DBC data is missing.",
+            UserWarning,
+            stacklevel=2,
+        )
+
+    keep = ~missing
+    if dbc_min is not None:
+        keep &= aligned_dbc >= dbc_min
+    if dbc_max is not None:
+        keep &= aligned_dbc <= dbc_max
+
+    result = u_nk.loc[np.asarray(keep, dtype=bool)]
+    if result.empty:
+        raise ValueError(f"DBC filtering left no samples for {fepout_file}")
+    return result
+
+
+def load_dbc_for_fepouts(fepout_files: list[Path]) -> pd.Series:
+    """Load matching DBC trajectories and reconcile their timestep index."""
+    trajectories = []
+    for fepout_file in fepout_files:
+        colvars_file = colvars_path_for_fepout(fepout_file)
+        if not colvars_file.is_file():
+            raise FileNotFoundError(
+                f"No colvars trajectory found for {fepout_file}; expected {colvars_file}"
+            )
+        trajectory = ColvarsTraj.read_colvars_traj(colvars_file)
+        if "DBC" not in trajectory.columns:
+            raise ValueError(f"Colvars trajectory {colvars_file} has no DBC column")
+        trajectories.append(trajectory["DBC"])
+
+    return pd.concat(trajectories)
+
+
+def has_dbc_filter(args) -> bool:
+    return (
+        getattr(args, "dbc_min", None) is not None
+        or getattr(args, "dbc_max", None) is not None
+    )
+
+
+def dbc_bounds(args) -> tuple[float | None, float | None]:
+    """Return the configured DBC bounds from an AFEP argument object."""
+    return getattr(args, "dbc_min", None), getattr(args, "dbc_max", None)
 
 
 def process_replicas(args, itcolors):
@@ -32,12 +111,15 @@ def process_replicas(args, itcolors):
         print(f"Reading {replica}")
         unkpath = root/replica/"decorrelated.csv"
         u_nk = None
-        if unkpath.is_file():
+        if unkpath.is_file() and not has_dbc_filter(args):
             print("Found existing dataframe. Reading.")
             u_nk = safep.read_UNK(unkpath)
         else:
-            print(
-                f"Didn't find existing dataframe at {unkpath}. Checking for raw fepout files.")
+            if has_dbc_filter(args) and unkpath.is_file():
+                print("DBC filtering enabled; bypassing existing dataframe cache.")
+            else:
+                print(
+                    f"Didn't find existing dataframe at {unkpath}. Checking for raw fepout files.")
             fepout_files = list((root/replica).glob(args.filename_pattern))
             report_number_and_size_of_fepout_files(fepout_files)
 
@@ -50,6 +132,10 @@ def process_replicas(args, itcolors):
                     f"WARNING: no fepout files found for {replica}. Skipping.")
 
         if u_nk is not None:
+            if has_dbc_filter(args):
+                dbc = load_dbc_for_fepouts(fepout_files)
+                dbc_min, dbc_max = dbc_bounds(args)
+                u_nk = filter_u_nk_by_dbc(u_nk, dbc, replica, dbc_min, dbc_max)
             fepruns[str(replica)] = FepRun(u_nk, None, None, None, None, None, None, None,
                                            next(itcolors))
     return fepruns

@@ -20,3 +20,12 @@ These scripts and notebooks are broadly applicable to FEP analysis.
 OR
 
 0. Run ``` pip install git+https://github.com/BranniganLab/safep.git ```
+
+## DBC filtering
+
+AFEP analysis can restrict samples using a matching NAMD colvars trajectory. For
+each `name.fepout`, provide `name.colvars.traj` beside it and pass inclusive
+bounds such as `--dbc-min 2.5 --dbc-max 6.0`. Samples without a matching DBC
+step are discarded with a warning; trajectory rows without a fepout sample are
+ignored. Filtered runs are read from raw fepout files and do not reuse or replace
+the generic `decorrelated.csv` cache.

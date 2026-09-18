@@ -138,6 +138,18 @@ class AFEPArgumentParser(argparse.ArgumentParser):
             default=False,
             action="store_true",
         )
+        self.add_argument(
+            "--dbc-min",
+            type=float,
+            default=None,
+            help="Inclusive lower bound for DBC filtering.",
+        )
+        self.add_argument(
+            "--dbc-max",
+            type=float,
+            default=None,
+            help="Inclusive upper bound for DBC filtering.",
+        )
 
 
 KILO = 1000
@@ -181,6 +193,8 @@ class AFEPArguments:
     make_figures: bool
     RT_kcal_per_mol: float = None
     replicas: list[str] = None
+    dbc_min: float = None
+    dbc_max: float = None
 
     @classmethod
     def from_AFEPArgumentParser(cls, parser: AFEPArgumentParser):
@@ -201,17 +215,29 @@ class AFEPArguments:
         detect_equilibrium = args.detect_equilibrium
 
         return cls(
-            dataroot,
-            replica_pattern,
-            filename_pattern,
-            args.temperature,
-            detect_equilibrium,
-            args.make_figures,
+            dataroot=dataroot,
+            replica_pattern=replica_pattern,
+            filename_pattern=filename_pattern,
+            temperature=args.temperature,
+            detect_equilibrium=detect_equilibrium,
+            make_figures=args.make_figures,
+            dbc_min=args.dbc_min,
+            dbc_max=args.dbc_max,
         )
 
     def __post_init__(self) -> None:
         """Get RT, standardize and sort replica names"""
         self.RT_kcal_per_mol = R / (KILO * calorie) * self.temperature
+        if self.dbc_min is not None and not np.isfinite(self.dbc_min):
+            raise ValueError("dbc_min must be finite")
+        if self.dbc_max is not None and not np.isfinite(self.dbc_max):
+            raise ValueError("dbc_max must be finite")
+        if (
+            self.dbc_min is not None
+            and self.dbc_max is not None
+            and self.dbc_min > self.dbc_max
+        ):
+            raise ValueError("dbc_min cannot be greater than dbc_max")
         if self.replica_pattern == '':
             self.replicas = ['.']
         else:
@@ -469,7 +495,8 @@ def main():
     if args.make_figures == 1:
         make_figures(args, fepruns, dGs, mean, sterr)
         plt.show()
-
+    for key, feprun in fepruns.items():
+        feprun.to_dir(Path(key))
 
 if __name__ == "__main__":
     main()
