@@ -1,0 +1,73 @@
+Warning on use of the timeseries module: If the inherent timescales of the system are long compared to those being analyzed, this statistical inefficiency may be an underestimate.  The estimate presumes the use of many statistically independent samples.  Tests should be performed to assess whether this condition is satisfied.   Be cautious in the interpretation of the data.
+
+********* JAX NOT FOUND *********
+ PyMBAR can run faster with JAX  
+ But will work fine without it   
+Either install with pip or conda:
+      pip install pybar[jax]     
+               OR                
+      conda install pymbar       
+*********************************
+Reading Replica1
+Didn't find existing dataframe at Replica1/decorrelated.csv. Checking for raw fepout files.
+Will process 2 fepout files.
+Total size:0.01GB
+Reading fepout files
+Reading Replica2
+Didn't find existing dataframe at Replica2/decorrelated.csv. Checking for raw fepout files.
+Will process 2 fepout files.
+Total size:0.01GB
+Reading fepout files
+Reading Replica3
+Didn't find existing dataframe at Replica3/decorrelated.csv. Checking for raw fepout files.
+Will process 2 fepout files.
+Total size:0.01GB
+Reading fepout files
+Reading Replica4
+Didn't find existing dataframe at Replica4/decorrelated.csv. Checking for raw fepout files.
+Will process 2 fepout files.
+Total size:0.01GB
+Reading fepout files
+Reading Replica5
+Didn't find existing dataframe at Replica5/decorrelated.csv. Checking for raw fepout files.
+Will process 2 fepout files.
+Total size:0.01GB
+Reading fepout files
+Reading Replica6
+Didn't find existing dataframe at Replica6/decorrelated.csv. Checking for raw fepout files.
+Will process 2 fepout files.
+Total size:0.01GB
+Reading fepout files
+Reading Replica7
+Didn't find existing dataframe at Replica7/decorrelated.csv. Checking for raw fepout files.
+Will process 2 fepout files.
+Total size:0.01GB
+Reading fepout files
+Reading Replica8
+Didn't find existing dataframe at Replica8/decorrelated.csv. Checking for raw fepout files.
+Will process 2 fepout files.
+Total size:0.01GB
+Reading fepout files
+Reading Replica9
+Didn't find existing dataframe at Replica9/decorrelated.csv. Checking for raw fepout files.
+Will process 2 fepout files.
+Total size:0.01GB
+Reading fepout files
+Reading Replica10
+Didn't find existing dataframe at Replica10/decorrelated.csv. Checking for raw fepout files.
+Will process 2 fepout files.
+Total size:0.01GB
+Reading fepout files
+Replica1: ΔG = 0.1±0.0 kcal/mol
+Replica2: ΔG = 0.1±0.0 kcal/mol
+Replica3: ΔG = 0.1±0.0 kcal/mol
+Replica4: ΔG = 0.1±0.0 kcal/mol
+Replica5: ΔG = 0.1±0.0 kcal/mol
+Replica6: ΔG = 0.1±0.0 kcal/mol
+Replica7: ΔG = 0.1±0.0 kcal/mol
+Replica8: ΔG = 0.1±0.0 kcal/mol
+Replica9: ΔG = 0.1±0.0 kcal/mol
+Replica10: ΔG = 0.1±0.0 kcal/mol
+
+mean: 0.1 kcal/mol
+sterr: 0.0 kcal/mol
