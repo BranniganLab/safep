@@ -142,7 +142,7 @@ class AFEPArgumentParser(argparse.ArgumentParser):
 
 
 KILO = 1000
-COLORS = ["blue", "red", "green", "purple", "orange", "violet", "cyan"]
+COLORS = TABLEAU_COLORS # up to 10 replicas. XKCD colors support up to ~1000.
 
 
 def initialize_general_figure(RT_kcal_per_mol, key, feprun):
@@ -463,7 +463,7 @@ def main():
     """Main function for parsing fep data and calculating free energy of (de)coupling"""
     parser = AFEPArgumentParser()
     args = AFEPArguments.from_AFEPArgumentParser(parser)
-    itcolors = iter(TABLEAU_COLORS)
+    itcolors = iter(COLORS)
     fepruns = process_replicas(args, itcolors)
     summary, dGs, mean, sterr = get_summary_statistics(args, fepruns)
     print(summary)
