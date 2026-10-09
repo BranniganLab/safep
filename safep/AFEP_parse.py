@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from natsort import natsorted
 
+from matplotlib.colors import TABLEAU_COLORS
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -462,7 +463,7 @@ def main():
     """Main function for parsing fep data and calculating free energy of (de)coupling"""
     parser = AFEPArgumentParser()
     args = AFEPArguments.from_AFEPArgumentParser(parser)
-    itcolors = iter(COLORS)
+    itcolors = iter(TABLEAU_COLORS)
     fepruns = process_replicas(args, itcolors)
     summary, dGs, mean, sterr = get_summary_statistics(args, fepruns)
     print(summary)
