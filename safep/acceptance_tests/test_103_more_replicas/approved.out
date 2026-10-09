@@ -1,13 +1,3 @@
-Warning on use of the timeseries module: If the inherent timescales of the system are long compared to those being analyzed, this statistical inefficiency may be an underestimate.  The estimate presumes the use of many statistically independent samples.  Tests should be performed to assess whether this condition is satisfied.   Be cautious in the interpretation of the data.
-
-********* JAX NOT FOUND *********
- PyMBAR can run faster with JAX  
- But will work fine without it   
-Either install with pip or conda:
-      pip install pybar[jax]     
-               OR                
-      conda install pymbar       
-*********************************
 Reading Replica1
 Didn't find existing dataframe at Replica1/decorrelated.csv. Checking for raw fepout files.
 Will process 2 fepout files.
