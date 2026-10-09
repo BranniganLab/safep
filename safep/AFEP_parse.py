@@ -419,15 +419,16 @@ def get_summary_statistics(args, fepruns):
     errors = []
     for key, feprun in natsorted(fepruns.items()):
         cumulative = feprun.cumulative
-        dG = np.round(cumulative.BAR.f.iloc[-1] * args.RT_kcal_per_mol, 1)
-        error = np.round(cumulative.BAR.errors.iloc[-1] * args.RT_kcal_per_mol, 1)
-        if (dG == 0 or dG == np.nan) and error == 0:
-            dG = np.round(cumulative.EXP.ff.iloc[-1] * args.RT_kcal_per_mol, 1)
+        # TODO: figure out why rounding later doesn't propagate to the summary report
+        dG = cumulative.BAR.f.iloc[-1] * args.RT_kcal_per_mol
+        error = cumulative.BAR.errors.iloc[-1] * args.RT_kcal_per_mol
+        if (dG == 0 or np.isnan(dG)) and error == 0:
+            dG = cumulative.EXP.ff.iloc[-1] * args.RT_kcal_per_mol
             error = np.nan
             warnings.warn("BAR estimation appears to have failed. Reporting exponential estimates."
-                          "Standard error could not be estimated.", RuntimeWarning)
-        dGs.append(dG)
-        errors.append(error)
+                          "Standard error for a given replica will not be estimated.", RuntimeWarning)
+        dGs.append(np.round(dG, 1))
+        errors.append(np.round(error, 1))
 
         if len(fepruns) == 1:
             change_and_error = f"\u0394G = {dG}\u00b1{error} kcal/mol\n"
