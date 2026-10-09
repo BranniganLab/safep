@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from natsort import natsorted
 
+from matplotlib.colors import TABLEAU_COLORS
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -141,7 +142,7 @@ class AFEPArgumentParser(argparse.ArgumentParser):
 
 
 KILO = 1000
-COLORS = ["blue", "red", "green", "purple", "orange", "violet", "cyan"]
+COLORS = TABLEAU_COLORS # up to 10 replicas. XKCD colors support up to ~1000.
 
 
 def initialize_general_figure(RT_kcal_per_mol, key, feprun):

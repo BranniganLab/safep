@@ -50,8 +50,16 @@ def process_replicas(args, itcolors):
                     f"WARNING: no fepout files found for {replica}. Skipping.")
 
         if u_nk is not None:
+            try:
+                color = next(itcolors)
+            except StopIteration as err:
+                raise RuntimeError(
+                    "Too many replicas (>10) to plot. "
+                    "Please try smaller batches or analyzing each replica separately, and/or alert the developers:"
+                    "https://github.com/BranniganLab/safep/issues/new"
+                ) from err
             fepruns[str(replica)] = FepRun(u_nk, None, None, None, None, None, None, None,
-                                           next(itcolors))
+                                           color)
     return fepruns
 
 _COERCERS = {
