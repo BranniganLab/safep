@@ -231,13 +231,13 @@ class AFEPArguments:
             self.replicas = natsorted([rep.stem for rep in self.dataroot.glob(self.replica_pattern)])
 
 
-def add_to_general_figure(fig, axes, args, key, feprun):
+def add_to_general_figure(fig, axes, RT, key, feprun):
     """Add another replica to an existing figure.
 
     Args:
         fig (matplotlib.figure.Figure): The figure to add to.
         axes (matplotlib.axes._subplots.Axes): The axes to add to.
-        args (argparse.Namespace): The parsed command line arguments.
+        RT (float): Ideal gas constant times temperature in kcal/mol.
         key (str): The key to use for the figure.
         feprun (safep.Feprun): The feprun replica to use.
 
@@ -249,7 +249,7 @@ def add_to_general_figure(fig, axes, args, key, feprun):
         None,
         feprun.per_window,
         None,
-        args.RT_kcal_per_mol,
+        RT,
         fig=fig,
         axes=axes,
         hysttype="lines",
@@ -387,11 +387,11 @@ def make_figures(args, fepruns, dGs, mean, sterr) -> None:
     fig.savefig(args.dataroot.joinpath("FEP_perLambda_convergence.pdf"))
 
 
-def do_general_figures_plot(args, fepruns, mean, sterr):
+def do_general_figures_plot(RT, fepruns, mean, sterr):
     """plot general SAFEP figures
 
     Args:
-        args (AFEPArguments): arguments from argparse
+        RT (float): Ideal gas constant times energy in kcal/mol
         fepruns (dict): fepruns dictionary
         mean (float): mean free energy across replicas
         sterr (float): sterr free energy across replicas
@@ -402,9 +402,9 @@ def do_general_figures_plot(args, fepruns, mean, sterr):
     fig = None
     for key, feprun in fepruns.items():
         if fig is None:
-            fig, axes = initialize_general_figure(args.RT_kcal_per_mol, key, feprun)
+            fig, axes = initialize_general_figure(RT, key, feprun)
         else:
-            fig, axes = add_to_general_figure(fig, axes, args, key, feprun)
+            fig, axes = add_to_general_figure(fig, axes, RT, key, feprun)
 
         # hack to get aggregate data:
     axes = add_summary_stats(mean, sterr, axes)
