@@ -1,4 +1,3 @@
-from approvaltests import verify
 import pandas as pd
 from pandas.testing import assert_frame_equal
 import numpy as np
