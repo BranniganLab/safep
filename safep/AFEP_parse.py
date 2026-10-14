@@ -412,7 +412,25 @@ def do_general_figures_plot(args, fepruns, mean, sterr):
     return fig, axes
 
 
-def get_summary_statistics(args, fepruns):
+def get_summary_stats(RT, fepruns) -> Any:
+    dGs = []
+    errors = []
+    for key, feprun in fepruns.items():
+        cumulative = feprun.cumulative
+        dG = np.round(cumulative.BAR.f.iloc[-1] * RT, 1)
+        error = np.round(cumulative.BAR.errors.iloc[-1] * RT, 1)
+        dGs.append(dG)
+        errors.append(error)
+
+    mean = np.round(np.average(dGs), 1)
+    # If there are only a few replicas, the MBAR estimated error will be more reliable, albeit underestimated
+    if len(dGs) < 3:
+        sterr = np.sqrt(np.sum(np.square(errors)))
+    else:
+        sterr = np.round(np.std(dGs) / np.sqrt(len(dGs)), 1)
+    return dGs, errors, mean, sterr
+
+def get_organized_summary_statistics(args, fepruns):
     """Extract summary statistics from fepruns.
 
     Args:
@@ -424,26 +442,14 @@ def get_summary_statistics(args, fepruns):
         and the mean and standard error across replicas
     """
     toprint = ""
-    dGs = []
-    errors = []
-    for key, feprun in natsorted(fepruns.items()):
-        cumulative = feprun.cumulative
-        dG = np.round(cumulative.BAR.f.iloc[-1] * args.RT_kcal_per_mol, 1)
-        error = np.round(cumulative.BAR.errors.iloc[-1] * args.RT_kcal_per_mol, 1)
-        dGs.append(dG)
-        errors.append(error)
-
-        if len(fepruns) == 1:
-            change_and_error = f"\u0394G = {dG}\u00b1{error} kcal/mol\n"
-        else:
-            change_and_error = f"{key}: \u0394G = {dG}\u00b1{error} kcal/mol\n"
-        toprint += change_and_error
-
-    toprint += "\n"
-    mean = np.average(dGs)
+    dGs, errors, mean, sterr = get_summary_stats(args.RT_kcal_per_mol, fepruns)
 
     # If there are only a few replicas,
     # the MBAR estimated error will be more reliable, albeit underestimated
+    for idx, dG, error in zip(range(len(dGs)), dGs, errors):
+        change_and_error = f"Replica{idx+1}: \u0394G = {dG}\u00b1{error} kcal/mol\n"
+        toprint += change_and_error
+    toprint += "\n"
     sterr = np.round(get_sterr(dGs, errors), 1)
     toprint += f"mean: {mean} kcal/mol\n" + f"sterr: {sterr} kcal/mol"
     if np.isnan(mean):
@@ -477,7 +483,7 @@ def main():
     args = AFEPArguments.from_AFEPArgumentParser(parser)
     itcolors = iter(COLORS)
     fepruns = process_replicas(args, itcolors)
-    summary, dGs, mean, sterr = get_summary_statistics(args, fepruns)
+    summary, dGs, mean, sterr = get_organized_summary_statistics(args, fepruns)
     print(summary)
     if args.make_figures == 1:
         make_figures(args, fepruns, dGs, mean, sterr)
