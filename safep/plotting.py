@@ -198,10 +198,17 @@ def plot_general(cumulative,
     cumul_ax.set(ylabel=r'Cumulative $\mathrm{\Delta} G_{\lambda}$'+'\n(kcal/mol)', ylim=cumulative_ylim)
 
     # Per-window change in kcal/mol
-    if errorbars:
-        each_ax.errorbar(per_window.index, per_window.BAR.df*RT, yerr=per_window.BAR.ddf, marker=None, linewidth=1, alpha=0.5, color=color, label="BAR")
+    if not np.allclose(0, per_window.BAR.df):
+        per_window_estimate = per_window.BAR.df * RT
+        per_window_errors = per_window.BAR.ddf
     else:
-        each_ax.plot(per_window.index, per_window.BAR.df*RT, marker=None, linewidth=1, color=color, label="BAR")
+        per_window_estimate = per_window.EXP.dG_f * RT
+        warn("Errors unavailable for forward exponential estimate.")
+        errorbars = False
+    if errorbars:
+        each_ax.errorbar(per_window.index, per_window_estimate, yerr=per_window_errors, marker=None, linewidth=1, alpha=0.5, color=color, label="BAR")
+    else:
+        each_ax.plot(per_window.index, per_window_estimate, marker=None, linewidth=1, color=color, label="BAR")
 
     each_ax.plot(per_window.index, per_window.EXP.dG_f*RT, marker=None, linewidth=1, alpha=0.5, color=color, label="forward EXP")
     each_ax.plot(per_window.index, -per_window.EXP.dG_b*RT, marker=None, linewidth=1, alpha=0.5, linestyle='--', color=color, label="backward EXP")
