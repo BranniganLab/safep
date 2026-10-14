@@ -441,20 +441,25 @@ def get_organized_summary_statistics(args, fepruns):
         tuple[str, list[float], float, float]: a pretty print string, individual delta Gs,
         and the mean and standard error across replicas
     """
-    toprint = ""
+    
     dGs, errors, mean, sterr = get_summary_stats(args.RT_kcal_per_mol, fepruns)
-
+    sterr = np.round(get_sterr(dGs, errors), 1)
     # If there are only a few replicas,
     # the MBAR estimated error will be more reliable, albeit underestimated
-    for idx, dG, error in zip(range(len(dGs)), dGs, errors):
-        change_and_error = f"Replica{idx+1}: \u0394G = {dG}\u00b1{error} kcal/mol\n"
-        toprint += change_and_error
-    toprint += "\n"
-    sterr = np.round(get_sterr(dGs, errors), 1)
-    toprint += f"mean: {mean} kcal/mol\n" + f"sterr: {sterr} kcal/mol"
+    toprint = pretty_print_summary_stats(dGs, errors, mean, sterr)
     if np.isnan(mean):
         raise RuntimeError("Free energy average is NaN")
     return toprint, dGs, mean, sterr
+
+
+def pretty_print_summary_stats(dGs, errors, mean, sterr) -> str:
+    toprint = ""
+    for idx, dG, error in zip(range(len(dGs)), dGs, errors):
+        change_and_error = f"Replica{idx + 1}: \u0394G = {dG}\u00b1{error} kcal/mol\n"
+        toprint += change_and_error
+    toprint += "\n"
+    toprint += f"mean: {mean} kcal/mol\n" + f"sterr: {sterr} kcal/mol"
+    return toprint
 
 
 def get_sterr(dGs, errors):
