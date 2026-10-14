@@ -17,9 +17,9 @@ In a terminal (tested on Linux and Mac):
 
 **[Optional] Create and activate a virtual environment**
 
-   Use one of the following: 
-   - ***venv:*** `python3 -m venv safep_venv; source safep_venv/bin/activate`
-   - ***conda:*** `conda create -n safep; conda activate safep`
+   Use one of the following:
+   - venv: `python3 -m venv safep_venv; source safep_venv/bin/activate`
+   - conda: `conda create -n safep; conda activate safep`
 
 **Installation Option 1 (includes sample notebooks):**
 1. Clone this repository using `git clone https://github.com/BranniganLab/safep.git`
@@ -30,12 +30,16 @@ In a terminal (tested on Linux and Mac):
 1. Run ``` pip install git+https://github.com/BranniganLab/safep.git ```
 
 ### Running in a Jupyter Notebook
-1. Download one or more example notebooks from the GitHub: https://github.com/BranniganLab/safep/tree/main/Sample_Notebooks
-2. [Optional] or clone the repository with `git clone https://github.com/BranniganLab/safep.git`
-3. Open the relevant notebook
+1. Obtain sample notebooks:
+
+   Use one of the following: 
+   - Download one or more example notebooks from the GitHub: https://github.com/BranniganLab/safep/tree/main/Sample_Notebooks
+   - Clone the repository with `git clone https://github.com/BranniganLab/safep.git`
+
+2. Open the relevant notebook
   - For FEP results, open BAR_Estimator_Basic.ipynb
   - For RFEP/thermodynamic integration, open RFEP_analysis.ipynb
-4. Follow the instructions in the notebook
+3. Follow the instructions in the notebook
 
 ### CLI (only available for FEP, not yet for RFEP)
 1. Navigate to the root directory of your FEP results.
