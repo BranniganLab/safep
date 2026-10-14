@@ -18,9 +18,9 @@ In a terminal (tested on Linux and Mac):
    1. venv: `python3 -m venv safep_venv` `source safep_venv/bin/activate`
    2. conda: `conda create -n safep` `conda activate safep`
 **Option 1 (includes sample notebooks):**
-1. Clone this repository using 
-2. Enter the repository directory
-3. Run ``` pip install . ```
+1. Clone this repository using `git clone https://github.com/BranniganLab/safep.git`
+2. Enter the repository directory `cd safep`
+3. Run `pip install .`
 
 **Option 2 (only provides CLI):**
 1. Run ``` pip install git+https://github.com/BranniganLab/safep.git ```
