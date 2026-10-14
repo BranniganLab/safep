@@ -1,4 +1,5 @@
 # Import block
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy as sp
@@ -7,27 +8,28 @@ import pandas as pd
 from .helpers import *
 from .processing import get_n_samples
 
+class SampleAxes(matplotlib.axes.Axes):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.set_ylabel("Number of Samples")
+        self.set_xlabel(r"$\lambda$")
+        self.set_yscale("log")
 
-def plot_samples(theax, u_nk, color="blue", label="Raw Data"):
-    """
-    Plot the number of samples against the lambda values.
-
-    Args:
-        theax (matplotlib.axes.Axes): The axes object to plot on.
-        u_nk (pd.DataFrame): The input data frame containing the samples and lambda values.
-        color (str, optional): The color of the plot line. Defaults to 'blue'.
-        label (str, optional): The label for the plot legend. Defaults to 'Raw Data'.
-
-    Returns:
-        matplotlib.axes.Axes: The axes object after plotting the data.
-    """
-    samples = get_n_samples(u_nk)
-    theax.plot(samples, color=color, label=label)
-    plt.yscale("log")
-    theax.set_ylabel("Number of Samples")
-    theax.set_xlabel(r"$\lambda$")
-    theax.legend()
-    return theax
+    def plot_samples(self, u_nk, color="blue", label="Raw Data"):
+        """
+        Plot the number of samples against the lambda values.
+    
+        Args:
+            u_nk (pd.DataFrame): The input data frame containing the samples and lambda values.
+            color (str, optional): The color of the plot line. Defaults to 'blue'.
+            label (str, optional): The label for the plot legend. Defaults to 'Raw Data'.
+    
+        Returns:
+            matplotlib.axes.Axes: The axes object after plotting the data.
+        """
+        samples = get_n_samples(u_nk)
+        self.plot(samples, color=color, label=label)
+        self.legend()
 
 
 def convergence_plot(

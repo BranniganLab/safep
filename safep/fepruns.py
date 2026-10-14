@@ -9,8 +9,10 @@ import numpy as np
 import pandas as pd
 from alchemlyb.parsing import namd
 from matplotlib import pyplot as plt
+from prometheus_client.samples import Sample
 
 import safep
+from safep import SampleAxes
 
 
 def process_replicas(args, itcolors):
@@ -214,17 +216,17 @@ def read_and_decorrelate(args, replica, unkpath, fepout_files):
     Returns:
         pd.DataFrame: a pandas DataFrame containing the postprocessed energies
     """
-    fig, ax = plt.subplots()
-
     u_nk = namd.extract_u_nk(fepout_files, args.temperature)
     u_nk = u_nk.sort_index(axis=0, level=1).sort_index(axis=1)
-    safep.plot_samples(ax, u_nk, color="blue", label="Raw Data")
+
+    fig = plt.figure()
+    samples_axes = fig.add_subplot(111, axes_class=SampleAxes)
+    samples_axes.plot_samples(u_nk, color="blue", label="Raw Data")
 
     if args.detect_equilibrium:
         print("Detecting equilibrium")
         u_nk = safep.detect_equilibrium_u_nk(u_nk)
-        safep.plot_samples(ax, u_nk, color="orange",
-                           label="Equilibrium-Detected")
+        samples_axes.plot_samples(u_nk, color="orange", label="Equilibrium-Detected")
         safep.save_UNK(u_nk, unkpath) # Only save decorrelated samples
     fig.savefig(args.dataroot.joinpath(f"{str(replica)}_FEP_number_of_samples.pdf"))
     return u_nk
