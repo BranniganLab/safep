@@ -294,7 +294,7 @@ def plot_hysteresis(axes,
         warn("Hysteresis could not be computed. "
              "Do you have both forward and backward data? "
              "Skipping hysteresis plots.")
-        return
+        return hyst_ax, pdf_ax
     if pdf_type not in ['KDE', 'Histogram']:
         raise ValueError(f"Error: PDFtype {pdf_type} not recognized. Please use either `KDE` or `Histogram`.")
     if hysttype not in ['classic', 'lines']:
