@@ -14,10 +14,12 @@ These scripts and notebooks are broadly applicable to FEP analysis.
 
 ### Installation
 In a terminal (tested on Linux and Mac):
+
 **[Optional] Create and activate a virtual environment**
+
    Use one of the following: 
-   1. venv: `python3 -m venv safep_venv; source safep_venv/bin/activate`
-   2. conda: `conda create -n safep; conda activate safep`
+   - ***venv:*** `python3 -m venv safep_venv; source safep_venv/bin/activate`
+   - ***conda:*** `conda create -n safep; conda activate safep`
 
 **Installation Option 1 (includes sample notebooks):**
 1. Clone this repository using `git clone https://github.com/BranniganLab/safep.git`
