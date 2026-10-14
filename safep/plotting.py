@@ -1,5 +1,6 @@
 # Import block
 import matplotlib.pyplot as plt
+from warnings import warn
 import numpy as np
 import scipy as sp
 import pandas as pd
@@ -182,14 +183,32 @@ def plot_general(cumulative,
         cumul_ax, each_ax, hyst_ax, pdf_ax = axes
 
     # Cumulative change in kcal/mol
-    cumul_ax.errorbar(cumulative.index, cumulative.BAR.f*RT, yerr=cumulative.BAR.errors, marker=None, linewidth=1, label=label, color=color)
+    if not np.allclose(cumulative.BAR.f, 0):
+        lambdas = cumulative.index
+        cumulative_dG = cumulative.BAR.f * RT
+        cumulative_errors = cumulative.BAR.errors
+    else:
+        warn("BAR failed for some reason. Plotting forward exponential estimate instead."
+             "This is often due to missing data.")
+        lambdas = cumulative.index
+        cumulative_dG = cumulative.EXP.ff * RT
+        cumulative_errors = np.nan
+    cumul_ax.errorbar(lambdas, cumulative_dG, yerr=cumulative_errors, marker=None, linewidth=1, label=label,
+                      color=color)
     cumul_ax.set(ylabel=r'Cumulative $\mathrm{\Delta} G_{\lambda}$'+'\n(kcal/mol)', ylim=cumulative_ylim)
 
     # Per-window change in kcal/mol
-    if errorbars:
-        each_ax.errorbar(per_window.index, per_window.BAR.df*RT, yerr=per_window.BAR.ddf, marker=None, linewidth=1, alpha=0.5, color=color, label="BAR")
+    if not np.allclose(0, per_window.BAR.df):
+        per_window_estimate = per_window.BAR.df * RT
+        per_window_errors = per_window.BAR.ddf
     else:
-        each_ax.plot(per_window.index, per_window.BAR.df*RT, marker=None, linewidth=1, color=color, label="BAR")
+        per_window_estimate = per_window.EXP.dG_f * RT
+        warn("Errors unavailable for forward exponential estimate.")
+        errorbars = False
+    if errorbars:
+        each_ax.errorbar(per_window.index, per_window_estimate, yerr=per_window_errors, marker=None, linewidth=1, alpha=0.5, color=color, label="BAR")
+    else:
+        each_ax.plot(per_window.index, per_window_estimate, marker=None, linewidth=1, color=color, label="BAR")
 
     each_ax.plot(per_window.index, per_window.EXP.dG_f*RT, marker=None, linewidth=1, alpha=0.5, color=color, label="forward EXP")
     each_ax.plot(per_window.index, -per_window.EXP.dG_b*RT, marker=None, linewidth=1, alpha=0.5, linestyle='--', color=color, label="backward EXP")
@@ -203,7 +222,10 @@ def plot_general(cumulative,
     each_ax.set(ylabel=r'$\mathrm{\Delta} G_\lambda$'+'\n'+r'$\left(\mathrm{kcal}/\mathrm{mol}\right)$', ylim=per_window_ylim)
 
     #Hysteresis Plots
-    hyst_ax, pdf_ax = plot_hysteresis((hyst_ax, pdf_ax), per_window, hysttype, color, fontsize, pdf_type, xlim)
+    if np.allclose(per_window.EXP.dG_b, 0):
+        warn("No backward samples found. Unable to compute hysteresis.")
+    else:
+        hyst_ax, pdf_ax = plot_hysteresis((hyst_ax, pdf_ax), per_window, hysttype, color, fontsize, pdf_type, xlim)
 
     fig.set_figwidth(width)
     fig.set_figheight(height*3)
@@ -268,7 +290,16 @@ def plot_hysteresis(axes,
     hyst_ax, pdf_ax = axes
     
     diff = per_window.EXP['difference']
-    assert hysttype in ['classic', 'lines'], f"ERROR: I don't know how to plot hysttype={hysttype}"
+    if np.allclose(diff, 0):
+        warn("Hysteresis could not be computed. "
+             "Do you have both forward and backward data? "
+             "Skipping hysteresis plots.")
+        return hyst_ax, pdf_ax
+    if pdf_type not in ['KDE', 'Histogram']:
+        raise ValueError(f"Error: PDFtype {pdf_type} not recognized. Please use either `KDE` or `Histogram`.")
+    if hysttype not in ['classic', 'lines']:
+        raise ValueError(f"ERROR: I don't know how to plot hysttype={hysttype}. Please use either `classic` or `lines`.")
+
     if hysttype == 'classic':
         hyst_ax.vlines(per_window.index, np.zeros(len(per_window)), diff, label="fwd - bwd", linewidth=2, color=color)
     elif hysttype == 'lines':
@@ -290,12 +321,10 @@ def plot_hysteresis(axes,
         pdf_y, pdf_x = np.histogram(diff, density=True)
         pdf_x = pdf_x[:-1]+(pdf_x[1]-pdf_x[0])/2
         pdf_ax.plot(pdf_y, pdf_x,  label="Estimated Distribution", color=color)
-    else:
-        raise f"Error: PDFtype {pdf_type} not recognized"
 
     pdf_ax.set_xlabel(pdf_type, fontsize=fontsize)
 
-    if textbox:
+    if textbox and 'pdf_x' in locals():
         pdf_ax = add_hyst_textbox(diff, pdf_x, pdf_y, pdf_ax)
 
     return hyst_ax, pdf_ax

@@ -40,13 +40,17 @@ def do_agg_data(dataax, plotax):
     for line in lines:
         agg_data.append(line.get_ydata())
     flat = np.array(agg_data).flatten()
-    kernel = sp.stats.gaussian_kde(flat)
-    pdf_x = np.linspace(-1, 1, 1000)
-    pdf_y = kernel(pdf_x)
+    if np.allclose(flat, 0):
+        warnings.warn("Kernel density estimation failed. All data are 0.")
+        mode = 0
+    else:
+        kernel = sp.stats.gaussian_kde(flat)
+        pdf_x = np.linspace(-1, 1, 1000)
+        pdf_y = kernel(pdf_x)
+        temp = pd.Series(pdf_y, index=pdf_x)
+        mode = temp.idxmax()
     std = np.std(flat)
     average = np.average(flat)
-    temp = pd.Series(pdf_y, index=pdf_x)
-    mode = temp.idxmax()
 
     textstr = (
         r"$\rm mode=$"
@@ -366,13 +370,17 @@ def make_figures(args, fepruns, dGs, mean, sterr) -> None:
 
     # # Plot the estimated total change in free energy as a function of simulation time;
     # contiguous subsets starting at t=0 ("Forward") and t=end ("Reverse")
+    do_convergence_plots = True
+    for key, feprun in fepruns.items():
+        if np.allclose(feprun.per_window.BAR.df,0):
+            warnings.warn(f"BAR estimation failed for some reason for replica {key}. Skipping convergence plots.")
+            do_convergence_plots = False
+    if do_convergence_plots:
+        fig, _ = do_shared_convergence_plot(args, fepruns, dGs)
+        fig.savefig(args.dataroot.joinpath("FEP_convergence.pdf"))
 
-    fig, _ = do_shared_convergence_plot(args, fepruns, dGs)
-    fig.savefig(args.dataroot.joinpath("FEP_convergence.pdf"))
-
-    fig, _ = do_per_lambda_convergence_shared_axes(fepruns, mean, sterr)
-    fig.savefig(args.dataroot.joinpath("FEP_perLambda_convergence.pdf"))
-
+        fig, _ = do_per_lambda_convergence_shared_axes(fepruns, mean, sterr)
+        fig.savefig(args.dataroot.joinpath("FEP_perLambda_convergence.pdf"))
 
 def do_general_figures_plot(args, fepruns, mean, sterr):
     """plot general SAFEP figures
@@ -415,15 +423,21 @@ def get_summary_statistics(args, fepruns):
     errors = []
     for key, feprun in natsorted(fepruns.items()):
         cumulative = feprun.cumulative
-        dG = np.round(cumulative.BAR.f.iloc[-1] * args.RT_kcal_per_mol, 1)
-        error = np.round(cumulative.BAR.errors.iloc[-1] * args.RT_kcal_per_mol, 1)
-        dGs.append(dG)
-        errors.append(error)
+        # TODO: figure out why rounding later doesn't propagate to the summary report
+        dG = cumulative.BAR.f.iloc[-1] * args.RT_kcal_per_mol
+        error = cumulative.BAR.errors.iloc[-1] * args.RT_kcal_per_mol
+        if (dG == 0 or np.isnan(dG)) and error == 0:
+            dG = cumulative.EXP.ff.iloc[-1] * args.RT_kcal_per_mol
+            error = np.nan
+            warnings.warn("BAR estimation appears to have failed. Reporting exponential estimates."
+                          "Standard error for a given replica will not be estimated.", RuntimeWarning)
+        dGs.append(np.round(dG, 1))
+        errors.append(np.round(error, 1))
 
         if len(fepruns) == 1:
-            change_and_error = f"\u0394G = {dG}\u00b1{error} kcal/mol\n"
+            change_and_error = f"\u0394G = {dGs[-1]}\u00b1{errors[-1]} kcal/mol\n"
         else:
-            change_and_error = f"{key}: \u0394G = {dG}\u00b1{error} kcal/mol\n"
+            change_and_error = f"{key}: \u0394G = {dGs[-1]}\u00b1{errors[-1]} kcal/mol\n"
         toprint += change_and_error
 
     toprint += "\n"
