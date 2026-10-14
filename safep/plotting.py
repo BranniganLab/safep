@@ -290,7 +290,16 @@ def plot_hysteresis(axes,
     hyst_ax, pdf_ax = axes
     
     diff = per_window.EXP['difference']
-    assert hysttype in ['classic', 'lines'], f"ERROR: I don't know how to plot hysttype={hysttype}"
+    if np.allclose(diff, 0):
+        warn("Hysteresis could not be computed. "
+             "Do you have both forward and backward data? "
+             "Skipping hysteresis plots.")
+        return
+    if pdf_type not in ['KDE', 'Histogram']:
+        raise ValueError(f"Error: PDFtype {pdf_type} not recognized. Please use either `KDE` or `Histogram`.")
+    if hysttype not in ['classic', 'lines']:
+        raise ValueError(f"ERROR: I don't know how to plot hysttype={hysttype}. Please use either `classic` or `lines`.")
+
     if hysttype == 'classic':
         hyst_ax.vlines(per_window.index, np.zeros(len(per_window)), diff, label="fwd - bwd", linewidth=2, color=color)
     elif hysttype == 'lines':
@@ -303,9 +312,7 @@ def plot_hysteresis(axes,
     xtxt = r'$\lambda$'
     hyst_ax.set_xlabel(xlabel=xtxt, fontsize=fontsize)
 
-    if np.allclose(diff, 0):
-        warn("Hysteresis could not be computed. Do you have both forward and backward data?")
-    elif pdf_type=='KDE':
+    if pdf_type=='KDE':
         kernel = sp.stats.gaussian_kde(diff)
         pdf_x = np.linspace(xlim[0], xlim[1], 1000)
         pdf_y = kernel(pdf_x)
@@ -314,8 +321,6 @@ def plot_hysteresis(axes,
         pdf_y, pdf_x = np.histogram(diff, density=True)
         pdf_x = pdf_x[:-1]+(pdf_x[1]-pdf_x[0])/2
         pdf_ax.plot(pdf_y, pdf_x,  label="Estimated Distribution", color=color)
-    else:
-        raise ValueError(f"Error: PDFtype {pdf_type} not recognized")
 
     pdf_ax.set_xlabel(pdf_type, fontsize=fontsize)
 
