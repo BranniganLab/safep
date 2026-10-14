@@ -222,7 +222,10 @@ def plot_general(cumulative,
     each_ax.set(ylabel=r'$\mathrm{\Delta} G_\lambda$'+'\n'+r'$\left(\mathrm{kcal}/\mathrm{mol}\right)$', ylim=per_window_ylim)
 
     #Hysteresis Plots
-    hyst_ax, pdf_ax = plot_hysteresis((hyst_ax, pdf_ax), per_window, hysttype, color, fontsize, pdf_type, xlim)
+    if np.allclose(per_window.EXP.dG_b, 0):
+        warn("No backward samples found. Unable to compute hysteresis.")
+    else:
+        hyst_ax, pdf_ax = plot_hysteresis((hyst_ax, pdf_ax), per_window, hysttype, color, fontsize, pdf_type, xlim)
 
     fig.set_figwidth(width)
     fig.set_figheight(height*3)
