@@ -431,9 +431,9 @@ def get_summary_statistics(args, fepruns):
         errors.append(np.round(error, 1))
 
         if len(fepruns) == 1:
-            change_and_error = f"\u0394G = {dG}\u00b1{error} kcal/mol\n"
+            change_and_error = f"\u0394G = {dGs[-1]}\u00b1{error[-1]} kcal/mol\n"
         else:
-            change_and_error = f"{key}: \u0394G = {dG}\u00b1{error} kcal/mol\n"
+            change_and_error = f"{key}: \u0394G = {dGs[-1]}\u00b1{errors[-1]} kcal/mol\n"
         toprint += change_and_error
 
     toprint += "\n"
