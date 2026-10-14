@@ -370,13 +370,17 @@ def make_figures(args, fepruns, dGs, mean, sterr) -> None:
 
     # # Plot the estimated total change in free energy as a function of simulation time;
     # contiguous subsets starting at t=0 ("Forward") and t=end ("Reverse")
+    do_convergence_plots = True
+    for key, feprun in fepruns.items():
+        if np.allclose(feprun.per_window.BAR.df,0):
+            warnings.warn(f"BAR estimation failed for some reason for replica {key}. Skipping convergence plots.")
+            do_convergence_plots = False
+    if do_convergence_plots:
+        fig, _ = do_shared_convergence_plot(args, fepruns, dGs)
+        fig.savefig(args.dataroot.joinpath("FEP_convergence.pdf"))
 
-    fig, _ = do_shared_convergence_plot(args, fepruns, dGs)
-    fig.savefig(args.dataroot.joinpath("FEP_convergence.pdf"))
-
-    fig, _ = do_per_lambda_convergence_shared_axes(fepruns, mean, sterr)
-    fig.savefig(args.dataroot.joinpath("FEP_perLambda_convergence.pdf"))
-
+        fig, _ = do_per_lambda_convergence_shared_axes(fepruns, mean, sterr)
+        fig.savefig(args.dataroot.joinpath("FEP_perLambda_convergence.pdf"))
 
 def do_general_figures_plot(args, fepruns, mean, sterr):
     """plot general SAFEP figures
