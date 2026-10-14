@@ -78,7 +78,7 @@ def test_u_nk(fepruns, request):
         max_error = "incalculable"
     print(f"U_nk does not match approved. Max error: {max_error}. "
          f"To approve the current version, rename "
-         f"test_afep_parse.test_u_nk.received.txt to test_afep_parse.test_u_nk.approved.txt "
+         f"test_afep_parse.test_u_nk.{test_id}.received.txt to test_afep_parse.test_u_nk.{test_id}.approved.txt "
          f"and commit the result")
 
 def test_sterr_of_five_numbers_is_correct():
