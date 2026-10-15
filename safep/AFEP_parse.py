@@ -418,18 +418,18 @@ def get_summary_stats(RT, fepruns) -> Any:
     errors = []
     for key, feprun in fepruns.items():
         cumulative = feprun.cumulative
-        dG = np.round(cumulative.BAR.f.iloc[-1] * RT, 1)
-        error = np.round(cumulative.BAR.errors.iloc[-1] * RT, 1)
+        dG = cumulative.BAR.f.iloc[-1] * RT
+        error = cumulative.BAR.errors.iloc[-1] * RT
         dGs.append(dG)
         errors.append(error)
 
     mean = np.round(np.average(dGs), 1)
     # If there are only a few replicas, the MBAR estimated error will be more reliable, albeit underestimated
     if len(dGs) < 3:
-        sterr = np.sqrt(np.sum(np.square(errors)))
+        sterr = np.round(np.sqrt(np.sum(np.square(errors))), 1)
     else:
         sterr = np.round(np.std(dGs) / np.sqrt(len(dGs)), 1)
-    return dGs, errors, mean, sterr
+    return np.round(dGs,1), np.round(errors,1), mean, sterr
 
 def get_organized_summary_statistics(args: AFEPArguments, fepruns: dict[str,FepRun]):
     """Extract summary statistics from fepruns.
