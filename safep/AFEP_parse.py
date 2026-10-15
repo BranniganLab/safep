@@ -424,11 +424,7 @@ def get_summary_stats(RT, fepruns) -> Any:
         errors.append(error)
 
     mean = np.round(np.average(dGs), 1)
-    # If there are only a few replicas, the MBAR estimated error will be more reliable, albeit underestimated
-    if len(dGs) < 3:
-        sterr = np.round(np.sqrt(np.sum(np.square(errors))), 1)
-    else:
-        sterr = np.round(np.std(dGs) / np.sqrt(len(dGs)), 1)
+    sterr = np.round(get_sterr(dGs, errors), 1)
     return np.round(dGs,1), np.round(errors,1), mean, sterr
 
 def get_organized_summary_statistics(args: AFEPArguments, fepruns: dict[str,FepRun]):
