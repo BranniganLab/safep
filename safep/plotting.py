@@ -1,10 +1,15 @@
 # Import block
+from typing import List
+
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-import scipy as sp
 import pandas as pd
-from numpy.core import numeric
+import scipy as sp
+from matplotlib.axes._axes import Axes
+from numbers import Number
+from numpy import ndarray
+from pandas.core.frame import DataFrame
 
 from .processing import get_n_samples
 
@@ -16,7 +21,7 @@ class SampleAxes(matplotlib.axes.Axes):
         self.set_xlabel(r"$\lambda$")
         self.set_yscale("log")
 
-    def plot_samples(self, u_nk, color="blue", label="Raw Data"):
+    def plot_samples(self, u_nk: DataFrame, color: str="blue", label: str="Raw Data"):
         """
         Plot the number of samples against the lambda values.
 
@@ -34,23 +39,23 @@ class SampleAxes(matplotlib.axes.Axes):
 
 
 def convergence_plot(
-    theax,
-    fs,
-    ferr,
-    bs,
-    berr,
-    fwd_color="#0072B2",
-    bwd_color="#D55E00",
-    fwd_legend=None,
-    bwd_legend=None,
-    fontsize=12,
-    errorbars=True,
+    theax: Axes,
+    fs: ndarray,
+    ferr: ndarray,
+    bs: ndarray,
+    berr: ndarray,
+    fwd_color:str ="#0072B2",
+    bwd_color: str="#D55E00",
+    fwd_legend: str="",
+    bwd_legend: str="",
+    fontsize: int=12,
+    errorbars: bool=True,
 ):
     """
     Convergence plot. Does the convergence plotting.
     Returns: a pyplot
     """
-    if not fwd_legend:
+    if fwd_legend=="":
         fwd_legend = fwd_color
         bwd_legend = bwd_color
 
@@ -113,21 +118,21 @@ def convergence_plot(
 
 def plot_general(
     cumulative: pd.DataFrame,
-    cumulative_ylim: list[numeric],
+    cumulative_ylim: List[Number],
     per_window: pd.DataFrame,
-    per_window_ylim: list[numeric],
-    RT: numeric,
-    width: numeric = 8,
-    height: numeric = 4,
+    per_window_ylim: List[Number],
+    RT: Number,
+    width: Number = 8,
+    height: Number = 4,
     pdf_type: str = "KDE",
     fontsize: int = 12,
     fig: matplotlib.pyplot.Figure | None = None,
-    axes: matplotlib.pyplot.Axes | None = None,
+    axes: List[Axes] | None = None,
     hysttype: str = "classic",
     label: str | None = None,
     color: str = "blue",
     errorbars: bool = True,
-    xlim: list[numeric] = [-1, 1],
+    xlim: List[Number] = [-1, 1],
 ):
     """
     Plot the general analysis of cumulative and per-window changes in delta-G.
@@ -262,7 +267,7 @@ def plot_general(
     return fig, [cumul_ax, each_ax, hyst_ax, pdf_ax]
 
 
-def add_hyst_textbox(diff, pdf_x, pdf_y, pdf_ax, xoffset=0.15, yoffset=0.95, fs=14):
+def add_hyst_textbox(diff: ndarray, pdf_x: ndarray, pdf_y: ndarray, pdf_ax: Axes, xoffset: Number=0.15, yoffset: Number=0.95, fs: int=14):
     """
     Add a textbox to a probability density function (PDF) plot.
 
@@ -318,14 +323,14 @@ def add_hyst_textbox(diff, pdf_x, pdf_y, pdf_ax, xoffset=0.15, yoffset=0.95, fs=
 
 
 def plot_hysteresis(
-    axes,
-    per_window,
-    hysttype,
-    color="blue",
-    fontsize=12,
-    pdf_type="KDE",
-    xlim=[-1, 1],
-    textbox=True,
+    axes: tuple[Axes,Axes],
+    per_window: DataFrame,
+    hysttype: str,
+    color: str="blue",
+    fontsize: int=12,
+    pdf_type: str="KDE",
+    xlim: List[float]=[-1, 1],
+    textbox: bool=True,
 ):
     hyst_ax, pdf_ax = axes
 
@@ -365,7 +370,7 @@ def plot_hysteresis(
         pdf_x = pdf_x[:-1] + (pdf_x[1] - pdf_x[0]) / 2
         pdf_ax.plot(pdf_y, pdf_x, label="Estimated Distribution", color=color)
     else:
-        raise f"Error: PDFtype {pdf_type} not recognized"
+        raise ValueError(f"PDFtype {pdf_type} not recognized")
 
     pdf_ax.set_xlabel(pdf_type, fontsize=fontsize)
 
