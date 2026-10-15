@@ -1,17 +1,18 @@
 """Organize all the data associated with a FEP replica"""
 
 import os
-from typing import get_args, get_type_hints
+from dataclasses import dataclass, field, fields
 from pathlib import Path
-from dataclasses import dataclass, fields, field
+from typing import get_args, get_type_hints
 
 import numpy as np
 import pandas as pd
 from alchemlyb.parsing import namd
 from matplotlib import pyplot as plt
 
-import safep
-from safep import SampleAxes
+from safep.fileIO import read_UNK, save_UNK
+from safep.plotting import SampleAxes
+from safep.processing import do_estimation, do_convergence, do_per_lambda_convergence, detect_equilibrium_u_nk
 
 
 def process_replicas(args, itcolors):
@@ -35,7 +36,7 @@ def process_replicas(args, itcolors):
         u_nk = None
         if unkpath.is_file():
             print("Found existing dataframe. Reading.")
-            u_nk = safep.read_UNK(unkpath)
+            u_nk = read_UNK(unkpath)
         else:
             print(
                 f"Didn't find existing dataframe at {unkpath}. Checking for raw fepout files.")
@@ -82,7 +83,7 @@ class FepRun:
 
         # Run the BAR estimator on the fep data
         if self.per_window is None or self.cumulative is None:
-            self.per_window, self.cumulative = safep.do_estimation(self.u_nk)
+            self.per_window, self.cumulative = do_estimation(self.u_nk)
 
         if (self.forward is None or
                 self.forward_error is None or
@@ -93,10 +94,10 @@ class FepRun:
                 self.forward_error,
                 self.backward,
                 self.backward_error,
-            ) = safep.do_convergence(self.u_nk)  # Used later in the convergence plot
+            ) = do_convergence(self.u_nk)  # Used later in the convergence plot
 
         if self.per_lambda_convergence is None:
-            self.per_lambda_convergence = safep.do_per_lambda_convergence(self.u_nk)
+            self.per_lambda_convergence = do_per_lambda_convergence(self.u_nk)
 
         self._sanitize_attributes()
 
@@ -224,8 +225,8 @@ def read_and_decorrelate(args, replica, unkpath, fepout_files):
 
     if args.detect_equilibrium:
         print("Detecting equilibrium")
-        u_nk = safep.detect_equilibrium_u_nk(u_nk)
+        u_nk = detect_equilibrium_u_nk(u_nk)
         samples_axes.plot_samples(u_nk, color="orange", label="Equilibrium-Detected")
-        safep.save_UNK(u_nk, unkpath) # Only save decorrelated samples
+        save_UNK(u_nk, unkpath) # Only save decorrelated samples
     fig.savefig(args.dataroot.joinpath(f"{str(replica)}_FEP_number_of_samples.pdf"))
     return u_nk
