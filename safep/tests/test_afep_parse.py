@@ -2,7 +2,7 @@ from approvaltests import verify
 import pandas as pd
 from pandas.testing import assert_frame_equal
 import numpy as np
-from safep.AFEP_parse import  COLORS, get_summary_statistics, AFEPArguments, get_sterr
+from safep.AFEP_parse import  COLORS, get_organized_summary_statistics, AFEPArguments, get_sterr
 from safep.fepruns import process_replicas, FepRun
 import pytest
 from pathlib import Path
@@ -26,7 +26,7 @@ def fepruns(afep_args, itcolors) -> dict[str, FepRun]:
     return process_replicas(afep_args, itcolors)
 
 def test_summary(afep_args, fepruns):
-    summary, dGs, mean, sterr = get_summary_statistics(afep_args, fepruns)
+    summary, dGs, mean, sterr = get_organized_summary_statistics(afep_args, fepruns)
     verify(summary)
 
 def test_u_nk(fepruns):
