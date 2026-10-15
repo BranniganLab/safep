@@ -23,7 +23,7 @@ class SampleAxes(matplotlib.axes.Axes):
 
     def plot_samples(
         self, u_nk: DataFrame, color: str = "blue", label: str = "Raw Data"
-    ):
+    ) -> None:
         """
         Plot the number of samples against the lambda values.
 
@@ -31,9 +31,6 @@ class SampleAxes(matplotlib.axes.Axes):
             u_nk (pd.DataFrame): The input data frame containing the samples and lambda values.
             color (str, optional): The color of the plot line. Defaults to 'blue'.
             label (str, optional): The label for the plot legend. Defaults to 'Raw Data'.
-
-        Returns:
-            matplotlib.axes.Axes: The axes object after plotting the data.
         """
         samples = get_n_samples(u_nk)
         self.plot(samples, color=color, label=label)
