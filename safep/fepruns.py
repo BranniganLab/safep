@@ -9,7 +9,6 @@ import numpy as np
 import pandas as pd
 from alchemlyb.parsing import namd
 from matplotlib import pyplot as plt
-from prometheus_client.samples import Sample
 
 import safep
 from safep import SampleAxes
