@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy as sp
 import pandas as pd
+from numpy.core import numeric
 
 from .processing import get_n_samples
 
@@ -111,22 +112,22 @@ def convergence_plot(
 
 
 def plot_general(
-    cumulative,
-    cumulative_ylim,
-    per_window,
-    per_window_ylim,
-    RT,
-    width=8,
-    height=4,
-    pdf_type="KDE",
-    fontsize=12,
-    fig=None,
-    axes=None,
-    hysttype="classic",
-    label=None,
-    color="blue",
-    errorbars=True,
-    xlim=[-1, 1],
+    cumulative: pd.DataFrame,
+    cumulative_ylim: list[numeric],
+    per_window: pd.DataFrame,
+    per_window_ylim: list[numeric],
+    RT: numeric,
+    width: numeric = 8,
+    height: numeric = 4,
+    pdf_type: str = "KDE",
+    fontsize: int = 12,
+    fig: matplotlib.pyplot.Figure | None = None,
+    axes: matplotlib.pyplot.Axes | None = None,
+    hysttype: str = "classic",
+    label: str | None = None,
+    color: str = "blue",
+    errorbars: bool = True,
+    xlim: list[numeric] = [-1, 1],
 ):
     """
     Plot the general analysis of cumulative and per-window changes in delta-G.
