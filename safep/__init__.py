@@ -10,7 +10,7 @@ __credits__ = 'Rutgers University - Camden'
 __all__=['processing', 'plotting', 'fileIO', 'estimators', 'helpers', 'TI']
 
 from .estimators import *
-from .feprun import *
+from .fepruns import *
 from .fileIO import *
 from .plotting import *
 from .processing import *
