@@ -20,7 +20,7 @@ from numpy import dtype, floating, ndarray
 from scipy.constants import R, calorie
 
 import safep
-from safep.feprun import FepRun
+from safep.fepruns import FepRun
 from safep.fepruns import process_replicas
 from safep.plotting import plot_hysteresis
 
@@ -431,7 +431,7 @@ def get_summary_stats(RT, fepruns) -> Any:
         sterr = np.round(np.std(dGs) / np.sqrt(len(dGs)), 1)
     return dGs, errors, mean, sterr
 
-def get_organized_summary_statistics(args, fepruns):
+def get_organized_summary_statistics(args: AFEPArguments, fepruns: dict[str,FepRun]):
     """Extract summary statistics from fepruns.
 
     Args:
