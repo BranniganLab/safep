@@ -359,7 +359,7 @@ def do_per_lambda_convergence_shared_axes(fepruns, mean, sterr):
     return fig, (hyst_ax, pdf_ax)
 
 
-def make_figures(args, fepruns, dGs, mean, sterr) -> None:
+def make_figures(args: AFEPArguments, fepruns: dict[str, FepRun], dGs: list[float], mean: float, sterr: float) -> None:
     """Make general SAFEP figures and convergence plots
 
     Args:
@@ -375,7 +375,7 @@ def make_figures(args, fepruns, dGs, mean, sterr) -> None:
     Side effects:
         Saves FEP_general_figures.pdf, FEP_convergence.pdf, and FEP_perLambda_convergence.pdf
     """
-    fig, _ = do_general_figures_plot(args, fepruns, mean, sterr)
+    fig, _ = do_general_figures_plot(args.RT_kcal_per_mol, fepruns, mean, sterr)
     fig.savefig(args.dataroot.joinpath("FEP_general_figures.pdf"))
 
     # # Plot the estimated total change in free energy as a function of simulation time;
@@ -388,7 +388,7 @@ def make_figures(args, fepruns, dGs, mean, sterr) -> None:
     fig.savefig(args.dataroot.joinpath("FEP_perLambda_convergence.pdf"))
 
 
-def do_general_figures_plot(RT, fepruns, mean, sterr):
+def do_general_figures_plot(RT: float, fepruns: dict[str, FepRun], mean: float, sterr: float):
     """plot general SAFEP figures
 
     Args:
