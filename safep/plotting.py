@@ -120,12 +120,12 @@ def convergence_plot(
 
 def plot_general(
     cumulative: pd.DataFrame,
-    cumulative_ylim: List[Number],
+    cumulative_ylim: List[float | int] | None,
     per_window: pd.DataFrame,
-    per_window_ylim: List[Number],
-    RT: Number,
-    width: Number = 8,
-    height: Number = 4,
+    per_window_ylim: List[float | int] | None,
+    RT: float | int,
+    width: float | int = 8,
+    height: float | int = 4,
     pdf_type: str = "KDE",
     fontsize: int = 12,
     fig: matplotlib.pyplot.Figure | None = None,
@@ -134,7 +134,7 @@ def plot_general(
     label: str | None = None,
     color: str = "blue",
     errorbars: bool = True,
-    xlim: List[Number] = [-1, 1],
+    xlim: List[float | int] = [-1, 1],
 ):
     """
     Plot the general analysis of cumulative and per-window changes in delta-G.

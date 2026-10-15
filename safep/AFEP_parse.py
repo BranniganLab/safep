@@ -9,17 +9,18 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from natsort import natsorted
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy as sp
+from matplotlib.axes._axes import Axes
+from matplotlib.figure import Figure
+from natsort import natsorted
 from numpy import dtype, floating, ndarray
-
 from scipy.constants import R, calorie
 
 import safep
+from safep.feprun import FepRun
 from safep.fepruns import process_replicas
 from safep.plotting import plot_hysteresis
 
@@ -157,7 +158,7 @@ KILO = 1000
 COLORS = ["blue", "red", "green", "purple", "orange", "violet", "cyan"]
 
 
-def initialize_general_figure(RT_kcal_per_mol, key, feprun):
+def initialize_general_figure(RT_kcal_per_mol: float, key: str, feprun: FepRun):
     """Create a new general figure
 
     Args:
@@ -192,7 +193,7 @@ class AFEPArguments:
     temperature: float
     detect_equilibrium: bool
     make_figures: bool
-    RT_kcal_per_mol: float = None
+    RT_kcal_per_mol: float = 0
     replicas: list[str] = None
 
     @classmethod
@@ -231,7 +232,7 @@ class AFEPArguments:
             self.replicas = natsorted([rep.stem for rep in self.dataroot.glob(self.replica_pattern)])
 
 
-def add_to_general_figure(fig, axes, RT, key, feprun):
+def add_to_general_figure(fig: Figure, axes: Axes, RT: float, key: str, feprun: FepRun):
     """Add another replica to an existing figure.
 
     Args:
@@ -279,7 +280,7 @@ def add_summary_stats(mean, sterr, axes):
     return axes
 
 
-def do_shared_convergence_plot(args, fepruns, dGs):
+def do_shared_convergence_plot(args: AFEPArguments, fepruns: dict[str,FepRun], dGs: list[float]):
     """Make the convergence plot (reverse and forward cumulative averages)
 
     Args:
