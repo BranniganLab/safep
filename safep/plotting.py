@@ -1,4 +1,5 @@
 # Import block
+from numbers import Number
 from typing import List
 
 import matplotlib
@@ -7,7 +8,6 @@ import numpy as np
 import pandas as pd
 import scipy as sp
 from matplotlib.axes._axes import Axes
-from numbers import Number
 from numpy import ndarray
 from pandas.core.frame import DataFrame
 
@@ -21,7 +21,9 @@ class SampleAxes(matplotlib.axes.Axes):
         self.set_xlabel(r"$\lambda$")
         self.set_yscale("log")
 
-    def plot_samples(self, u_nk: DataFrame, color: str="blue", label: str="Raw Data"):
+    def plot_samples(
+        self, u_nk: DataFrame, color: str = "blue", label: str = "Raw Data"
+    ):
         """
         Plot the number of samples against the lambda values.
 
@@ -44,18 +46,18 @@ def convergence_plot(
     ferr: ndarray,
     bs: ndarray,
     berr: ndarray,
-    fwd_color:str ="#0072B2",
-    bwd_color: str="#D55E00",
-    fwd_legend: str="",
-    bwd_legend: str="",
-    fontsize: int=12,
-    errorbars: bool=True,
+    fwd_color: str = "#0072B2",
+    bwd_color: str = "#D55E00",
+    fwd_legend: str = "",
+    bwd_legend: str = "",
+    fontsize: int = 12,
+    errorbars: bool = True,
 ):
     """
     Convergence plot. Does the convergence plotting.
     Returns: a pyplot
     """
-    if fwd_legend=="":
+    if fwd_legend == "":
         fwd_legend = fwd_color
         bwd_legend = bwd_color
 
@@ -267,7 +269,15 @@ def plot_general(
     return fig, [cumul_ax, each_ax, hyst_ax, pdf_ax]
 
 
-def add_hyst_textbox(diff: ndarray, pdf_x: ndarray, pdf_y: ndarray, pdf_ax: Axes, xoffset: Number=0.15, yoffset: Number=0.95, fs: int=14):
+def add_hyst_textbox(
+    diff: ndarray,
+    pdf_x: ndarray,
+    pdf_y: ndarray,
+    pdf_ax: Axes,
+    xoffset: Number = 0.15,
+    yoffset: Number = 0.95,
+    fs: int = 14,
+):
     """
     Add a textbox to a probability density function (PDF) plot.
 
@@ -323,14 +333,14 @@ def add_hyst_textbox(diff: ndarray, pdf_x: ndarray, pdf_y: ndarray, pdf_ax: Axes
 
 
 def plot_hysteresis(
-    axes: tuple[Axes,Axes],
+    axes: tuple[Axes, Axes],
     per_window: DataFrame,
     hysttype: str,
-    color: str="blue",
-    fontsize: int=12,
-    pdf_type: str="KDE",
-    xlim: List[float]=[-1, 1],
-    textbox: bool=True,
+    color: str = "blue",
+    fontsize: int = 12,
+    pdf_type: str = "KDE",
+    xlim: tuple[float, float] = (-1, 1),
+    textbox: bool = True,
 ):
     hyst_ax, pdf_ax = axes
 
