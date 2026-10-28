@@ -60,7 +60,8 @@ def convergence_plot(
 
     lower = fs[-1] - ferr[-1]
     upper = fs[-1] + ferr[-1]
-    theax.fill_between([0, 1], [lower, lower], [upper, upper], color="gray", alpha=0.1)
+    theax.fill_between([0, 1], [lower, lower], [
+                       upper, upper], color="gray", alpha=0.1)
 
     fwdparams = {
         "marker": "o",
@@ -110,7 +111,8 @@ def convergence_plot(
         label="Backward Time Sampling",
     )
     theax.set_xlabel("Fraction of Simulation Time", fontsize=fontsize)
-    theax.set_ylabel(r"Total $\mathrm{\Delta} G$ (kcal/mol)", fontsize=fontsize)
+    theax.set_ylabel(
+        r"Total $\mathrm{\Delta} G$ (kcal/mol)", fontsize=fontsize)
     theax.legend()
     return theax
 
@@ -309,11 +311,11 @@ def add_hyst_textbox(
     mode = temp.idxmax()
 
     textstr = (
-        rf"$\rm mode=${np.round(mode,2)}"
+        rf"$\rm mode=${np.round(mode, 2)}"
         + "\n"
-        + rf"$\mu$={np.round(mean,2)}"
+        + rf"$\mu$={np.round(mean, 2)}"
         + "\n"
-        + rf"$\sigma$={np.round(std,2)}"
+        + rf"$\sigma$={np.round(std, 2)}"
     )
     props = dict(boxstyle="square", facecolor="white", alpha=0.5)
     pdf_ax.text(

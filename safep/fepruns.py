@@ -56,11 +56,13 @@ def process_replicas(args, itcolors):
                                            next(itcolors))
     return fepruns
 
+
 _COERCERS = {
     pd.DataFrame: pd.DataFrame,
     np.ndarray: lambda v: np.asarray(v).flatten(),
     str: str,
 }
+
 
 @dataclass
 class FepRun:
@@ -69,14 +71,14 @@ class FepRun:
         free energies
         and associated metrics"""
     u_nk: pd.DataFrame = field(metadata={"skip_sanitize": True})
-    per_window: pd.DataFrame|None = None
-    cumulative: pd.DataFrame|None = None
-    forward: np.ndarray|None = None
-    forward_error: np.ndarray|None = None
-    backward: np.ndarray|None = None
-    backward_error: np.ndarray|None = None
-    per_lambda_convergence: pd.DataFrame|None = None
-    color: str|None = "k"
+    per_window: pd.DataFrame | None = None
+    cumulative: pd.DataFrame | None = None
+    forward: np.ndarray | None = None
+    forward_error: np.ndarray | None = None
+    backward: np.ndarray | None = None
+    backward_error: np.ndarray | None = None
+    per_lambda_convergence: pd.DataFrame | None = None
+    color: str | None = "k"
 
     def __post_init__(self):
         self.u_nk.columns = self.u_nk.columns.astype(float)
@@ -129,7 +131,8 @@ class FepRun:
             coerce = _COERCERS.get(main_type)
             if coerce is None:
                 raise TypeError(
-                    f"{type(self).__name__}.{fld.name} can't process type {hint}"
+                    f"{type(self).__name__}.{
+                        fld.name} can't process type {hint}"
                 )
             setattr(self, fld.name, coerce(attr))
 
@@ -168,11 +171,13 @@ class FepRun:
         """
         nacent_dict = {}
         key = "u_nk"
-        nacent_dict[key] = pd.read_csv(root/f"{key}.csv", header=[0], index_col=[0,1], dtype=float)
+        nacent_dict[key] = pd.read_csv(
+            root/f"{key}.csv", header=[0], index_col=[0, 1], dtype=float)
 
         for key in ["per_window", "cumulative"]:
             fname = root / f"{key}.csv"
-            nacent_dict[key] = pd.read_csv(fname, header=[0, 1], index_col=[0], dtype=float)
+            nacent_dict[key] = pd.read_csv(
+                fname, header=[0, 1], index_col=[0], dtype=float)
 
         for key in ["forward", "forward_error", "backward", "backward_error"]:
             fname = root / f"{key}.csv"
@@ -181,12 +186,13 @@ class FepRun:
 
         key = "per_lambda_convergence"
         fname = root / f"{key}.csv"
-        nacent_dict[key] = pd.read_csv(fname, header=[0, 1], index_col=[0], dtype=float)
+        nacent_dict[key] = pd.read_csv(
+            fname, header=[0, 1], index_col=[0], dtype=float)
 
         with open(root/"color.txt", 'r', encoding="UTF8") as f:
             color = f.read()
 
-        return cls(color = color, **nacent_dict)
+        return cls(color=color, **nacent_dict)
 
 
 def report_number_and_size_of_fepout_files(fepout_files):
@@ -226,7 +232,9 @@ def read_and_decorrelate(args, replica, unkpath, fepout_files):
     if args.detect_equilibrium:
         print("Detecting equilibrium")
         u_nk = detect_equilibrium_u_nk(u_nk)
-        samples_axes.plot_samples(u_nk, color="orange", label="Equilibrium-Detected")
-        save_UNK(u_nk, unkpath) # Only save decorrelated samples
-    fig.savefig(args.dataroot.joinpath(f"{str(replica)}_FEP_number_of_samples.pdf"))
+        samples_axes.plot_samples(
+            u_nk, color="orange", label="Equilibrium-Detected")
+        save_UNK(u_nk, unkpath)  # Only save decorrelated samples
+    fig.savefig(args.dataroot.joinpath(
+        f"{str(replica)}_FEP_number_of_samples.pdf"))
     return u_nk
