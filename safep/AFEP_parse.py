@@ -69,6 +69,16 @@ def do_agg_data(dataax, plotax, pdf_type="KDE"):
 
 
 def do_aggregate_pdf(dataax, pdf_type: str) -> tuple[ndarray[Any, dtype[Any]], Any, ndarray[Any, dtype[floating[Any]]]]:
+    """Estimate aggregate probability density function
+
+    Args:
+        dataax (plt.Axes): The Axes from which to extract the data
+        pdf_type (str): The type of PDF estimation. "KDE" or uses histogramming.
+
+    Returns:
+        tuple[ndarray[Any, dtype[Any]], Any, ndarray[Any, dtype[floating[Any]]]]:
+            the flattened data, bin centers, and probability densities, respectively
+    """
     agg_data = []
     lines = dataax.lines
     for line in lines:
@@ -159,7 +169,7 @@ COLORS = ["blue", "red", "green", "purple", "orange", "violet", "cyan"]
 
 
 def initialize_general_figure(RT_kcal_per_mol: float, key: str, feprun: FepRun):
-    """Create a new general figure
+    """Create a new general figure.
 
     Args:
         RT_kcal_per_mol (float): RT in kcal/mol
@@ -418,6 +428,16 @@ def do_general_figures_plot(RT: float, fepruns: dict[str, FepRun], mean: float, 
 
 
 def get_summary_stats(RT, fepruns) -> Any:
+    """Get summary statistics.
+
+    Args:
+        RT (float): Gas constant * temperature
+        fepruns (dict[str:Feprun]): dictionary of fepruns
+
+    Returns:
+        tuple[list[float], list[float], float, float]:
+            List of free energies, list of errors, overall mean, overall standard error 
+    """
     dGs = []
     errors = []
     for key, feprun in fepruns.items():
@@ -455,6 +475,17 @@ def get_organized_summary_statistics(args: AFEPArguments, fepruns: dict[str, Fep
 
 
 def pretty_print_summary_stats(dGs, errors, mean, sterr) -> str:
+    """Format summary statistics.
+
+    Args:
+        dGs (list[float]): free energy differences
+        errors (list[float]): error of each free energy difference
+        mean (float): average free energy change
+        sterr (float): error in the mean
+
+    Returns:
+        str: formatted string with all summary statistics
+    """
     toprint = ""
     for idx, dG, error in zip(range(len(dGs)), dGs, errors):
         change_and_error = f"Replica{
