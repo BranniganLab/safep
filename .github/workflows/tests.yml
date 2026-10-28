@@ -24,12 +24,14 @@ jobs:
 
      - name: Pytest
        run: |
-         pytest -n2 --approvaltests-use-reporter='PythonNativeReporter' safep/tests
+         pytest -n2 --approvaltests-use-reporter='PythonNativeReporter' --basetemp safep/tests/test_tmp safep/tests
      - name: upload-failed-tests
        if: failure()
        uses: actions/upload-artifact@v7
        with:
          name: approval-test-files
-         path: safep/tests/*received*
+         path: |
+            **/*.received.*
+            *received*
          if-no-files-found: warn
          retention-days: 5
