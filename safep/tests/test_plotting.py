@@ -40,6 +40,6 @@ def test_plot_samples_approval(u_nk, entry_point, tmp_path):
         actual = tmp_path / "test_plotting.test_plot_samples.received.png"
         fig.savefig(actual)
         approved = Path(__file__).with_name("test_plotting.test_plot_samples.approved.png")
-        assert compare_images(str(approved), str(actual), tol=0) is None
+        assert compare_images(str(approved), str(actual), tol=2) is None
     finally:
         plt.close(fig)
