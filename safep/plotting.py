@@ -5,6 +5,7 @@ import scipy as sp
 import pandas as pd
 
 from .helpers import *
+from .estimators import binding_probability, get_dissociation_constant
 from .processing import get_n_samples
 
 
@@ -412,6 +413,7 @@ def plot_titration(axis, concentrations, binding_free_energy, error_binding, RT)
     axis.fill_between(
         concentrations,
         probability_lower_bound,
+        probability_upper_bound,
         alpha=0.25,
         label="95% Confidence Interval",
     )

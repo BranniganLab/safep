@@ -1,0 +1,41 @@
+
+colvar {
+    name DBC
+
+    rmsd {
+ refPositionsFile ../inputs/step5_input.pdb
+
+        atoms {
+            # Remove 2nd "#" below to update atom IDs when applying cfg or changing molecule
+            ## auto-updating selection: "resname POPG and name C2 C3 O31 C31 O21 C21"
+            atomNumbers 25371 25373 25374 25379 25382 25383
+
+
+            centerToReference yes
+            rotateToReference yes
+            fittingGroup {
+            # Remove 2nd "#" below to update atom IDs when applying cfg or changing molecule
+            ## auto-updating selection: "segname PROA and name CA and resid > 200 and resid < 220"
+            atomNumbers 3101 3113 3124 3145 3166 3185 3209 3220 3240 3259 3280 3292 3311 3318 3337 3356 3375 3385 3395
+            # Remove 2nd "#" below to update atom IDs when applying cfg or changing molecule
+            ## auto-updating selection: "segname PROE and name CA and resid > 260 and resid < 280"
+            atomNumbers 24371 24387 24406 24418 24435 24452 24471 24490 24500 24507 24528 24535 24546 24565 24585 24595 24605 24624 24643
+
+            }
+        refPositionsFile ../inputs/step5_input.pdb
+        # refPositionsCol O
+        # refPositionsColValue 1
+
+        }
+    }
+}
+
+harmonicwalls {
+    name rest_DBC
+
+    colvars        DBC
+    upperWalls     6
+    forceConstant  200.0
+}
+
+
