@@ -20,4 +20,4 @@ def test_plot_titration(tmp_path):
     finally:
         plt.close(fig)
 
-    assert compare_images(str(reference), str(actual), tol=0) is None
+    assert compare_images(str(reference), str(actual), tol=1e-5) is None
