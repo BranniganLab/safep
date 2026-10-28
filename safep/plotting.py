@@ -1,3 +1,15 @@
+"""Plot outputs from SAFEP analysis.
+
+Classes:
+    SampleAxes
+
+Functions:
+    convergence_plot
+    plot_general
+    add_hyst_textbox
+    plot_hysteresis
+"""
+
 # Import block
 from numbers import Number
 from typing import List
@@ -15,6 +27,8 @@ from .processing import get_n_samples
 
 
 class SampleAxes(matplotlib.axes.Axes):
+    """Plot the number of samples.
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.set_ylabel("Number of Samples")
@@ -133,7 +147,7 @@ def plot_general(
     label: str | None = None,
     color: str = "blue",
     errorbars: bool = True,
-    xlim: List[float | int] = [-1, 1],
+    xlim: tuple[float | int, float | int] = (-1, 1),
 ):
     """
     Plot the general analysis of cumulative and per-window changes in delta-G.
