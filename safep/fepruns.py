@@ -130,10 +130,8 @@ class FepRun:
 
             coerce = _COERCERS.get(main_type)
             if coerce is None:
-                raise TypeError(
-                    f"{type(self).__name__}.{
-                        fld.name} can't process type {hint}"
-                )
+                errmsg = f"{type(self).__name__}.{fld.name} can't process type {hint}"
+                raise TypeError(errmsg)
             setattr(self, fld.name, coerce(attr))
 
     def to_dir(self, root: Path):
