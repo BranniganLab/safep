@@ -10,7 +10,7 @@ from safep.plotting import plot_titration
 def test_plot_titration(tmp_path):
     concentrations = np.logspace(0, 6, 1000)
     reference = Path(__file__).parent / "test_plotting.test_plot_titration.approved.png"
-    actual = "test_plot_titration.png"
+    actual = "test_plotting.test_plot_titration.received.png"
 
     fig, axis = plt.subplots(figsize=(10, 6))
     try:

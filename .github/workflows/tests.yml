@@ -29,5 +29,5 @@ jobs:
        uses: actions/upload-artifact@v7
        with:
          name: approval-test-files
-         path: safep/tests/*received.txt
+         path: safep/tests/*received*
          retention-days: 5
