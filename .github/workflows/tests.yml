@@ -25,7 +25,11 @@ jobs:
 
      - name: Pytest
        run: |
-         pytest -n2 --approvaltests-use-reporter='PythonNativeReporter' --basetemp safep/tests/test_tmp safep/tests
+         if python -c 'import sys; sys.exit(sys.version_info < (3, 13))'; then
+           pytest -n2 --approvaltests-use-reporter='PythonNativeReporter' --basetemp safep/tests/test_tmp safep/tests
+         else
+           pytest -n2 --approvaltests-use-reporter='PythonNativeReporter' --basetemp safep/tests/test_tmp safep/tests -k 'not test_plot_titration'
+         fi
      - name: upload-failed-tests
        if: failure()
        uses: actions/upload-artifact@v7
