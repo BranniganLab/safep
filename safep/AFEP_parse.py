@@ -440,7 +440,7 @@ def get_summary_stats(RT, fepruns) -> Any:
     """
     dGs = []
     errors = []
-    for key, feprun in fepruns.items():
+    for _, feprun in fepruns.items():
         cumulative = feprun.cumulative
         dG = cumulative.BAR.f.iloc[-1] * RT
         error = cumulative.BAR.errors.iloc[-1] * RT
