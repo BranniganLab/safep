@@ -11,3 +11,9 @@ safep.egg-info*
 .vscode
 .qodo
 .idea
+deactivate/
+build/
+monkeytype*
+Replica*
+EXPT*
+salari
