@@ -39,9 +39,7 @@ def test_plot_samples_approval(u_nk, entry_point, tmp_path):
             assert isinstance(sample_ax, SampleAxes)
         actual = tmp_path / "plot.png"
         fig.savefig(actual)
-        approved = Path(__file__).with_name(
-            f"test_plotting.test_plot_samples_{entry_point}.approved.png"
-        )
+        approved = Path(__file__).with_name("test_plotting.test_plot_samples.approved.png")
         assert compare_images(str(approved), str(actual), tol=0) is None
     finally:
         plt.close(fig)
