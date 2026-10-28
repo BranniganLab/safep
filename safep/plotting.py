@@ -50,6 +50,10 @@ class SampleAxes(matplotlib.axes.Axes):
         self.plot(samples, color=color, label=label)
         self.legend()
 
+def plot_samples(theax: Axes, u_nk: DataFrame, color: str='blue', label: str='Raw Data') -> SampleAxes:
+    smplaxes = SampleAxes(theax)
+    smplaxes.plot_samples(u_nk, color, label)
+    return smplaxes
 
 def convergence_plot(
     theax: Axes,
