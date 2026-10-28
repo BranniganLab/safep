@@ -146,14 +146,14 @@ class FepRun:
             Creates and populates the root directory with the fields of a FepRun
         """
         root.mkdir(parents=True, exist_ok=True)
-        for field in fields(self):
-            attr = getattr(self, field.name)
+        for fld in fields(self):
+            attr = getattr(self, fld.name)
             if isinstance(attr, np.ndarray):
                 attr = pd.DataFrame(attr)
             if isinstance(attr, pd.DataFrame):
-                attr.to_csv(root/f'{field.name}.csv')
+                attr.to_csv(root/f'{fld.name}.csv')
             else:
-                with open(root/f'{field.name}.txt', 'w', encoding="UTF8") as f:
+                with open(root/f'{fld.name}.txt', 'w', encoding="UTF8") as f:
                     f.write(attr)
 
     @classmethod
