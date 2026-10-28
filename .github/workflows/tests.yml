@@ -34,7 +34,7 @@ jobs:
        if: failure()
        uses: actions/upload-artifact@v7
        with:
-         name: approval-test-files
+         name: approval-test-files-${{ matrix.python-version }}
          path: |
             **/*.received.*
             *received*
