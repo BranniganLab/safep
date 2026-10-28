@@ -25,6 +25,7 @@ from pandas.core.frame import DataFrame
 
 from .processing import get_n_samples
 
+from warnings import warn
 
 class SampleAxes(matplotlib.axes.Axes):
     """Plot the number of samples.
@@ -50,10 +51,20 @@ class SampleAxes(matplotlib.axes.Axes):
         self.plot(samples, color=color, label=label)
         self.legend()
 
-def plot_samples(theax: Axes, u_nk: DataFrame, color: str='blue', label: str='Raw Data') -> SampleAxes:
-    smplaxes = SampleAxes(theax)
-    smplaxes.plot_samples(u_nk, color, label)
-    return smplaxes
+def plot_samples(
+    theax: Axes, u_nk: DataFrame, color: str = "blue", label: str = "Raw Data"
+) -> Axes:
+    """Plot sample counts in the supplied axes.
+    
+    LEGACY USE ONLY.
+    """
+    warn("plot_samples is deprecated and will be removed in a future version. Please migrate to SampleAxes.plot_samples.", DeprecationWarning)
+    theax.set_ylabel("Number of Samples")
+    theax.set_xlabel(r"$\lambda$")
+    theax.set_yscale("log")
+    theax.plot(get_n_samples(u_nk), color=color, label=label)
+    theax.legend()
+    return theax
 
 def convergence_plot(
     theax: Axes,
