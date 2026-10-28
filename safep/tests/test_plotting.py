@@ -37,7 +37,7 @@ def test_plot_samples_approval(u_nk, entry_point, tmp_path):
 
         if entry_point == "method":
             assert isinstance(sample_ax, SampleAxes)
-        actual = tmp_path / "plot.png"
+        actual = tmp_path / "test_plotting.test_plot_samples.received.png"
         fig.savefig(actual)
         approved = Path(__file__).with_name("test_plotting.test_plot_samples.approved.png")
         assert compare_images(str(approved), str(actual), tol=0) is None
