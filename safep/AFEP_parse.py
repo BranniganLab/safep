@@ -488,8 +488,7 @@ def pretty_print_summary_stats(dGs, errors, mean, sterr) -> str:
     """
     toprint = ""
     for idx, dG, error in zip(range(len(dGs)), dGs, errors):
-        change_and_error = f"Replica{
-            idx + 1}: \u0394G = {dG}\u00b1{error} kcal/mol\n"
+        change_and_error = f"Replica{idx + 1}: \u0394G = {dG}\u00b1{error} kcal/mol\n"
         toprint += change_and_error
     toprint += "\n"
     toprint += f"mean: {mean} kcal/mol\n" + f"sterr: {sterr} kcal/mol"
