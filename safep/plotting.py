@@ -12,7 +12,7 @@ Functions:
 
 # Import block
 from numbers import Number
-from typing import List
+from typing import List, Any
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -21,7 +21,7 @@ import pandas as pd
 import scipy as sp
 from matplotlib import pyplot as plt
 from matplotlib.axes._axes import Axes
-from numpy import ndarray
+from numpy import ndarray, dtype, floating
 from pandas import DataFrame
 from pandas.core.frame import DataFrame
 
@@ -429,3 +429,70 @@ def plot_number_of_samples_per_window(raw_u_nk: DataFrame, decorrelated_u_nk: Da
         samples_axes.plot_samples(
             decorrelated_u_nk, color="orange", label="Equilibrium-Detected")
     fig.savefig(dataroot / f"{str(replica)}_FEP_number_of_samples.pdf")
+
+
+def do_agg_data(dataax, plotax, pdf_type="KDE"):
+    """
+    Aggregates data from a given matplotlib axis, computes statistical measures,
+    and displays them on another axis.
+
+    Parameters:
+    dataax (matplotlib.axes.Axes): The axis containing lines with data to be aggregated.
+    plotax (matplotlib.axes.Axes): The axis where the statistical summary will be displayed.
+
+    Returns:
+    matplotlib.axes.Axes: The plot axis with the statistical summary text added.
+    """
+    flat, pdf_x, pdf_y = do_aggregate_pdf(dataax, pdf_type)
+
+    std = np.std(flat)
+    average = np.average(flat)
+    temp = pd.Series(pdf_y, index=pdf_x)
+    mode = temp.idxmax()
+
+    textstr = (
+        r"$\rm mode=$"
+        + f"{np.round(mode, 2)}"
+        + "\n"
+        + rf"$\mu$={np.round(average, 2)}"
+        + "\n"
+        + rf"$\sigma$={np.round(std, 2)}"
+    )
+    props = {"boxstyle": "square", "facecolor": "white", "alpha": 1}
+    plotax.text(
+        0.175,
+        0.95,
+        textstr,
+        transform=plotax.transAxes,
+        fontsize=14,
+        verticalalignment="top",
+        bbox=props,
+    )
+
+    return plotax
+
+
+def do_aggregate_pdf(dataax, pdf_type: str) -> tuple[ndarray[Any, dtype[Any]], Any, ndarray[Any, dtype[floating[Any]]]]:
+    """Estimate aggregate probability density function
+
+    Args:
+        dataax (plt.Axes): The Axes from which to extract the data
+        pdf_type (str): The type of PDF estimation. "KDE" or uses histogramming.
+
+    Returns:
+        tuple[ndarray[Any, dtype[Any]], Any, ndarray[Any, dtype[floating[Any]]]]:
+            the flattened data, bin centers, and probability densities, respectively
+    """
+    agg_data = []
+    lines = dataax.lines
+    for line in lines:
+        agg_data.append(line.get_ydata())
+    flat = np.array(agg_data).flatten()
+    if pdf_type == "KDE":
+        kernel = sp.stats.gaussian_kde(flat)
+        pdf_x = np.linspace(-1, 1, 1000)
+        pdf_y = kernel(pdf_x)
+    else:
+        pdf_y, pdf_x = np.histogram(flat, density=True, bins=50)
+        pdf_x = pdf_x[:-1] + (pdf_x[1] - pdf_x[0]) / 2
+    return flat, pdf_x, pdf_y
