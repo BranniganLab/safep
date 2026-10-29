@@ -447,9 +447,9 @@ def get_summary_stats(RT, fepruns) -> Any:
         dGs.append(dG)
         errors.append(error)
 
-    mean = np.round(np.average(dGs), 1)
-    sterr = np.round(get_sterr(dGs, errors), 1)
-    return np.round(dGs, 1), np.round(errors, 1), mean, sterr
+    mean = np.average(dGs)
+    sterr = get_sterr(dGs, errors)
+    return dGs, errors, mean, sterr
 
 
 def get_organized_summary_statistics(args: AFEPArguments, fepruns: dict[str, FepRun]):
@@ -474,7 +474,7 @@ def get_organized_summary_statistics(args: AFEPArguments, fepruns: dict[str, Fep
     return toprint, dGs, mean, sterr
 
 
-def pretty_print_summary_stats(dGs, errors, mean, sterr) -> str:
+def pretty_print_summary_stats(dGs, errors, mean, sterr, precision: int=1) -> str:
     """Format summary statistics.
 
     Args:
@@ -488,10 +488,10 @@ def pretty_print_summary_stats(dGs, errors, mean, sterr) -> str:
     """
     toprint = ""
     for idx, dG, error in zip(range(len(dGs)), dGs, errors):
-        change_and_error = f"Replica{idx + 1}: \u0394G = {dG}\u00b1{error} kcal/mol\n"
+        change_and_error = f"Replica{idx + 1}: \u0394G = {np.round(dG, precision)}\u00b1{np.round(error, precision)} kcal/mol\n"
         toprint += change_and_error
     toprint += "\n"
-    toprint += f"mean: {mean} kcal/mol\n" + f"sterr: {sterr} kcal/mol"
+    toprint += f"mean: {np.round(mean, precision)} kcal/mol\n" + f"sterr: {np.round(sterr, precision)} kcal/mol"
     return toprint
 
 
