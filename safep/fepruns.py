@@ -1,16 +1,18 @@
 """Organize all the data associated with a FEP replica"""
 
 import os
-from typing import get_args, get_type_hints
+from dataclasses import dataclass, field, fields
 from pathlib import Path
-from dataclasses import dataclass, fields, field
+from typing import get_args, get_type_hints
 
 import numpy as np
 import pandas as pd
 from alchemlyb.parsing import namd
 from matplotlib import pyplot as plt
 
-import safep
+from safep.fileIO import read_UNK, save_UNK
+from safep.plotting import SampleAxes
+from safep.processing import do_estimation, do_convergence, do_per_lambda_convergence, detect_equilibrium_u_nk
 
 
 def process_replicas(args, itcolors):
@@ -34,7 +36,7 @@ def process_replicas(args, itcolors):
         u_nk = None
         if unkpath.is_file():
             print("Found existing dataframe. Reading.")
-            u_nk = safep.read_UNK(unkpath)
+            u_nk = read_UNK(unkpath)
         else:
             print(
                 f"Didn't find existing dataframe at {unkpath}. Checking for raw fepout files.")
@@ -54,11 +56,13 @@ def process_replicas(args, itcolors):
                                            next(itcolors))
     return fepruns
 
+
 _COERCERS = {
     pd.DataFrame: pd.DataFrame,
     np.ndarray: lambda v: np.asarray(v).flatten(),
     str: str,
 }
+
 
 @dataclass
 class FepRun:
@@ -67,21 +71,21 @@ class FepRun:
         free energies
         and associated metrics"""
     u_nk: pd.DataFrame = field(metadata={"skip_sanitize": True})
-    per_window: pd.DataFrame|None = None
-    cumulative: pd.DataFrame|None = None
-    forward: np.ndarray|None = None
-    forward_error: np.ndarray|None = None
-    backward: np.ndarray|None = None
-    backward_error: np.ndarray|None = None
-    per_lambda_convergence: pd.DataFrame|None = None
-    color: str|None = "k"
+    per_window: pd.DataFrame | None = None
+    cumulative: pd.DataFrame | None = None
+    forward: np.ndarray | None = None
+    forward_error: np.ndarray | None = None
+    backward: np.ndarray | None = None
+    backward_error: np.ndarray | None = None
+    per_lambda_convergence: pd.DataFrame | None = None
+    color: str | None = "k"
 
     def __post_init__(self):
         self.u_nk.columns = self.u_nk.columns.astype(float)
 
         # Run the BAR estimator on the fep data
         if self.per_window is None or self.cumulative is None:
-            self.per_window, self.cumulative = safep.do_estimation(self.u_nk)
+            self.per_window, self.cumulative = do_estimation(self.u_nk)
 
         if (self.forward is None or
                 self.forward_error is None or
@@ -92,10 +96,10 @@ class FepRun:
                 self.forward_error,
                 self.backward,
                 self.backward_error,
-            ) = safep.do_convergence(self.u_nk)  # Used later in the convergence plot
+            ) = do_convergence(self.u_nk)  # Used later in the convergence plot
 
         if self.per_lambda_convergence is None:
-            self.per_lambda_convergence = safep.do_per_lambda_convergence(self.u_nk)
+            self.per_lambda_convergence = do_per_lambda_convergence(self.u_nk)
 
         self._sanitize_attributes()
 
@@ -126,9 +130,8 @@ class FepRun:
 
             coerce = _COERCERS.get(main_type)
             if coerce is None:
-                raise TypeError(
-                    f"{type(self).__name__}.{fld.name} can't process type {hint}"
-                )
+                errmsg = f"{type(self).__name__}.{fld.name} can't process type {hint}"
+                raise TypeError(errmsg)
             setattr(self, fld.name, coerce(attr))
 
     def to_dir(self, root: Path):
@@ -144,14 +147,14 @@ class FepRun:
             Creates and populates the root directory with the fields of a FepRun
         """
         root.mkdir(parents=True, exist_ok=True)
-        for field in fields(self):
-            attr = getattr(self, field.name)
+        for fld in fields(self):
+            attr = getattr(self, fld.name)
             if isinstance(attr, np.ndarray):
                 attr = pd.DataFrame(attr)
             if isinstance(attr, pd.DataFrame):
-                attr.to_csv(root/f'{field.name}.csv')
+                attr.to_csv(root/f'{fld.name}.csv')
             else:
-                with open(root/f'{field.name}.txt', 'w', encoding="UTF8") as f:
+                with open(root/f'{fld.name}.txt', 'w', encoding="UTF8") as f:
                     f.write(attr)
 
     @classmethod
@@ -166,11 +169,13 @@ class FepRun:
         """
         nacent_dict = {}
         key = "u_nk"
-        nacent_dict[key] = pd.read_csv(root/f"{key}.csv", header=[0], index_col=[0,1], dtype=float)
+        nacent_dict[key] = pd.read_csv(
+            root/f"{key}.csv", header=[0], index_col=[0, 1], dtype=float)
 
         for key in ["per_window", "cumulative"]:
             fname = root / f"{key}.csv"
-            nacent_dict[key] = pd.read_csv(fname, header=[0, 1], index_col=[0], dtype=float)
+            nacent_dict[key] = pd.read_csv(
+                fname, header=[0, 1], index_col=[0], dtype=float)
 
         for key in ["forward", "forward_error", "backward", "backward_error"]:
             fname = root / f"{key}.csv"
@@ -179,12 +184,13 @@ class FepRun:
 
         key = "per_lambda_convergence"
         fname = root / f"{key}.csv"
-        nacent_dict[key] = pd.read_csv(fname, header=[0, 1], index_col=[0], dtype=float)
+        nacent_dict[key] = pd.read_csv(
+            fname, header=[0, 1], index_col=[0], dtype=float)
 
         with open(root/"color.txt", 'r', encoding="UTF8") as f:
             color = f.read()
 
-        return cls(color = color, **nacent_dict)
+        return cls(color=color, **nacent_dict)
 
 
 def report_number_and_size_of_fepout_files(fepout_files):
@@ -214,17 +220,19 @@ def read_and_decorrelate(args, replica, unkpath, fepout_files):
     Returns:
         pd.DataFrame: a pandas DataFrame containing the postprocessed energies
     """
-    fig, ax = plt.subplots()
-
     u_nk = namd.extract_u_nk(fepout_files, args.temperature)
     u_nk = u_nk.sort_index(axis=0, level=1).sort_index(axis=1)
-    safep.plot_samples(ax, u_nk, color="blue", label="Raw Data")
+
+    fig = plt.figure()
+    samples_axes = fig.add_subplot(111, axes_class=SampleAxes)
+    samples_axes.plot_samples(u_nk, color="blue", label="Raw Data")
 
     if args.detect_equilibrium:
         print("Detecting equilibrium")
-        u_nk = safep.detect_equilibrium_u_nk(u_nk)
-        safep.plot_samples(ax, u_nk, color="orange",
-                           label="Equilibrium-Detected")
-        safep.save_UNK(u_nk, unkpath) # Only save decorrelated samples
-    fig.savefig(args.dataroot.joinpath(f"{str(replica)}_FEP_number_of_samples.pdf"))
+        u_nk = detect_equilibrium_u_nk(u_nk)
+        samples_axes.plot_samples(
+            u_nk, color="orange", label="Equilibrium-Detected")
+        save_UNK(u_nk, unkpath)  # Only save decorrelated samples
+    fig.savefig(args.dataroot.joinpath(
+        f"{str(replica)}_FEP_number_of_samples.pdf"))
     return u_nk

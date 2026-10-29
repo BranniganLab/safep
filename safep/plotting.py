@@ -1,86 +1,119 @@
+"""Plot outputs from SAFEP analysis.
+
+Classes:
+    SampleAxes
+
+Functions:
+    convergence_plot
+    plot_general
+    add_hyst_textbox
+    plot_hysteresis
+"""
+
 # Import block
+from numbers import Number
+from typing import List
+
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-import scipy as sp
 import pandas as pd
+import scipy as sp
+from matplotlib.axes._axes import Axes
+from numpy import ndarray
+from pandas.core.frame import DataFrame
 
-from .helpers import *
 from .processing import get_n_samples
 
+from warnings import warn
 
-def plot_samples(theax, u_nk, color='blue', label='Raw Data'):
+class SampleAxes(matplotlib.axes.Axes):
+    """Plot the number of samples.
     """
-    Plot the number of samples against the lambda values.
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.set_ylabel("Number of Samples")
+        self.set_xlabel(r"$\lambda$")
+        self.set_yscale("log")
 
-    Args:
-        theax (matplotlib.axes.Axes): The axes object to plot on.
-        u_nk (pd.DataFrame): The input data frame containing the samples and lambda values.
-        color (str, optional): The color of the plot line. Defaults to 'blue'.
-        label (str, optional): The label for the plot legend. Defaults to 'Raw Data'.
+    def plot_samples(
+        self, u_nk: DataFrame, color: str = "blue", label: str = "Raw Data"
+    ) -> None:
+        """
+        Plot the number of samples against the lambda values.
 
-    Returns:
-        matplotlib.axes.Axes: The axes object after plotting the data.
+        Args:
+            u_nk (pd.DataFrame): The input data frame containing the samples and lambda values.
+            color (str, optional): The color of the plot line. Defaults to 'blue'.
+            label (str, optional): The label for the plot legend. Defaults to 'Raw Data'.
+        """
+        samples = get_n_samples(u_nk)
+        self.plot(samples, color=color, label=label)
+        self.legend()
+
+def plot_samples(
+    theax: Axes, u_nk: DataFrame, color: str = "blue", label: str = "Raw Data"
+) -> Axes:
+    """Plot sample counts in the supplied axes.
+    
+    LEGACY USE ONLY.
     """
-    samples = get_n_samples(u_nk)
-    theax.plot(samples, color=color, label=label)
-    plt.yscale('log')
-    theax.set_ylabel('Number of Samples')
-    theax.set_xlabel(r'$\lambda$')
+    warn("plot_samples is deprecated and will be removed in a future version. Please migrate to SampleAxes.plot_samples.", DeprecationWarning)
+    theax.set_ylabel("Number of Samples")
+    theax.set_xlabel(r"$\lambda$")
+    theax.set_yscale("log")
+    theax.plot(get_n_samples(u_nk), color=color, label=label)
     theax.legend()
     return theax
 
-def do_conv_plot(ax, X, fs, ferr, fwd_color, label=None):
-    '''
-    A minimalist convergence plot
-    Arguments: ax[is], X (the X values), fs (forward estimates), ferr (forward errors), fwdColor (the forward color), label text
-    Returns: ax[is]
-    '''
-    ax.errorbar(X, fs, yerr=ferr, marker=None, linewidth=1, color=fwd_color, markerfacecolor='white', markeredgewidth=1, markeredgecolor=fwd_color, ms=5, label=label)
-    return ax
-
-
-def convergence_plot(theax,
-                     fs,
-                     ferr,
-                     bs,
-                     berr,
-                     fwd_color='#0072B2',
-                     bwd_color='#D55E00',
-                     fwd_legend=None,
-                     bwd_legend=None,
-                     fontsize=12,
-                     errorbars=True):
-    '''
+def convergence_plot(
+    theax: Axes,
+    fs: ndarray,
+    ferr: ndarray,
+    bs: ndarray,
+    berr: ndarray,
+    fwd_color: str = "#0072B2",
+    bwd_color: str = "#D55E00",
+    fwd_legend: str = "",
+    bwd_legend: str = "",
+    fontsize: int = 12,
+    errorbars: bool = True,
+):
+    """
     Convergence plot. Does the convergence plotting.
     Returns: a pyplot
-    '''
-    if not fwd_legend:
-        fwd_legend=fwd_color
-        bwd_legend=bwd_color
+    """
+    if fwd_legend == "":
+        fwd_legend = fwd_color
+        bwd_legend = bwd_color
 
-    lower = fs[-1]-ferr[-1]
-    upper = fs[-1]+ferr[-1]
-    theax.fill_between([0,1],[lower, lower], [upper, upper], color='gray', alpha=0.1)
+    lower = fs[-1] - ferr[-1]
+    upper = fs[-1] + ferr[-1]
+    theax.fill_between([0, 1], [lower, lower], [
+                       upper, upper], color="gray", alpha=0.1)
 
-    fwdparams = {'marker':'o',
-                'linewidth':1,
-                'color':fwd_color,
-                'markerfacecolor':'white',
-                'markeredgewidth':1,
-                'markeredgecolor':fwd_color,
-                'ms':5,
-                }
-    bwdparams = {'marker':'o',
-                'linewidth':1,
-                'color':bwd_color,
-                'markerfacecolor':'white',
-                'markeredgewidth':1,
-                'markeredgecolor':bwd_color,
-                'ms':5,
-                'linestyle':'--'}
+    fwdparams = {
+        "marker": "o",
+        "linewidth": 1,
+        "color": fwd_color,
+        "markerfacecolor": "white",
+        "markeredgewidth": 1,
+        "markeredgecolor": fwd_color,
+        "ms": 5,
+    }
+    bwdparams = {
+        "marker": "o",
+        "linewidth": 1,
+        "color": bwd_color,
+        "markerfacecolor": "white",
+        "markeredgewidth": 1,
+        "markeredgecolor": bwd_color,
+        "ms": 5,
+        "linestyle": "--",
+    }
 
-    xfwd = np.arange(len(fs))/len(fs)+0.1
-    xbwd = np.arange(len(bs))/len(fs)+0.1
+    xfwd = np.arange(len(fs)) / len(fs) + 0.1
+    xbwd = np.arange(len(bs)) / len(fs) + 0.1
 
     if errorbars:
         theax.errorbar(xfwd, fs, yerr=ferr, **fwdparams)
@@ -89,66 +122,49 @@ def convergence_plot(theax,
         theax.errorbar(xfwd, fs, **fwdparams)
         theax.errorbar(xbwd, bs, **bwdparams)
 
-
     theax.xaxis.set_ticks([0, 0.2, 0.4, 0.6, 0.8, 1])
 
     final_mean = fs[-1]
-    theax.axhline(y= final_mean, linestyle='-.', color='gray')
-    theax.set_ylim((final_mean-0.75, final_mean+0.75))
+    theax.axhline(y=final_mean, linestyle="-.", color="gray")
+    theax.set_ylim((final_mean - 0.75, final_mean + 0.75))
 
-    theax.plot(0, final_mean, linewidth=1, color=fwd_legend, label='Forward Time Sampling')
-    theax.plot(0, final_mean, linewidth=1, color=bwd_legend, linestyle='--', label='Backward Time Sampling')
-    theax.set_xlabel('Fraction of Simulation Time', fontsize=fontsize)
-    theax.set_ylabel(r'Total $\mathrm{\Delta} G$ (kcal/mol)', fontsize=fontsize)
+    theax.plot(
+        0, final_mean, linewidth=1, color=fwd_legend, label="Forward Time Sampling"
+    )
+    theax.plot(
+        0,
+        final_mean,
+        linewidth=1,
+        color=bwd_legend,
+        linestyle="--",
+        label="Backward Time Sampling",
+    )
+    theax.set_xlabel("Fraction of Simulation Time", fontsize=fontsize)
+    theax.set_ylabel(
+        r"Total $\mathrm{\Delta} G$ (kcal/mol)", fontsize=fontsize)
     theax.legend()
     return theax
-    
-    
-def fb_discrepancy_plot(l_mid, dG_f, dG_b):
-    '''
-    Plot the forward-backward discrepancy ("hysteresis")
-    Arguments: l_mid (lambda window midpoints), dG_f (forward estimates), dG_b (backward estimates)
-    Returns: a pyplot
-    '''
-    plt.vlines(l_mid, np.zeros(len(l_mid)), dG_f + np.array(dG_b), label="fwd - bwd", linewidth=3)
-    plt.legend()
-    plt.title('Fwd-bwd discrepancies by lambda')
-    plt.xlabel('Lambda')
-    plt.ylabel('Diff. in delta-G')
-    #Return the figure
-    return plt.gca() 
-
-def fb_discrepancy_hist(dG_f, dG_b):
-    '''
-    Plot the distribution of the hystersis
-    Arguments: dG_f, dG_b
-    Returns: a pyplot
-    '''
-    plt.hist(dG_f + np.array(dG_b))
-    plt.title('Distribution of fwd-bwd discrepancies')
-    plt.xlabel('Difference in delta-G')
-    plt.ylabel('Count')
-    #return the figure
-    return plt.gca()
 
 
-def plot_general(cumulative,
-                 cumulative_ylim,
-                 per_window,
-                 per_window_ylim,
-                 RT,
-                 width=8,
-                 height=4,
-                 pdf_type='KDE',
-                 fontsize=12,
-                 fig=None,
-                 axes=None,
-                 hysttype='classic',
-                 label=None,
-                 color='blue',
-                 errorbars=True,
-                 xlim=[-1,1]):
-    '''
+def plot_general(
+    cumulative: pd.DataFrame,
+    cumulative_ylim: List[float | int] | None,
+    per_window: pd.DataFrame,
+    per_window_ylim: List[float | int] | None,
+    RT: float | int,
+    width: float | int = 8,
+    height: float | int = 4,
+    pdf_type: str = "KDE",
+    fontsize: int = 12,
+    fig: matplotlib.pyplot.Figure | None = None,
+    axes: List[Axes] | None = None,
+    hysttype: str = "classic",
+    label: str | None = None,
+    color: str = "blue",
+    errorbars: bool = True,
+    xlim: tuple[float | int, float | int] = (-1, 1),
+):
+    """
     Plot the general analysis of cumulative and per-window changes in delta-G.
 
     Arguments:
@@ -171,10 +187,12 @@ def plot_general(cumulative,
     Returns:
     - fig: The figure object.
     - axes: The axes objects.
-    '''
+    """
     if fig is None and axes is None:
-        fig, axes = plt.subplots(3,2, sharex='col', sharey='row', gridspec_kw={'width_ratios': [2, 1]})
-        ((cumul_ax, del1),( each_ax, del2), (hyst_ax, pdf_ax)) = axes
+        fig, axes = plt.subplots(
+            3, 2, sharex="col", sharey="row", gridspec_kw={"width_ratios": [2, 1]}
+        )
+        ((cumul_ax, del1), (each_ax, del2), (hyst_ax, pdf_ax)) = axes
 
         fig.delaxes(del1)
         fig.delaxes(del2)
@@ -182,41 +200,112 @@ def plot_general(cumulative,
         cumul_ax, each_ax, hyst_ax, pdf_ax = axes
 
     # Cumulative change in kcal/mol
-    cumul_ax.errorbar(cumulative.index, cumulative.BAR.f*RT, yerr=cumulative.BAR.errors, marker=None, linewidth=1, label=label, color=color)
-    cumul_ax.set(ylabel=r'Cumulative $\mathrm{\Delta} G_{\lambda}$'+'\n(kcal/mol)', ylim=cumulative_ylim)
+    cumul_ax.errorbar(
+        cumulative.index,
+        cumulative.BAR.f * RT,
+        yerr=cumulative.BAR.errors,
+        marker=None,
+        linewidth=1,
+        label=label,
+        color=color,
+    )
+    cumul_ax.set(
+        ylabel=r"Cumulative $\mathrm{\Delta} G_{\lambda}$" + "\n(kcal/mol)",
+        ylim=cumulative_ylim,
+    )
 
     # Per-window change in kcal/mol
     if errorbars:
-        each_ax.errorbar(per_window.index, per_window.BAR.df*RT, yerr=per_window.BAR.ddf, marker=None, linewidth=1, alpha=0.5, color=color, label="BAR")
+        each_ax.errorbar(
+            per_window.index,
+            per_window.BAR.df * RT,
+            yerr=per_window.BAR.ddf,
+            marker=None,
+            linewidth=1,
+            alpha=0.5,
+            color=color,
+            label="BAR",
+        )
     else:
-        each_ax.plot(per_window.index, per_window.BAR.df*RT, marker=None, linewidth=1, color=color, label="BAR")
+        each_ax.plot(
+            per_window.index,
+            per_window.BAR.df * RT,
+            marker=None,
+            linewidth=1,
+            color=color,
+            label="BAR",
+        )
 
-    each_ax.plot(per_window.index, per_window.EXP.dG_f*RT, marker=None, linewidth=1, alpha=0.5, color=color, label="forward EXP")
-    each_ax.plot(per_window.index, -per_window.EXP.dG_b*RT, marker=None, linewidth=1, alpha=0.5, linestyle='--', color=color, label="backward EXP")
+    each_ax.plot(
+        per_window.index,
+        per_window.EXP.dG_f * RT,
+        marker=None,
+        linewidth=1,
+        alpha=0.5,
+        color=color,
+        label="forward EXP",
+    )
+    each_ax.plot(
+        per_window.index,
+        -per_window.EXP.dG_b * RT,
+        marker=None,
+        linewidth=1,
+        alpha=0.5,
+        linestyle="--",
+        color=color,
+        label="backward EXP",
+    )
 
     if each_ax.get_legend() is None:
-        line_bar, = each_ax.plot([],[], marker=None, linewidth=1, color="k", label="BAR")
-        line_fwd, = each_ax.plot([],[], marker=None, linewidth=1, alpha=0.5, color="k",label="forward EXP")
-        line_bwd, = each_ax.plot([],[], marker=None, linewidth=1, alpha=0.5, linestyle='--',color="k", label="backward EXP")
+        (line_bar,) = each_ax.plot(
+            [], [], marker=None, linewidth=1, color="k", label="BAR"
+        )
+        (line_fwd,) = each_ax.plot(
+            [], [], marker=None, linewidth=1, alpha=0.5, color="k", label="forward EXP"
+        )
+        (line_bwd,) = each_ax.plot(
+            [],
+            [],
+            marker=None,
+            linewidth=1,
+            alpha=0.5,
+            linestyle="--",
+            color="k",
+            label="backward EXP",
+        )
         each_ax.legend(handles=[line_bar, line_fwd, line_bwd])
 
-    each_ax.set(ylabel=r'$\mathrm{\Delta} G_\lambda$'+'\n'+r'$\left(\mathrm{kcal}/\mathrm{mol}\right)$', ylim=per_window_ylim)
+    each_ax.set(
+        ylabel=r"$\mathrm{\Delta} G_\lambda$"
+        + "\n"
+        + r"$\left(\mathrm{kcal}/\mathrm{mol}\right)$",
+        ylim=per_window_ylim,
+    )
 
-    #Hysteresis Plots
-    hyst_ax, pdf_ax = plot_hysteresis((hyst_ax, pdf_ax), per_window, hysttype, color, fontsize, pdf_type, xlim)
+    # Hysteresis Plots
+    hyst_ax, pdf_ax = plot_hysteresis(
+        (hyst_ax, pdf_ax), per_window, hysttype, color, fontsize, pdf_type, xlim
+    )
 
     fig.set_figwidth(width)
-    fig.set_figheight(height*3)
+    fig.set_figheight(height * 3)
     fig.tight_layout()
 
-    for ax in [cumul_ax,each_ax,hyst_ax,pdf_ax]:
+    for ax in [cumul_ax, each_ax, hyst_ax, pdf_ax]:
         ax.set_ylabel(ax.get_ylabel(), fontsize=fontsize)
 
-    return fig, [cumul_ax,each_ax,hyst_ax,pdf_ax]
+    return fig, [cumul_ax, each_ax, hyst_ax, pdf_ax]
 
 
-
-def add_hyst_textbox(diff, pdf_x, pdf_y, pdf_ax, xoffset=0.15, yoffset=0.95, fs=14):
+def add_hyst_textbox(
+    diff: ndarray,
+    pdf_x: ndarray,
+    pdf_y: ndarray,
+    pdf_ax: Axes,
+    xoffset: Number = 0.15,
+    yoffset: Number = 0.95,
+    fs: int = 14,
+):
     """
     Add a textbox to a probability density function (PDF) plot.
 
@@ -250,48 +339,76 @@ def add_hyst_textbox(diff, pdf_x, pdf_y, pdf_ax, xoffset=0.15, yoffset=0.95, fs=
     temp = pd.Series(pdf_y, index=pdf_x)
     mode = temp.idxmax()
 
-    textstr = fr"$\rm mode=${np.round(mode,2)}"+"\n"+fr"$\mu$={np.round(mean,2)}"+"\n"+fr"$\sigma$={np.round(std,2)}"
-    props = dict(boxstyle='square', facecolor='white', alpha=0.5)
-    pdf_ax.text(xoffset, yoffset, textstr, transform=pdf_ax.transAxes, fontsize=fs,
-            verticalalignment='top', bbox=props)
-    
+    textstr = (
+        rf"$\rm mode=${np.round(mode, 2)}"
+        + "\n"
+        + rf"$\mu$={np.round(mean, 2)}"
+        + "\n"
+        + rf"$\sigma$={np.round(std, 2)}"
+    )
+    props = dict(boxstyle="square", facecolor="white", alpha=0.5)
+    pdf_ax.text(
+        xoffset,
+        yoffset,
+        textstr,
+        transform=pdf_ax.transAxes,
+        fontsize=fs,
+        verticalalignment="top",
+        bbox=props,
+    )
+
     return pdf_ax
 
-def plot_hysteresis(axes,
-                    per_window,
-                    hysttype,
-                    color='blue',
-                    fontsize=12,
-                    pdf_type='KDE',
-                    xlim=[-1,1],
-                    textbox=True):
-    hyst_ax, pdf_ax = axes
-    
-    diff = per_window.EXP['difference']
-    assert hysttype in ['classic', 'lines'], f"ERROR: I don't know how to plot hysttype={hysttype}"
-    if hysttype == 'classic':
-        hyst_ax.vlines(per_window.index, np.zeros(len(per_window)), diff, label="fwd - bwd", linewidth=2, color=color)
-    elif hysttype == 'lines':
-        hyst_ax.plot(per_window.index, diff, label="fwd - bwd", linewidth=1, color=color)
 
-    ytxt = r'$\delta_\lambda$ (kcal/mol)'
+def plot_hysteresis(
+    axes: tuple[Axes, Axes],
+    per_window: DataFrame,
+    hysttype: str,
+    color: str = "blue",
+    fontsize: int = 12,
+    pdf_type: str = "KDE",
+    xlim: tuple[float, float] = (-1, 1),
+    textbox: bool = True,
+):
+    hyst_ax, pdf_ax = axes
+
+    diff = per_window.EXP["difference"]
+    assert hysttype in [
+        "classic",
+        "lines",
+    ], f"ERROR: I don't know how to plot hysttype={hysttype}"
+    if hysttype == "classic":
+        hyst_ax.vlines(
+            per_window.index,
+            np.zeros(len(per_window)),
+            diff,
+            label="fwd - bwd",
+            linewidth=2,
+            color=color,
+        )
+    elif hysttype == "lines":
+        hyst_ax.plot(
+            per_window.index, diff, label="fwd - bwd", linewidth=1, color=color
+        )
+
+    ytxt = r"$\delta_\lambda$ (kcal/mol)"
     hyst_ax.set_ylabel(ylabel=ytxt, fontsize=fontsize)
     hyst_ax.set_ylim(xlim)
 
-    xtxt = r'$\lambda$'
+    xtxt = r"$\lambda$"
     hyst_ax.set_xlabel(xlabel=xtxt, fontsize=fontsize)
 
-    if pdf_type=='KDE':
+    if pdf_type == "KDE":
         kernel = sp.stats.gaussian_kde(diff)
         pdf_x = np.linspace(xlim[0], xlim[1], 1000)
         pdf_y = kernel(pdf_x)
-        pdf_ax.plot(pdf_y, pdf_x, label='KDE', color=color)
-    elif pdf_type=='Histogram':
+        pdf_ax.plot(pdf_y, pdf_x, label="KDE", color=color)
+    elif pdf_type == "Histogram":
         pdf_y, pdf_x = np.histogram(diff, density=True)
-        pdf_x = pdf_x[:-1]+(pdf_x[1]-pdf_x[0])/2
-        pdf_ax.plot(pdf_y, pdf_x,  label="Estimated Distribution", color=color)
+        pdf_x = pdf_x[:-1] + (pdf_x[1] - pdf_x[0]) / 2
+        pdf_ax.plot(pdf_y, pdf_x, label="Estimated Distribution", color=color)
     else:
-        raise f"Error: PDFtype {pdf_type} not recognized"
+        raise ValueError(f"PDFtype {pdf_type} not recognized")
 
     pdf_ax.set_xlabel(pdf_type, fontsize=fontsize)
 
@@ -299,101 +416,3 @@ def plot_hysteresis(axes,
         pdf_ax = add_hyst_textbox(diff, pdf_x, pdf_y, pdf_ax)
 
     return hyst_ax, pdf_ax
-
-
-
-def plot_general_legacy(cumulative,
-                        cumulative_ylim,
-                        perWindow,
-                        per_window_ylim,
-                        RT,
-                        width=8,
-                        height=4,
-                        PDFtype='KDE',
-                        fontsize=12):
-    '''
-    This is a deprecated plotting function
-    '''
-    fig, axes = plt.subplots(4,2, sharex='col', sharey='row', gridspec_kw={'width_ratios': [2, 1]})
-    ((cumulative_ax, del1),( each_ax, del2), (ddG_ax, del3), (hysteresis_ax, pdf_ax)) = axes
-
-    fig.delaxes(del1)
-    fig.delaxes(del2)
-    fig.delaxes(del3)
-
-    # Cumulative change in kcal/mol
-    cumulative_ax.errorbar(cumulative.index, cumulative.BAR.f*RT, yerr=cumulative.BAR.errors, marker=None, linewidth=1)
-    cumulative_ax.set(ylabel=r'Cumulative $\mathrm{\Delta} G_{\lambda}$'+'\n(kcal/mol)', ylim=cumulative_ylim)
-
-    # Per-window change in kcal/mol
-    each_ax.errorbar(perWindow.index, perWindow.BAR.df*RT, yerr=perWindow.BAR.ddf, marker=None, linewidth=1)
-    each_ax.plot(perWindow.index, perWindow.EXP.dG_f*RT, marker=None, linewidth=1, alpha=0.5)
-    each_ax.errorbar(perWindow.index, -perWindow.EXP.dG_b*RT, marker=None, linewidth=1, alpha=0.5)
-    each_ax.set(ylabel=r'$\mathrm{\Delta} G_\lambda$'+'\n'+r'$\left(kcal/mol\right)$', ylim=per_window_ylim)
-
-    # Second derivative plot
-    ddG = np.diff(perWindow.BAR.df*RT)
-    ddG_ax.errorbar(cumulative.index[1:-1], ddG, marker='.')
-    #ddGAx.set_xlabel(r'$\lambda$')
-    ddG_ax.set_ylabel(r"$\mathrm{\Delta\Delta} G_\lambda \left(kcal/mol\right)$")
-    ddG_ax.set(ylim=(-1, 1))
-
-    #Hysteresis Plots
-    diff = perWindow.EXP['difference']
-    hysteresis_ax.vlines(perWindow.index, np.zeros(len(perWindow)), diff, label="fwd - bwd", linewidth=2)
-    hysteresis_ax.set(ylabel=r'$\delta_\lambda$ (kcal/mol)', ylim=(-1,1))
-    hysteresis_ax.set_xlabel(xlabel=r'$\lambda$', fontsize=fontsize)
-
-    if PDFtype=='KDE':
-        kernel = sp.stats.gaussian_kde(diff)
-        pdfx = np.linspace(-1, 1, 1000)
-        pdfy = kernel(pdfx)
-        pdf_ax.plot(pdfy, pdfx, label='KDE')
-    elif PDFtype=='Histogram':
-        pdfy, pdfx = np.histogram(diff, density=True)
-        pdfx = pdfx[:-1]+(pdfx[1]-pdfx[0])/2
-        pdf_ax.plot(pdfy, pdfx,  label="Estimated Distribution")
-    else:
-        raise(f"Error: PDFtype {PDFtype} not recognized")
-
-    pdf_ax.set_xlabel(PDFtype, fontsize=fontsize)
-
-    std = np.std(diff)
-    mean = np.average(diff)
-    temp = pd.Series(pdfy, index=pdfx)
-    mode = temp.idxmax()
-
-    textstr = r"$\rm mode=$"+f"{np.round(mode,2)}"+"\n"+fr"$\mu$={np.round(mean,2)}"+"\n"+fr"$\sigma$={np.round(std,2)}"
-    props = dict(boxstyle='square', facecolor='white', alpha=0.5)
-    pdf_ax.text(0.15, 0.95, textstr, transform=pdf_ax.transAxes, fontsize=14,
-            verticalalignment='top', bbox=props)
-
-    fig.set_figwidth(width)
-    fig.set_figheight(height*3)
-    fig.tight_layout()
-
-    for ax in [cumulative_ax,each_ax,hysteresis_ax,pdf_ax, ddG_ax]:
-        ax.set_ylabel(ax.get_ylabel(), fontsize=fontsize)
-
-    return fig, [cumulative_ax,each_ax,hysteresis_ax,pdf_ax, ddG_ax]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
