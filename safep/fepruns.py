@@ -45,8 +45,20 @@ def process_replicas(args, itcolors):
 
             if len(list(fepout_files)) > 0:
                 print("Reading fepout files")
-                u_nk = read_and_decorrelate(
-                    args, replica, unkpath, fepout_files)
+                nk = namd.extract_u_nk(fepout_files, args.temperature)
+                nk = nk.sort_index(axis=0, level=1).sort_index(axis=1)
+                fig = plt.figure()
+                samples_axes = fig.add_subplot(111, axes_class=SampleAxes)
+                samples_axes.plot_samples(nk, color="blue", label="Raw Data")
+                if args.detect_equilibrium:
+                    print("Detecting equilibrium")
+                    nk = detect_equilibrium_u_nk(nk)
+                    samples_axes.plot_samples(
+                        nk, color="orange", label="Equilibrium-Detected")
+                    save_UNK(nk, unkpath)  # Only save decorrelated samples
+                fig.savefig(args.dataroot.joinpath(
+                    f"{str(replica)}_FEP_number_of_samples.pdf"))
+                u_nk = nk
             else:
                 print(
                     f"WARNING: no fepout files found for {replica}. Skipping.")
@@ -206,33 +218,3 @@ def report_number_and_size_of_fepout_files(fepout_files):
         total_size += os.path.getsize(file)
     print(f"Will process {len(fepout_files)} fepout files." +
           f"\nTotal size:{np.round(total_size/10**9, 2)}GB")
-
-
-def read_and_decorrelate(args, replica, unkpath, fepout_files):
-    """Read each replica and optionally detect equilibrium/decorrelate samples
-
-    Args:
-        args (AFEPArguments): information needed to collect fep data and analyze
-        replica (str): name of the replica
-        unkpath (pathlib.Path): path to save the postprocessed data
-        fepout_files (list): list of paths to fepout files
-
-    Returns:
-        pd.DataFrame: a pandas DataFrame containing the postprocessed energies
-    """
-    u_nk = namd.extract_u_nk(fepout_files, args.temperature)
-    u_nk = u_nk.sort_index(axis=0, level=1).sort_index(axis=1)
-
-    fig = plt.figure()
-    samples_axes = fig.add_subplot(111, axes_class=SampleAxes)
-    samples_axes.plot_samples(u_nk, color="blue", label="Raw Data")
-
-    if args.detect_equilibrium:
-        print("Detecting equilibrium")
-        u_nk = detect_equilibrium_u_nk(u_nk)
-        samples_axes.plot_samples(
-            u_nk, color="orange", label="Equilibrium-Detected")
-        save_UNK(u_nk, unkpath)  # Only save decorrelated samples
-    fig.savefig(args.dataroot.joinpath(
-        f"{str(replica)}_FEP_number_of_samples.pdf"))
-    return u_nk
