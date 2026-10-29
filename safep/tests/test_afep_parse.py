@@ -2,7 +2,8 @@ from approvaltests import verify
 import pandas as pd
 from pandas.testing import assert_frame_equal
 import numpy as np
-from safep.AFEP_parse import  COLORS, get_organized_summary_statistics, AFEPArguments, get_sterr
+from safep.AFEP_parse import  COLORS, get_organized_summary_statistics, get_sterr
+from safep.cli import AFEPArguments
 from safep.fepruns import process_replicas, FepRun
 import pytest
 from pathlib import Path
