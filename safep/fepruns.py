@@ -45,20 +45,24 @@ def process_replicas(args, itcolors):
 
             if len(list(fepout_files)) > 0:
                 print("Reading fepout files")
-                u_nk = namd.extract_u_nk(fepout_files, args.temperature)
-                u_nk = u_nk.sort_index(axis=0, level=1).sort_index(axis=1)
+                raw_u_nk = namd.extract_u_nk(fepout_files, args.temperature)
+                raw_u_nk = raw_u_nk.sort_index(axis=0, level=1).sort_index(axis=1)
+
+                if args.detect_equilibrium:
+                    print("Detecting equilibrium")
+                    decorrelated_u_nk = detect_equilibrium_u_nk(raw_u_nk)
 
                 fig = plt.figure()
                 samples_axes = fig.add_subplot(111, axes_class=SampleAxes)
-                samples_axes.plot_samples(u_nk, color="blue", label="Raw Data")
+                samples_axes.plot_samples(raw_u_nk, color="blue", label="Raw Data")
                 if args.detect_equilibrium:
-                    print("Detecting equilibrium")
-                    u_nk = detect_equilibrium_u_nk(u_nk)
                     samples_axes.plot_samples(
-                        u_nk, color="orange", label="Equilibrium-Detected")
-                    save_UNK(u_nk, unkpath)  # Only save decorrelated samples
+                        decorrelated_u_nk, color="orange", label="Equilibrium-Detected")
+                    save_UNK(decorrelated_u_nk, unkpath)  # Only save decorrelated samples
                 fig.savefig(args.dataroot.joinpath(
                     f"{str(replica)}_FEP_number_of_samples.pdf"))
+
+                u_nk = decorrelated_u_nk
             else:
                 print(
                     f"WARNING: no fepout files found for {replica}. Skipping.")
