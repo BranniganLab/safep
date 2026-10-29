@@ -452,6 +452,13 @@ def get_summary_stats(RT, fepruns) -> Any:
     return dGs, errors, mean, sterr
 
 
+def get_summary_statistics(args: AFEPArguments, fepruns: dict[str, FepRun]):
+    """DEPRECATED: Compatibility layer for old function signature."""
+    warnings.warn("get_summary_statistics is deprecated and will be removed in a future release. " \
+    "Please use get_organized_summary_statistics or get_summary_stats directly.", DeprecationWarning)
+    return get_organized_summary_statistics(args, fepruns)
+
+
 def get_organized_summary_statistics(args: AFEPArguments, fepruns: dict[str, FepRun]):
     """Extract summary statistics from fepruns.
 
