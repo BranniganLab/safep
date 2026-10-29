@@ -20,8 +20,7 @@ from numpy import dtype, floating, ndarray
 from scipy.constants import R, calorie
 
 import safep
-from safep.fepruns import FepRun
-from safep.fepruns import process_replicas
+from safep.fepruns import FepRun, process_replicas
 from safep.plotting import plot_hysteresis
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -388,7 +387,7 @@ def make_figures(args: AFEPArguments, fepruns: dict[str, FepRun], dGs: list[floa
     Side effects:
         Saves FEP_general_figures.pdf, FEP_convergence.pdf, and FEP_perLambda_convergence.pdf
     """
-    fig, _ = do_general_figures_plot(
+    fig, _ = plot_general_figures(
         args.RT_kcal_per_mol, fepruns, mean, sterr)
     fig.savefig(args.dataroot.joinpath("FEP_general_figures.pdf"))
 
@@ -402,7 +401,13 @@ def make_figures(args: AFEPArguments, fepruns: dict[str, FepRun], dGs: list[floa
     fig.savefig(args.dataroot.joinpath("FEP_perLambda_convergence.pdf"))
 
 
-def do_general_figures_plot(RT: float, fepruns: dict[str, FepRun], mean: float, sterr: float):
+def do_general_figures_plot(args, fepruns, mean, sterr):
+    """DEPRECATED. Legacy general figure maker."""
+    warnings.warn("do_general_figures_plot is deprecated and will be removed in a future release. " \
+        "Please use plot_general_figures directly.", DeprecationWarning)
+    return plot_general_figures(args.RT_kcal_per_mol, fepruns, mean, sterr)
+
+def plot_general_figures(RT: float, fepruns: dict[str, FepRun], mean: float, sterr: float):
     """plot general SAFEP figures
 
     Args:
