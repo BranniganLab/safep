@@ -8,11 +8,9 @@ from typing import get_args, get_type_hints
 import numpy as np
 import pandas as pd
 from alchemlyb.parsing import namd
-from matplotlib import pyplot as plt
-from pandas import DataFrame
 
+from safep.plotting import plot_number_of_samples_per_window
 from safep.fileIO import read_UNK, save_UNK
-from safep.plotting import SampleAxes
 from safep.processing import do_estimation, do_convergence, do_per_lambda_convergence, detect_equilibrium_u_nk
 
 
@@ -46,16 +44,16 @@ def process_replicas(args, itcolors):
 
             if len(list(fepout_files)) > 0:
                 print("Reading fepout files")
-                raw_u_nk = namd.extract_u_nk(fepout_files, args.temperature)
-                raw_u_nk = raw_u_nk.sort_index(axis=0, level=1).sort_index(axis=1)
+                u_nk = namd.extract_u_nk(fepout_files, args.temperature)
+                u_nk = u_nk.sort_index(axis=0, level=1).sort_index(axis=1)
                 detect_equilibrium = args.detect_equilibrium
                 if detect_equilibrium:
                     print("Detecting equilibrium")
-                    decorrelated_u_nk = detect_equilibrium_u_nk(raw_u_nk)
+                    decorrelated_u_nk = detect_equilibrium_u_nk(u_nk)
                     # Only save decorrelated samples
                     save_UNK(decorrelated_u_nk, unkpath)
                 dataroot = args.dataroot
-                plot_number_of_samples_per_window(raw_u_nk, decorrelated_u_nk, dataroot, detect_equilibrium, replica)
+                plot_number_of_samples_per_window(u_nk, decorrelated_u_nk, dataroot, detect_equilibrium, replica)
 
                 u_nk = decorrelated_u_nk
             else:
@@ -66,17 +64,6 @@ def process_replicas(args, itcolors):
             fepruns[str(replica)] = FepRun(u_nk, None, None, None, None, None, None, None,
                                            next(itcolors))
     return fepruns
-
-
-def plot_number_of_samples_per_window(raw_u_nk: DataFrame, decorrelated_u_nk: DataFrame, dataroot, detect_equilibrium,
-                                      replica):
-    fig = plt.figure()
-    samples_axes = fig.add_subplot(111, axes_class=SampleAxes)
-    samples_axes.plot_samples(raw_u_nk, color="blue", label="Raw Data")
-    if detect_equilibrium:
-        samples_axes.plot_samples(
-            decorrelated_u_nk, color="orange", label="Equilibrium-Detected")
-    fig.savefig(dataroot / f"{str(replica)}_FEP_number_of_samples.pdf")
 
 
 _COERCERS = {

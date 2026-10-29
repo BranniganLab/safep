@@ -19,8 +19,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy as sp
+from matplotlib import pyplot as plt
 from matplotlib.axes._axes import Axes
 from numpy import ndarray
+from pandas import DataFrame
 from pandas.core.frame import DataFrame
 
 from .processing import get_n_samples
@@ -416,3 +418,14 @@ def plot_hysteresis(
         pdf_ax = add_hyst_textbox(diff, pdf_x, pdf_y, pdf_ax)
 
     return hyst_ax, pdf_ax
+
+
+def plot_number_of_samples_per_window(raw_u_nk: DataFrame, decorrelated_u_nk: DataFrame, dataroot, detect_equilibrium,
+                                      replica):
+    fig = plt.figure()
+    samples_axes = fig.add_subplot(111, axes_class=SampleAxes)
+    samples_axes.plot_samples(raw_u_nk, color="blue", label="Raw Data")
+    if detect_equilibrium:
+        samples_axes.plot_samples(
+            decorrelated_u_nk, color="orange", label="Equilibrium-Detected")
+    fig.savefig(dataroot / f"{str(replica)}_FEP_number_of_samples.pdf")
