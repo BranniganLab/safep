@@ -57,7 +57,7 @@ def plot_samples(
     theax: Axes, u_nk: DataFrame, color: str = "blue", label: str = "Raw Data"
 ) -> Axes:
     """Plot sample counts in the supplied axes.
-    
+
     LEGACY USE ONLY.
     """
     warn("plot_samples is deprecated and will be removed in a future version. Please migrate to SampleAxes.plot_samples.", DeprecationWarning)
@@ -67,6 +67,29 @@ def plot_samples(
     theax.plot(get_n_samples(u_nk), color=color, label=label)
     theax.legend()
     return theax
+
+
+def do_conv_plot(ax, X, fs, ferr, fwd_color, label=None):
+    """
+    A minimalist convergence plot
+    Arguments: ax[is], X (the X values), fs (forward estimates), ferr (forward errors), fwdColor (the forward color), label text
+    Returns: ax[is]
+    """
+    ax.errorbar(
+        X,
+        fs,
+        yerr=ferr,
+        marker=None,
+        linewidth=1,
+        color=fwd_color,
+        markerfacecolor="white",
+        markeredgewidth=1,
+        markeredgecolor=fwd_color,
+        ms=5,
+        label=label,
+    )
+    return ax
+
 
 def convergence_plot(
     theax: Axes,
@@ -146,6 +169,41 @@ def convergence_plot(
         r"Total $\mathrm{\Delta} G$ (kcal/mol)", fontsize=fontsize)
     theax.legend()
     return theax
+
+
+def fb_discrepancy_plot(l_mid, dG_f, dG_b):
+    """
+    Plot the forward-backward discrepancy ("hysteresis")
+    Arguments: l_mid (lambda window midpoints), dG_f (forward estimates), dG_b (backward estimates)
+    Returns: a pyplot
+    """
+    plt.vlines(
+        l_mid,
+        np.zeros(len(l_mid)),
+        dG_f + np.array(dG_b),
+        label="fwd - bwd",
+        linewidth=3,
+    )
+    plt.legend()
+    plt.title("Fwd-bwd discrepancies by lambda")
+    plt.xlabel("Lambda")
+    plt.ylabel("Diff. in delta-G")
+    # Return the figure
+    return plt.gca()
+
+
+def fb_discrepancy_hist(dG_f, dG_b):
+    """
+    Plot the distribution of the hystersis
+    Arguments: dG_f, dG_b
+    Returns: a pyplot
+    """
+    plt.hist(dG_f + np.array(dG_b))
+    plt.title("Distribution of fwd-bwd discrepancies")
+    plt.xlabel("Difference in delta-G")
+    plt.ylabel("Count")
+    # return the figure
+    return plt.gca()
 
 
 def plot_general(
@@ -496,3 +554,6 @@ def do_aggregate_pdf(dataax, pdf_type: str) -> tuple[ndarray[Any, dtype[Any]], A
         pdf_y, pdf_x = np.histogram(flat, density=True, bins=50)
         pdf_x = pdf_x[:-1] + (pdf_x[1] - pdf_x[0]) / 2
     return flat, pdf_x, pdf_y
+
+def plot_general_legacy(*args, **kwargs):
+    raise NotImplementedError("plot_general_legacy has been removed. Please update your code to use plot_general.")
