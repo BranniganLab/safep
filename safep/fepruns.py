@@ -52,10 +52,10 @@ def process_replicas(args, itcolors):
                     decorrelated_u_nk = detect_equilibrium_u_nk(u_nk)
                     # Only save decorrelated samples
                     save_UNK(decorrelated_u_nk, unkpath)
-                dataroot = args.dataroot
-                plot_number_of_samples_per_window(u_nk, decorrelated_u_nk, dataroot, detect_equilibrium, replica)
+                    dataroot = args.dataroot
+                    plot_number_of_samples_per_window(u_nk, decorrelated_u_nk, dataroot, detect_equilibrium, replica)
 
-                u_nk = decorrelated_u_nk
+                    u_nk = decorrelated_u_nk
             else:
                 print(
                     f"WARNING: no fepout files found for {replica}. Skipping.")
