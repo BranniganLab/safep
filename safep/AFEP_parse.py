@@ -8,6 +8,7 @@ from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from matplotlib.axes._axes import Axes
 from matplotlib.figure import Figure
 
@@ -248,14 +249,14 @@ def get_summary_stats(RT, fepruns) -> Any:
         tuple[list[float], list[float], float, float]:
             List of free energies, list of errors, overall mean, overall standard error 
     """
-    dGs = []
-    errors = []
-    for _, feprun in fepruns.items():
+    dGs = pd.Series()
+    errors = pd.Series()
+    for key, feprun in fepruns.items():
         cumulative = feprun.cumulative
         dG = cumulative.BAR.f.iloc[-1] * RT
         error = cumulative.BAR.errors.iloc[-1] * RT
-        dGs.append(dG)
-        errors.append(error)
+        dGs[key] = dG
+        errors[key] = error
 
     mean = np.average(dGs)
     sterr = get_sterr(dGs, errors)
@@ -304,8 +305,10 @@ def pretty_print_summary_stats(dGs, errors, mean, sterr, precision: int=1) -> st
         str: formatted string with all summary statistics
     """
     toprint = ""
-    for idx, dG, error in zip(range(len(dGs)), dGs, errors):
-        change_and_error = f"Replica{idx + 1}: \u0394G = {np.round(dG, precision)}\u00b1{np.round(error, precision)} kcal/mol\n"
+    for replica_name in dGs.index:
+        dG = dGs[replica_name]
+        error = errors[replica_name]
+        change_and_error = f"{replica_name}: \u0394G = {np.round(dG, precision)}\u00b1{np.round(error, precision)} kcal/mol\n"
         toprint += change_and_error
     toprint += "\n"
     toprint += f"mean: {np.round(mean, precision)} kcal/mol\n" + f"sterr: {np.round(sterr, precision)} kcal/mol"
