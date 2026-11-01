@@ -9,7 +9,7 @@ from typing import Any
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.axes._axes import Axes
+from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
 import safep
@@ -48,7 +48,7 @@ def initialize_general_figure(RT_kcal_per_mol: float, key: str, feprun: FepRun):
     return fig, axes
 
 
-def add_to_general_figure(fig: Figure, axes: Axes, RT: float, key: str, feprun: FepRun):
+def add_to_general_figure(fig: Figure, axes: list[Axes], RT: float, key: str, feprun: FepRun):
     """Add another replica to an existing figure.
 
     Args:
@@ -81,7 +81,7 @@ def add_to_general_figure(fig: Figure, axes: Axes, RT: float, key: str, feprun: 
     return fig, axes
 
 
-def add_summary_stats(mean, sterr, axes):
+def add_summary_stats(mean: float, sterr: float, axes: list[Axes]):
     """Add summary statistics to a general safep figure.
 
     Args:
@@ -142,7 +142,7 @@ def do_shared_convergence_plot(args: AFEPArguments, fepruns: dict[str, FepRun], 
     return fig, conv_ax
 
 
-def do_per_lambda_convergence_shared_axes(fepruns, mean, sterr):
+def do_per_lambda_convergence_shared_axes(fepruns: dict[str, FepRun], mean: float, sterr: float):
     """Plot lambda convergence for all replicas.
 
     Args:
@@ -211,7 +211,7 @@ def make_figures(args: AFEPArguments, fepruns: dict[str, FepRun], dGs: list[floa
     fig.savefig(args.dataroot.joinpath("FEP_perLambda_convergence.pdf"))
 
 
-def do_general_figures_plot(args, fepruns, mean, sterr):
+def do_general_figures_plot(args: AFEPArguments, fepruns: dict[str, FepRun], mean: float, sterr: float):
     """DEPRECATED. Legacy general figure maker."""
     warnings.warn("do_general_figures_plot is deprecated and will be removed in a future release. " \
         "Please use plot_general_figures directly.", DeprecationWarning, stacklevel=2)
@@ -236,7 +236,6 @@ def plot_general_figures(RT: float, fepruns: dict[str, FepRun], mean: float, ste
         else:
             fig, axes = add_to_general_figure(fig, axes, RT, key, feprun)
 
-        # hack to get aggregate data:
     axes = add_summary_stats(mean, sterr, axes)
     fig.tight_layout()
     return fig, axes
@@ -293,7 +292,7 @@ def get_organized_summary_statistics(args: AFEPArguments, fepruns: dict[str, Fep
     return toprint, dGs, mean, sterr
 
 
-def pretty_print_summary_stats(dGs, errors, mean, sterr, precision: int=1) -> str:
+def pretty_print_summary_stats(dGs: pd.Series, errors: pd.Series, mean: float, sterr: float, precision: int=1) -> str:
     """Format summary statistics.
 
     Args:
@@ -316,7 +315,7 @@ def pretty_print_summary_stats(dGs, errors, mean, sterr, precision: int=1) -> st
     return toprint
 
 
-def get_sterr(dGs, errors):
+def get_sterr(dGs: pd.Series, errors: pd.Series):
     """Get the standard error of the dGs
 
     args:
