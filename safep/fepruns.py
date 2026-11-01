@@ -31,38 +31,46 @@ def process_replicas(args, itcolors):
     root = args.dataroot
     for replica in args.replicas:
         print(f"Reading {replica}")
-        unkpath = root/replica/"decorrelated.csv"
-        u_nk = None
-        if unkpath.is_file():
-            print("Found existing dataframe. Reading.")
-            u_nk = read_UNK(unkpath)
-        else:
-            print(
-                f"Didn't find existing dataframe at {unkpath}. Checking for raw fepout files.")
-            fepout_files = list((root/replica).glob(args.filename_pattern))
-            report_number_and_size_of_fepout_files(fepout_files)
-
-            if len(list(fepout_files)) == 0:
-                print(f"WARNING: no fepout files found for {replica}. Skipping.")
-                continue
-            print("Reading fepout files")
-            u_nk = namd.extract_u_nk(fepout_files, args.temperature)
-            u_nk = u_nk.sort_index(axis=0, level=1).sort_index(axis=1)
-            detect_equilibrium = args.detect_equilibrium
-            if detect_equilibrium:
-                print("Detecting equilibrium")
-                decorrelated_u_nk = detect_equilibrium_u_nk(u_nk)
-                # Only save decorrelated samples
-                save_UNK(decorrelated_u_nk, unkpath)
-                dataroot = args.dataroot
-                plot_number_of_samples_per_window(u_nk, decorrelated_u_nk, dataroot, detect_equilibrium, replica)
-
-                u_nk = decorrelated_u_nk
+        u_nk = read_and_decorrelate(args, replica, root)
 
         if u_nk is not None:
             fepruns[str(replica)] = FepRun(u_nk, None, None, None, None, None, None, None,
                                            next(itcolors))
     return fepruns
+
+
+def read_and_decorrelate(args, replica, root):
+    unkpath = root / replica / "decorrelated.csv"
+
+    if unkpath.is_file():
+        print("Found existing dataframe. Reading.")
+        return read_UNK(unkpath)
+
+    print(f"Didn't find existing dataframe at {unkpath}. Checking for raw fepout files.")
+    fepout_files = list((root / replica).glob(args.filename_pattern))
+    report_number_and_size_of_fepout_files(fepout_files)
+
+    if len(list(fepout_files)) == 0:
+        print(f"WARNING: no fepout files found for {replica}. Skipping.")
+        return None
+
+    print("Reading fepout files")
+    u_nk = namd.extract_u_nk(fepout_files, args.temperature)
+    u_nk = u_nk.sort_index(axis=0, level=1).sort_index(axis=1)
+    detect_equilibrium = args.detect_equilibrium
+    if not detect_equilibrium:
+        return u_nk
+
+    print("Detecting equilibrium")
+    return _get_decorrelated_u_nk(args.dataroot, detect_equilibrium, replica, u_nk, unkpath)
+
+
+def _get_decorrelated_u_nk(dataroot, detect_equilibrium, replica, u_nk, unkpath) -> pd.DataFrame:
+    decorrelated_u_nk = detect_equilibrium_u_nk(u_nk)
+    save_UNK(decorrelated_u_nk, unkpath)
+    plot_number_of_samples_per_window(u_nk, decorrelated_u_nk, dataroot, detect_equilibrium, replica)
+
+    return decorrelated_u_nk
 
 
 _COERCERS = {
