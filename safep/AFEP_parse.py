@@ -325,7 +325,7 @@ def get_sterr(dGs: pd.Series, errors: pd.Series):
     """
     if len(dGs) < 3:
         sterr = np.sqrt(np.sum(np.square(errors)))
-        print("Warning: Not enough replicas for a standard error. Propagating BAR errors.", stacklevel=2)
+        warnings.warn("Not enough replicas for a standard error. Propagating BAR errors.", stacklevel=2)
     else:
         sterr = np.std(dGs, ddof=1)/np.sqrt(len(dGs))
     return sterr
