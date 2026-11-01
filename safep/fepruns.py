@@ -68,14 +68,33 @@ def read_and_decorrelate(args: AFEPArguments, replica: str, root: Path) -> pd.Da
     print("Reading fepout files")
     u_nk = namd.extract_u_nk(fepout_files, args.temperature)
     u_nk = u_nk.sort_index(axis=0, level=1).sort_index(axis=1)
-    detect_equilibrium = args.detect_equilibrium
-    if not detect_equilibrium:
+
+    if not args.detect_equilibrium:
         return u_nk
 
+    return _get_decorrelated_u_nk(args.dataroot, replica, u_nk, unkpath)
+
+
+def _get_decorrelated_u_nk(dataroot: Path, replica: str, u_nk: pd.DataFrame, unkpath: Path) -> pd.DataFrame:
+    """Decorrelate u_nk dataframe and save to unkpath.
+
+    Args:
+        dataroot (Path): root directory of FEP data
+        replica (str): the replica name
+        u_nk (pd.DataFrame): u_nk dataframe
+        unkpath (Path): the path to save the decorrelated u_nk dataframe
+
+    Returns:
+        pd.DataFrame: decorrelated u_nk dataframe
+
+    Notes:
+        - writes the decorrelated u_nk dataframe to unkpath
+        - plots samples and saves them to dataroot
+    """
     print("Detecting equilibrium")
     decorrelated_u_nk = detect_equilibrium_u_nk(u_nk)
     save_UNK(decorrelated_u_nk, unkpath)
-    plot_number_of_samples_per_window(u_nk, decorrelated_u_nk, args.dataroot, replica)
+    plot_number_of_samples_per_window(u_nk, decorrelated_u_nk, dataroot, replica)
     return decorrelated_u_nk
 
 
