@@ -3,149 +3,28 @@ Large datasets can be difficult to parse on a workstation due to inefficiencies
 in the way data is represented for pymbar. When possible, reduce the size of your dataset.
 """
 
-import argparse
 import warnings
-from dataclasses import dataclass
-from pathlib import Path
-from natsort import natsorted
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import scipy as sp
-
-from scipy.constants import R, calorie
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 
 import safep
-from safep.fepruns import process_replicas
+from safep import do_agg_data
+from safep.cli import AFEPArgumentParser, AFEPArguments
+from safep.fepruns import FepRun, process_replicas
 from safep.plotting import plot_hysteresis
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
-
-def do_agg_data(dataax, plotax):
-    """
-    Aggregates data from a given matplotlib axis, computes statistical measures,
-    and displays them on another axis.
-
-    Parameters:
-    dataax (matplotlib.axes.Axes): The axis containing lines with data to be aggregated.
-    plotax (matplotlib.axes.Axes): The axis where the statistical summary will be displayed.
-
-    Returns:
-    matplotlib.axes.Axes: The plot axis with the statistical summary text added.
-    """
-    agg_data = []
-    lines = dataax.lines
-    for line in lines:
-        agg_data.append(line.get_ydata())
-    flat = np.array(agg_data).flatten()
-    kernel = sp.stats.gaussian_kde(flat)
-    pdf_x = np.linspace(-1, 1, 1000)
-    pdf_y = kernel(pdf_x)
-    std = np.std(flat)
-    average = np.average(flat)
-    temp = pd.Series(pdf_y, index=pdf_x)
-    mode = temp.idxmax()
-
-    textstr = (
-        r"$\rm mode=$"
-        + f"{np.round(mode,2)}"
-        + "\n"
-        + rf"$\mu$={np.round(average,2)}"
-        + "\n"
-        + rf"$\sigma$={np.round(std,2)}"
-    )
-    props = {"boxstyle": "square", "facecolor": "white", "alpha": 1}
-    plotax.text(
-        0.175,
-        0.95,
-        textstr,
-        transform=plotax.transAxes,
-        fontsize=14,
-        verticalalignment="top",
-        bbox=props,
-    )
-
-    return plotax
-
-
-class AFEPArgumentParser(argparse.ArgumentParser):
-    """Dedicated CLI argument parser for AFEP.
-
-    Attributes:
-        path (str|Path): root path for data folder.
-        fepoutre (str): regex for fepout files
-        replicare (str): regex for replica directories
-        temperature (float): the temperature at which the simulation was run (K)
-        detect_equilibrium (bool): Flag to run automated equilibrium detection and downsampling
-        fittingMethod (str): Method for fitting forward-backward discrepancies. Untested.
-        max_size (float): UNUSED. Maximum size of data to parse. Default 1GB
-            Note: this should be much less than the total RAM available.
-        make_figures (bool): Whether or not to generate figures. Default False.
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.add_argument(
-            "--path",
-            type=str,
-            help="The absolute path to the directory containing the fepout files",
-            default=".",
-        )
-        self.add_argument(
-            "--fepoutre",
-            type=str,
-            help="A regular expression that matches the fepout files to be parsed.",
-            default="*.fep*",
-        )
-        self.add_argument(
-            "--replicare",
-            type=str,
-            help="A regular expression that matches the replica directories",
-            default="Replica?",
-            required=True,
-        )
-        self.add_argument(
-            "--temperature",
-            type=float,
-            help="The temperature at which the FEP was run.",
-            default=303.15,
-        )
-        self.add_argument(
-            "--detect_equilibrium",
-            help="Flag for automated equilibrium detection.",
-            default=False,
-            action="store_true",
-        )
-        self.add_argument(
-            "--fittingMethod",
-            type=str,
-            help="Method for fitting the forward-backward discrepancies (hysteresis)."
-            + "LS=least squares, ML=maximum likelihood Default: LS",
-            default="LS",
-        )
-        self.add_argument(
-            "--max_size",
-            type=float,
-            help="Maximum total file size in GB."
-            + "This is MUCH less than the required RAM. Default: 1",
-            default=1,
-        )
-        self.add_argument(
-            "--make_figures",
-            help="Flag to generate figures with additional diagnostics.",
-            default=False,
-            action="store_true",
-        )
-
-
-KILO = 1000
 COLORS = ["blue", "red", "green", "purple", "orange", "violet", "cyan"]
 
 
-def initialize_general_figure(RT_kcal_per_mol, key, feprun):
-    """Create a new general figure
+def initialize_general_figure(RT_kcal_per_mol: float, key: str, feprun: FepRun):
+    """Create a new general figure.
 
     Args:
         RT_kcal_per_mol (float): RT in kcal/mol
@@ -169,74 +48,29 @@ def initialize_general_figure(RT_kcal_per_mol, key, feprun):
     return fig, axes
 
 
-@dataclass(slots=True)
-class AFEPArguments:
-    """A more readable/testable format for CLI arguments"""
-
-    dataroot: Path
-    replica_pattern: str
-    filename_pattern: str
-    temperature: float
-    detect_equilibrium: bool
-    make_figures: bool
-    RT_kcal_per_mol: float = None
-    replicas: list[str] = None
-
-    @classmethod
-    def from_AFEPArgumentParser(cls, parser: AFEPArgumentParser):
-        """Unpack arguments from an AFEPArgumentParser object.
-
-        Args:
-            parser (AFEPArgumentParser): An AFEPArgumentParser object.
-
-        Returns:
-            AFEPArguments: The unpacked arguments.
-        """
-        args = parser.parse_args()
-
-        dataroot = Path(args.path)
-        replica_pattern = args.replicare
-        filename_pattern = args.fepoutre
-
-        detect_equilibrium = args.detect_equilibrium
-
-        return cls(
-            dataroot,
-            replica_pattern,
-            filename_pattern,
-            args.temperature,
-            detect_equilibrium,
-            args.make_figures,
-        )
-
-    def __post_init__(self) -> None:
-        """Get RT, standardize and sort replica names"""
-        self.RT_kcal_per_mol = R / (KILO * calorie) * self.temperature
-        if self.replica_pattern == '':
-            self.replicas = ['.']
-        else:
-            self.replicas = natsorted([rep.stem for rep in self.dataroot.glob(self.replica_pattern)])
-
-
-def add_to_general_figure(fig, axes, args, key, feprun):
+def add_to_general_figure(fig: Figure, axes: list[Axes], RT: float, key: str, feprun: FepRun):
     """Add another replica to an existing figure.
 
     Args:
         fig (matplotlib.figure.Figure): The figure to add to.
         axes (matplotlib.axes._subplots.Axes): The axes to add to.
-        args (argparse.Namespace): The parsed command line arguments.
+        RT (float): Ideal gas constant times temperature in kcal/mol.
         key (str): The key to use for the figure.
         feprun (safep.Feprun): The feprun replica to use.
 
     Returns:
         tuple(Fig, Axes): The figure and axes that were modified
     """
+    if isinstance(RT, AFEPArguments):
+        RT = RT.RT_kcal_per_mol
+        warnings.warn("add_to_general_figure now uses RT directly instead of AFEPArguments. "
+                      "Please replace usage of (e.g.) args with args.RT_kcal_per_mol.", stacklevel=2)
     fig, axes = safep.plot_general(
         feprun.cumulative,
         None,
         feprun.per_window,
         None,
-        args.RT_kcal_per_mol,
+        RT,
         fig=fig,
         axes=axes,
         hysttype="lines",
@@ -247,7 +81,7 @@ def add_to_general_figure(fig, axes, args, key, feprun):
     return fig, axes
 
 
-def add_summary_stats(mean, sterr, axes):
+def add_summary_stats(mean: float, sterr: float, axes: list[Axes]):
     """Add summary statistics to a general safep figure.
 
     Args:
@@ -261,12 +95,13 @@ def add_summary_stats(mean, sterr, axes):
     """
     axes[3] = do_agg_data(axes[2], axes[3])
 
-    axes[0].set_title(str(round(mean, 3)) + r"$\pm$" + str(sterr) + " kcal/mol")
+    axes[0].set_title(str(round(mean, 1)) + r"$\pm$" +
+                      str(sterr) + " kcal/mol")
     axes[0].legend()
     return axes
 
 
-def do_shared_convergence_plot(args, fepruns, dGs):
+def do_shared_convergence_plot(args: AFEPArguments, fepruns: dict[str, FepRun], dGs: list[float]):
     """Make the convergence plot (reverse and forward cumulative averages)
 
     Args:
@@ -307,15 +142,13 @@ def do_shared_convergence_plot(args, fepruns, dGs):
     return fig, conv_ax
 
 
-def do_per_lambda_convergence_shared_axes(fepruns, mean, sterr):
+def do_per_lambda_convergence_shared_axes(fepruns: dict[str, FepRun], mean: float, sterr: float):
     """Plot lambda convergence for all replicas.
 
     Args:
-        args (AFEPArguments): command line arguments
         fepruns (dict): fepruns dictionary
         mean (float): mean value across replicas
         sterr (float): sterr value across replicas
-        axes (list): matplotlib axes list
 
     Returns:
         tuple[Fig, Axes]: figure and axes objects with the per lambda convergence
@@ -340,12 +173,13 @@ def do_per_lambda_convergence_shared_axes(fepruns, mean, sterr):
         )
 
     pdf_ax = do_agg_data(hyst_ax, pdf_ax)
-    hyst_ax.set_title(str(round(mean, 3)) + r"$\pm$" + str(sterr) + " kcal/mol")
+    hyst_ax.set_title(str(round(mean, 3)) + r"$\pm$" +
+                      str(sterr) + " kcal/mol")
 
     return fig, (hyst_ax, pdf_ax)
 
 
-def make_figures(args, fepruns, dGs, mean, sterr) -> None:
+def make_figures(args: AFEPArguments, fepruns: dict[str, FepRun], dGs: list[float], mean: float, sterr: float) -> None:
     """Make general SAFEP figures and convergence plots
 
     Args:
@@ -361,7 +195,8 @@ def make_figures(args, fepruns, dGs, mean, sterr) -> None:
     Side effects:
         Saves FEP_general_figures.pdf, FEP_convergence.pdf, and FEP_perLambda_convergence.pdf
     """
-    fig, _ = do_general_figures_plot(args, fepruns, mean, sterr)
+    fig, _ = plot_general_figures(
+        args.RT_kcal_per_mol, fepruns, mean, sterr)
     fig.savefig(args.dataroot.joinpath("FEP_general_figures.pdf"))
 
     # # Plot the estimated total change in free energy as a function of simulation time;
@@ -374,11 +209,17 @@ def make_figures(args, fepruns, dGs, mean, sterr) -> None:
     fig.savefig(args.dataroot.joinpath("FEP_perLambda_convergence.pdf"))
 
 
-def do_general_figures_plot(args, fepruns, mean, sterr):
+def do_general_figures_plot(args: AFEPArguments, fepruns: dict[str, FepRun], mean: float, sterr: float):
+    """DEPRECATED. Legacy general figure maker."""
+    warnings.warn("do_general_figures_plot is deprecated and will be removed in a future release. " \
+        "Please use plot_general_figures directly.", DeprecationWarning, stacklevel=2)
+    return plot_general_figures(args.RT_kcal_per_mol, fepruns, mean, sterr)
+
+def plot_general_figures(RT: float, fepruns: dict[str, FepRun], mean: float, sterr: float):
     """plot general SAFEP figures
 
     Args:
-        args (AFEPArguments): arguments from argparse
+        RT (float): Ideal gas constant times energy in kcal/mol
         fepruns (dict): fepruns dictionary
         mean (float): mean free energy across replicas
         sterr (float): sterr free energy across replicas
@@ -389,17 +230,48 @@ def do_general_figures_plot(args, fepruns, mean, sterr):
     fig = None
     for key, feprun in fepruns.items():
         if fig is None:
-            fig, axes = initialize_general_figure(args.RT_kcal_per_mol, key, feprun)
+            fig, axes = initialize_general_figure(RT, key, feprun)
         else:
-            fig, axes = add_to_general_figure(fig, axes, args, key, feprun)
+            fig, axes = add_to_general_figure(fig, axes, RT, key, feprun)
 
-        # hack to get aggregate data:
     axes = add_summary_stats(mean, sterr, axes)
     fig.tight_layout()
     return fig, axes
 
 
-def get_summary_statistics(args, fepruns):
+def compute_summary_statistics(RT: float, fepruns: dict[str,FepRun]) -> tuple[pd.Series, pd.Series, float, float]:
+    """Get summary statistics.
+
+    Args:
+        RT (float): Gas constant * temperature
+        fepruns (dict[str:FepRun]): dictionary of fepruns
+
+    Returns:
+        tuple[list[float], list[float], float, float]:
+            List of free energies, list of errors, overall mean, overall standard error 
+    """
+    dGs = pd.Series()
+    errors = pd.Series()
+    for key, feprun in fepruns.items():
+        cumulative = feprun.cumulative
+        dG = cumulative.BAR.f.iloc[-1] * RT
+        error = cumulative.BAR.errors.iloc[-1] * RT
+        dGs[key] = dG
+        errors[key] = error
+
+    mean = np.average(dGs)
+    sterr = get_sterr(dGs, errors)
+    return dGs, errors, mean, sterr
+
+
+def get_summary_statistics(args: AFEPArguments, fepruns: dict[str, FepRun]):
+    """DEPRECATED: Compatibility layer for old function signature."""
+    warnings.warn("get_summary_statistics is deprecated and will be removed in a future release. " \
+    "Please use get_organized_summary_statistics or compute_summary_statistics directly.", DeprecationWarning, stacklevel=2)
+    return get_organized_summary_statistics(args, fepruns)
+
+
+def get_organized_summary_statistics(args: AFEPArguments, fepruns: dict[str, FepRun]):
     """Extract summary statistics from fepruns.
 
     Args:
@@ -410,49 +282,54 @@ def get_summary_statistics(args, fepruns):
         tuple[str, list[float], float, float]: a pretty print string, individual delta Gs,
         and the mean and standard error across replicas
     """
-    toprint = ""
-    dGs = []
-    errors = []
-    for key, feprun in natsorted(fepruns.items()):
-        cumulative = feprun.cumulative
-        dG = np.round(cumulative.BAR.f.iloc[-1] * args.RT_kcal_per_mol, 1)
-        error = np.round(cumulative.BAR.errors.iloc[-1] * args.RT_kcal_per_mol, 1)
-        dGs.append(dG)
-        errors.append(error)
 
-        if len(fepruns) == 1:
-            change_and_error = f"\u0394G = {dG}\u00b1{error} kcal/mol\n"
-        else:
-            change_and_error = f"{key}: \u0394G = {dG}\u00b1{error} kcal/mol\n"
-        toprint += change_and_error
-
-    toprint += "\n"
-    mean = np.average(dGs)
-
-    # If there are only a few replicas,
-    # the MBAR estimated error will be more reliable, albeit underestimated
-    sterr = np.round(get_sterr(dGs, errors), 1)
-    toprint += f"mean: {mean} kcal/mol\n" + f"sterr: {sterr} kcal/mol"
+    dGs, errors, mean, sterr = compute_summary_statistics(args.RT_kcal_per_mol, fepruns)
+    toprint = pretty_print_summary_stats(dGs, errors, mean, sterr)
     if np.isnan(mean):
         raise RuntimeError("Free energy average is NaN")
     return toprint, dGs, mean, sterr
 
 
-def get_sterr(dGs, errors):
+def pretty_print_summary_stats(dGs: pd.Series, errors: pd.Series, mean: float, sterr: float, precision: int=1) -> str:
+    """Format summary statistics.
+
+    Args:
+        dGs (list[float]): free energy differences
+        errors (list[float]): error of each free energy difference
+        mean (float): average free energy change
+        sterr (float): error in the mean
+
+    Returns:
+        str: formatted string with all summary statistics
+    """
+    toprint = ""
+    for replica_name in dGs.index:
+        dG = dGs[replica_name]
+        error = errors[replica_name]
+        if len(dGs) == 1:
+            prefix = ""
+        else:
+            prefix = f"{replica_name}: "
+        change_and_error = f"{prefix}\u0394G = {np.round(dG, precision)}\u00b1{np.round(error, precision)} kcal/mol\n"
+        toprint += change_and_error
+    toprint += "\n"
+    toprint += f"mean: {np.round(mean, precision)} kcal/mol\n" + f"sterr: {np.round(sterr, precision)} kcal/mol"
+    return toprint
+
+
+def get_sterr(dGs: pd.Series, errors: pd.Series):
     """Get the standard error of the dGs
 
     args:
-        dGs (list): list of free energies
-        errors (list): list of errors corresponding to dGs
-        mean (float): mean free energy across replicas. Default None.
-        toprint (str): log string. Default empty.
+        dGs (pd.Series): Series of free energies
+        errors (pd.Series): Series of errors corresponding to dGs
 
     returns:
         float, str: the standard error of the dGs and an updated print string
     """
     if len(dGs) < 3:
         sterr = np.sqrt(np.sum(np.square(errors)))
-        print("Warning: Not enough replicas for a standard error. Propagating BAR errors.")
+        warnings.warn("Not enough replicas for a standard error. Propagating BAR errors.", stacklevel=2)
     else:
         sterr = np.std(dGs, ddof=1)/np.sqrt(len(dGs))
     return sterr
@@ -464,7 +341,7 @@ def main():
     args = AFEPArguments.from_AFEPArgumentParser(parser)
     itcolors = iter(COLORS)
     fepruns = process_replicas(args, itcolors)
-    summary, dGs, mean, sterr = get_summary_statistics(args, fepruns)
+    summary, dGs, mean, sterr = get_organized_summary_statistics(args, fepruns)
     print(summary)
     if args.make_figures == 1:
         make_figures(args, fepruns, dGs, mean, sterr)
