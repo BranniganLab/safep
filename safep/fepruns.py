@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 from alchemlyb.parsing import namd
 
+from safep.cli import AFEPArguments
 from safep.plotting import plot_number_of_samples_per_window
 from safep.fileIO import read_UNK, save_UNK
 from safep.processing import do_estimation, do_convergence, do_per_lambda_convergence, detect_equilibrium_u_nk
@@ -39,7 +40,7 @@ def process_replicas(args, itcolors):
     return fepruns
 
 
-def read_and_decorrelate(args, replica, root):
+def read_and_decorrelate(args: AFEPArguments, replica: str, root: Path) -> pd.DataFrame:
     unkpath = root / replica / "decorrelated.csv"
 
     if unkpath.is_file():
@@ -65,7 +66,7 @@ def read_and_decorrelate(args, replica, root):
     return _get_decorrelated_u_nk(args.dataroot, detect_equilibrium, replica, u_nk, unkpath)
 
 
-def _get_decorrelated_u_nk(dataroot, detect_equilibrium, replica, u_nk, unkpath) -> pd.DataFrame:
+def _get_decorrelated_u_nk(dataroot: Path, detect_equilibrium: bool, replica: str, u_nk: pd.DataFrame, unkpath: Path) -> pd.DataFrame:
     decorrelated_u_nk = detect_equilibrium_u_nk(u_nk)
     save_UNK(decorrelated_u_nk, unkpath)
     plot_number_of_samples_per_window(u_nk, decorrelated_u_nk, dataroot, detect_equilibrium, replica)
