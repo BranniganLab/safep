@@ -214,7 +214,7 @@ def make_figures(args: AFEPArguments, fepruns: dict[str, FepRun], dGs: list[floa
 def do_general_figures_plot(args, fepruns, mean, sterr):
     """DEPRECATED. Legacy general figure maker."""
     warnings.warn("do_general_figures_plot is deprecated and will be removed in a future release. " \
-        "Please use plot_general_figures directly.", DeprecationWarning)
+        "Please use plot_general_figures directly.", DeprecationWarning, stacklevel=2)
     return plot_general_figures(args.RT_kcal_per_mol, fepruns, mean, sterr)
 
 def plot_general_figures(RT: float, fepruns: dict[str, FepRun], mean: float, sterr: float):
@@ -242,12 +242,12 @@ def plot_general_figures(RT: float, fepruns: dict[str, FepRun], mean: float, ste
     return fig, axes
 
 
-def get_summary_stats(RT, fepruns) -> Any:
+def get_summary_stats(RT: float, fepruns: dict[str,FepRun]) -> tuple[pd.Series, pd.Series, float, float]:
     """Get summary statistics.
 
     Args:
         RT (float): Gas constant * temperature
-        fepruns (dict[str:Feprun]): dictionary of fepruns
+        fepruns (dict[str:FepRun]): dictionary of fepruns
 
     Returns:
         tuple[list[float], list[float], float, float]:
@@ -270,7 +270,7 @@ def get_summary_stats(RT, fepruns) -> Any:
 def get_summary_statistics(args: AFEPArguments, fepruns: dict[str, FepRun]):
     """DEPRECATED: Compatibility layer for old function signature."""
     warnings.warn("get_summary_statistics is deprecated and will be removed in a future release. " \
-    "Please use get_organized_summary_statistics or get_summary_stats directly.", DeprecationWarning)
+    "Please use get_organized_summary_statistics or get_summary_stats directly.", DeprecationWarning, stacklevel=2)
     return get_organized_summary_statistics(args, fepruns)
 
 
@@ -330,7 +330,7 @@ def get_sterr(dGs, errors):
     """
     if len(dGs) < 3:
         sterr = np.sqrt(np.sum(np.square(errors)))
-        print("Warning: Not enough replicas for a standard error. Propagating BAR errors.")
+        print("Warning: Not enough replicas for a standard error. Propagating BAR errors.", stacklevel=2)
     else:
         sterr = np.std(dGs, ddof=1)/np.sqrt(len(dGs))
     return sterr
