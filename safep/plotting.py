@@ -108,7 +108,7 @@ def convergence_plot(
     Convergence plot. Does the convergence plotting.
     Returns: a pyplot
     """
-    if fwd_legend == "":
+    if fwd_legend == "" or fwd_legend is None:
         fwd_legend = fwd_color
         bwd_legend = bwd_color
 
