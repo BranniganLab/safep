@@ -63,14 +63,9 @@ def read_and_decorrelate(args: AFEPArguments, replica: str, root: Path) -> pd.Da
         return u_nk
 
     print("Detecting equilibrium")
-    return _get_decorrelated_u_nk(args.dataroot, detect_equilibrium, replica, u_nk, unkpath)
-
-
-def _get_decorrelated_u_nk(dataroot: Path, detect_equilibrium: bool, replica: str, u_nk: pd.DataFrame, unkpath: Path) -> pd.DataFrame:
     decorrelated_u_nk = detect_equilibrium_u_nk(u_nk)
     save_UNK(decorrelated_u_nk, unkpath)
-    plot_number_of_samples_per_window(u_nk, decorrelated_u_nk, dataroot, detect_equilibrium, replica)
-
+    plot_number_of_samples_per_window(u_nk, decorrelated_u_nk, args.dataroot, replica)
     return decorrelated_u_nk
 
 
