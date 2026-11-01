@@ -306,7 +306,11 @@ def pretty_print_summary_stats(dGs: pd.Series, errors: pd.Series, mean: float, s
     for replica_name in dGs.index:
         dG = dGs[replica_name]
         error = errors[replica_name]
-        change_and_error = f"{replica_name}: \u0394G = {np.round(dG, precision)}\u00b1{np.round(error, precision)} kcal/mol\n"
+        if len(dGs) == 1:
+            prefix = ""
+        else:
+            prefix = f"{replica_name}: "
+        change_and_error = f"{prefix}\u0394G = {np.round(dG, precision)}\u00b1{np.round(error, precision)} kcal/mol\n"
         toprint += change_and_error
     toprint += "\n"
     toprint += f"mean: {np.round(mean, precision)} kcal/mol\n" + f"sterr: {np.round(sterr, precision)} kcal/mol"
