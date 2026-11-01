@@ -10,9 +10,10 @@ Functions:
     plot_hysteresis
 """
 
-# Import block
+
 from numbers import Number
 from typing import List, Any
+from pathlib import Path
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -478,14 +479,25 @@ def plot_hysteresis(
     return hyst_ax, pdf_ax
 
 
-def plot_number_of_samples_per_window(raw_u_nk: DataFrame, decorrelated_u_nk: DataFrame, dataroot, detect_equilibrium,
-                                      replica):
+def plot_number_of_samples_per_window(raw_u_nk: DataFrame, decorrelated_u_nk: DataFrame, dataroot: Path, replica: str | Path) -> None:
+    """Plot number of samples for each window, both raw and decorrelated.
+
+    Args:
+        raw_u_nk (pd.DataFrame): Raw energy data as extracted from fepout files
+        decorrelated_u_nk (pd.DataFrame): Decorrelated energy data
+        dataroot (Path): Root path of fepout files
+        replica (str|Path): Name/path of the replica
+
+    Returns:
+        None
+
+    Notes:
+        Writes the samples figure to [dataroot]/[replica]_FEP_number_of_samples.pdf
+    """
     fig = plt.figure()
     samples_axes = fig.add_subplot(111, axes_class=SampleAxes)
     samples_axes.plot_samples(raw_u_nk, color="blue", label="Raw Data")
-    if detect_equilibrium:
-        samples_axes.plot_samples(
-            decorrelated_u_nk, color="orange", label="Equilibrium-Detected")
+    samples_axes.plot_samples(decorrelated_u_nk, color="orange", label="Equilibrium-Detected")
     fig.savefig(dataroot / f"{str(replica)}_FEP_number_of_samples.pdf")
 
 
