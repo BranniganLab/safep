@@ -287,9 +287,6 @@ def get_organized_summary_statistics(args: AFEPArguments, fepruns: dict[str, Fep
     """
 
     dGs, errors, mean, sterr = get_summary_stats(args.RT_kcal_per_mol, fepruns)
-    sterr = np.round(get_sterr(dGs, errors), 1)
-    # If there are only a few replicas,
-    # the MBAR estimated error will be more reliable, albeit underestimated
     toprint = pretty_print_summary_stats(dGs, errors, mean, sterr)
     if np.isnan(mean):
         raise RuntimeError("Free energy average is NaN")
