@@ -95,7 +95,7 @@ def add_summary_stats(mean: float, sterr: float, axes: list[Axes]):
     """
     axes[3] = do_agg_data(axes[2], axes[3])
 
-    axes[0].set_title(str(round(mean, 3)) + r"$\pm$" +
+    axes[0].set_title(str(round(mean, 1)) + r"$\pm$" +
                       str(sterr) + " kcal/mol")
     axes[0].legend()
     return axes
@@ -267,7 +267,7 @@ def compute_summary_statistics(RT: float, fepruns: dict[str,FepRun]) -> tuple[pd
 def get_summary_statistics(args: AFEPArguments, fepruns: dict[str, FepRun]):
     """DEPRECATED: Compatibility layer for old function signature."""
     warnings.warn("get_summary_statistics is deprecated and will be removed in a future release. " \
-    "Please use get_organized_summary_statistics or get_summary_stats directly.", DeprecationWarning, stacklevel=2)
+    "Please use get_organized_summary_statistics or compute_summary_statistics directly.", DeprecationWarning, stacklevel=2)
     return get_organized_summary_statistics(args, fepruns)
 
 
