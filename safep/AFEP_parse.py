@@ -146,11 +146,9 @@ def do_per_lambda_convergence_shared_axes(fepruns: dict[str, FepRun], mean: floa
     """Plot lambda convergence for all replicas.
 
     Args:
-        args (AFEPArguments): command line arguments
         fepruns (dict): fepruns dictionary
         mean (float): mean value across replicas
         sterr (float): sterr value across replicas
-        axes (list): matplotlib axes list
 
     Returns:
         tuple[Fig, Axes]: figure and axes objects with the per lambda convergence
@@ -319,10 +317,8 @@ def get_sterr(dGs: pd.Series, errors: pd.Series):
     """Get the standard error of the dGs
 
     args:
-        dGs (list): list of free energies
-        errors (list): list of errors corresponding to dGs
-        mean (float): mean free energy across replicas. Default None.
-        toprint (str): log string. Default empty.
+        dGs (pd.Series): Series of free energies
+        errors (pd.Series): Series of errors corresponding to dGs
 
     returns:
         float, str: the standard error of the dGs and an updated print string
