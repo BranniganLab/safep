@@ -239,7 +239,7 @@ def plot_general_figures(RT: float, fepruns: dict[str, FepRun], mean: float, ste
     return fig, axes
 
 
-def get_summary_stats(RT: float, fepruns: dict[str,FepRun]) -> tuple[pd.Series, pd.Series, float, float]:
+def compute_summary_statistics(RT: float, fepruns: dict[str,FepRun]) -> tuple[pd.Series, pd.Series, float, float]:
     """Get summary statistics.
 
     Args:
@@ -283,7 +283,7 @@ def get_organized_summary_statistics(args: AFEPArguments, fepruns: dict[str, Fep
         and the mean and standard error across replicas
     """
 
-    dGs, errors, mean, sterr = get_summary_stats(args.RT_kcal_per_mol, fepruns)
+    dGs, errors, mean, sterr = compute_summary_statistics(args.RT_kcal_per_mol, fepruns)
     toprint = pretty_print_summary_stats(dGs, errors, mean, sterr)
     if np.isnan(mean):
         raise RuntimeError("Free energy average is NaN")
