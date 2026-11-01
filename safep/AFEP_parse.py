@@ -61,6 +61,10 @@ def add_to_general_figure(fig: Figure, axes: Axes, RT: float, key: str, feprun: 
     Returns:
         tuple(Fig, Axes): The figure and axes that were modified
     """
+    if type(RT) is AFEPArguments:
+        RT = RT.RT_kcal_per_mol
+        warnings.warn("add_to_general_figure now uses RT directly instead of AFEPArguments. "
+                      "Please replace usage of (e.g.) args with args.RT_kcal_per_mol.", stacklevel=2)
     fig, axes = safep.plot_general(
         feprun.cumulative,
         None,
