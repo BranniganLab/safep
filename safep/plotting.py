@@ -556,4 +556,5 @@ def do_aggregate_pdf(dataax, pdf_type: str) -> tuple[ndarray[Any, dtype[Any]], A
     return flat, pdf_x, pdf_y
 
 def plot_general_legacy(*args, **kwargs):
+    """plot_general_legacy has not been used in years"""
     raise NotImplementedError("plot_general_legacy has been removed. Please update your code to use plot_general.")
