@@ -42,23 +42,22 @@ def process_replicas(args, itcolors):
             fepout_files = list((root/replica).glob(args.filename_pattern))
             report_number_and_size_of_fepout_files(fepout_files)
 
-            if len(list(fepout_files)) > 0:
-                print("Reading fepout files")
-                u_nk = namd.extract_u_nk(fepout_files, args.temperature)
-                u_nk = u_nk.sort_index(axis=0, level=1).sort_index(axis=1)
-                detect_equilibrium = args.detect_equilibrium
-                if detect_equilibrium:
-                    print("Detecting equilibrium")
-                    decorrelated_u_nk = detect_equilibrium_u_nk(u_nk)
-                    # Only save decorrelated samples
-                    save_UNK(decorrelated_u_nk, unkpath)
-                    dataroot = args.dataroot
-                    plot_number_of_samples_per_window(u_nk, decorrelated_u_nk, dataroot, detect_equilibrium, replica)
+            if len(list(fepout_files)) == 0:
+                print(f"WARNING: no fepout files found for {replica}. Skipping.")
+                continue
+            print("Reading fepout files")
+            u_nk = namd.extract_u_nk(fepout_files, args.temperature)
+            u_nk = u_nk.sort_index(axis=0, level=1).sort_index(axis=1)
+            detect_equilibrium = args.detect_equilibrium
+            if detect_equilibrium:
+                print("Detecting equilibrium")
+                decorrelated_u_nk = detect_equilibrium_u_nk(u_nk)
+                # Only save decorrelated samples
+                save_UNK(decorrelated_u_nk, unkpath)
+                dataroot = args.dataroot
+                plot_number_of_samples_per_window(u_nk, decorrelated_u_nk, dataroot, detect_equilibrium, replica)
 
-                    u_nk = decorrelated_u_nk
-            else:
-                print(
-                    f"WARNING: no fepout files found for {replica}. Skipping.")
+                u_nk = decorrelated_u_nk
 
         if u_nk is not None:
             fepruns[str(replica)] = FepRun(u_nk, None, None, None, None, None, None, None,
