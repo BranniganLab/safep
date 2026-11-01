@@ -40,64 +40,6 @@ def process_replicas(args, itcolors):
     return fepruns
 
 
-def read_and_decorrelate(args: AFEPArguments, replica: str, root: Path) -> pd.DataFrame | None:
-    """Read and decorrelated FEP data (if requested)
-
-    Args:
-        args (AFEPArguments): information needed to collect FEP data and analyze it
-        replica (str): the replica name
-        root (Path): the root of the FEP data
-
-    Returns:
-        pd.DataFrame | None: the (optionally decorrelated) FEP data. If reading failed, return None.
-    """
-    unkpath = root / replica / "decorrelated.csv"
-
-    if unkpath.is_file():
-        print("Found existing dataframe. Reading.")
-        return read_UNK(unkpath)
-
-    print(f"Didn't find existing dataframe at {unkpath}. Checking for raw fepout files.")
-    fepout_files = list((root / replica).glob(args.filename_pattern))
-    report_number_and_size_of_fepout_files(fepout_files)
-
-    if len(list(fepout_files)) == 0:
-        print(f"WARNING: no fepout files found for {replica}. Skipping.")
-        return None
-
-    print("Reading fepout files")
-    u_nk = namd.extract_u_nk(fepout_files, args.temperature)
-    u_nk = u_nk.sort_index(axis=0, level=1).sort_index(axis=1)
-
-    if not args.detect_equilibrium:
-        return u_nk
-
-    return _get_decorrelated_u_nk(args.dataroot, replica, u_nk, unkpath)
-
-
-def _get_decorrelated_u_nk(dataroot: Path, replica: str, u_nk: pd.DataFrame, unkpath: Path) -> pd.DataFrame:
-    """Decorrelate u_nk dataframe and save to unkpath.
-
-    Args:
-        dataroot (Path): root directory of FEP data
-        replica (str): the replica name
-        u_nk (pd.DataFrame): u_nk dataframe
-        unkpath (Path): the path to save the decorrelated u_nk dataframe
-
-    Returns:
-        pd.DataFrame: decorrelated u_nk dataframe
-
-    Notes:
-        - writes the decorrelated u_nk dataframe to unkpath
-        - plots samples and saves them to dataroot
-    """
-    print("Detecting equilibrium")
-    decorrelated_u_nk = detect_equilibrium_u_nk(u_nk)
-    save_UNK(decorrelated_u_nk, unkpath)
-    plot_number_of_samples_per_window(u_nk, decorrelated_u_nk, dataroot, replica)
-    return decorrelated_u_nk
-
-
 _COERCERS = {
     pd.DataFrame: pd.DataFrame,
     np.ndarray: lambda v: np.asarray(v).flatten(),
@@ -247,3 +189,62 @@ def report_number_and_size_of_fepout_files(fepout_files):
         total_size += os.path.getsize(file)
     print(f"Will process {len(fepout_files)} fepout files." +
           f"\nTotal size:{np.round(total_size/10**9, 2)}GB")
+
+
+
+def read_and_decorrelate(args: AFEPArguments, replica: str, root: Path) -> pd.DataFrame | None:
+    """Read and decorrelated FEP data (if requested)
+
+    Args:
+        args (AFEPArguments): information needed to collect FEP data and analyze it
+        replica (str): the replica name
+        root (Path): the root of the FEP data
+
+    Returns:
+        pd.DataFrame | None: the (optionally decorrelated) FEP data. If reading failed, return None.
+    """
+    unkpath = root / replica / "decorrelated.csv"
+
+    if unkpath.is_file():
+        print("Found existing dataframe. Reading.")
+        return read_UNK(unkpath)
+
+    print(f"Didn't find existing dataframe at {unkpath}. Checking for raw fepout files.")
+    fepout_files = list((root / replica).glob(args.filename_pattern))
+    report_number_and_size_of_fepout_files(fepout_files)
+
+    if len(list(fepout_files)) == 0:
+        print(f"WARNING: no fepout files found for {replica}. Skipping.")
+        return None
+
+    print("Reading fepout files")
+    u_nk = namd.extract_u_nk(fepout_files, args.temperature)
+    u_nk = u_nk.sort_index(axis=0, level=1).sort_index(axis=1)
+
+    if not args.detect_equilibrium:
+        return u_nk
+
+    return _get_decorrelated_u_nk(args.dataroot, replica, u_nk, unkpath)
+
+
+def _get_decorrelated_u_nk(dataroot: Path, replica: str, u_nk: pd.DataFrame, unkpath: Path) -> pd.DataFrame:
+    """Decorrelate u_nk dataframe and save to unkpath.
+
+    Args:
+        dataroot (Path): root directory of FEP data
+        replica (str): the replica name
+        u_nk (pd.DataFrame): u_nk dataframe
+        unkpath (Path): the path to save the decorrelated u_nk dataframe
+
+    Returns:
+        pd.DataFrame: decorrelated u_nk dataframe
+
+    Notes:
+        - writes the decorrelated u_nk dataframe to unkpath
+        - plots samples and saves them to dataroot
+    """
+    print("Detecting equilibrium")
+    decorrelated_u_nk = detect_equilibrium_u_nk(u_nk)
+    save_UNK(decorrelated_u_nk, unkpath)
+    plot_number_of_samples_per_window(u_nk, decorrelated_u_nk, dataroot, replica)
+    return decorrelated_u_nk
