@@ -61,7 +61,8 @@ def plot_samples(
 
     LEGACY USE ONLY.
     """
-    warn("plot_samples is deprecated and will be removed in a future version. Please migrate to SampleAxes.plot_samples.", DeprecationWarning)
+    warn("plot_samples is deprecated and will be removed in a future version. "
+         "Please migrate to SampleAxes.plot_samples.", DeprecationWarning, stacklevel=2)
     theax.set_ylabel("Number of Samples")
     theax.set_xlabel(r"$\lambda$")
     theax.set_yscale("log")
