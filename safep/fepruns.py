@@ -40,7 +40,17 @@ def process_replicas(args, itcolors):
     return fepruns
 
 
-def read_and_decorrelate(args: AFEPArguments, replica: str, root: Path) -> pd.DataFrame:
+def read_and_decorrelate(args: AFEPArguments, replica: str, root: Path) -> pd.DataFrame | None:
+    """Read and decorrelated FEP data (if requested)
+
+    Args:
+        args (AFEPArguments): information needed to collect FEP data and analyze it
+        replica (str): the replica name
+        root (Path): the root of the FEP data
+
+    Returns:
+        pd.DataFrame | None: the (optionally decorrelated) FEP data. If reading failed, return None.
+    """
     unkpath = root / replica / "decorrelated.csv"
 
     if unkpath.is_file():
