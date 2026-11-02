@@ -23,7 +23,7 @@ from safep.plotting import plot_hysteresis
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
 
-def do_agg_data(dataax, plotax):
+def do_agg_data(dataax, plotax, pdf_type="KDE"):
     """
     Aggregates data from a given matplotlib axis, computes statistical measures,
     and displays them on another axis.
@@ -35,14 +35,8 @@ def do_agg_data(dataax, plotax):
     Returns:
     matplotlib.axes.Axes: The plot axis with the statistical summary text added.
     """
-    agg_data = []
-    lines = dataax.lines
-    for line in lines:
-        agg_data.append(line.get_ydata())
-    flat = np.array(agg_data).flatten()
-    kernel = sp.stats.gaussian_kde(flat)
-    pdf_x = np.linspace(-1, 1, 1000)
-    pdf_y = kernel(pdf_x)
+    flat, pdf_x, pdf_y = do_aggregate_pdf(dataax, pdf_type)
+
     std = np.std(flat)
     average = np.average(flat)
     temp = pd.Series(pdf_y, index=pdf_x)
@@ -50,11 +44,11 @@ def do_agg_data(dataax, plotax):
 
     textstr = (
         r"$\rm mode=$"
-        + f"{np.round(mode,2)}"
+        + f"{np.round(mode, 2)}"
         + "\n"
-        + rf"$\mu$={np.round(average,2)}"
+        + rf"$\mu$={np.round(average, 2)}"
         + "\n"
-        + rf"$\sigma$={np.round(std,2)}"
+        + rf"$\sigma$={np.round(std, 2)}"
     )
     props = {"boxstyle": "square", "facecolor": "white", "alpha": 1}
     plotax.text(
@@ -69,6 +63,31 @@ def do_agg_data(dataax, plotax):
 
     return plotax
 
+
+def do_aggregate_pdf(dataax, pdf_type: str):
+    """Estimate aggregate probability density function
+
+    Args:
+        dataax (plt.Axes): The Axes from which to extract the data
+        pdf_type (str): The type of PDF estimation. "KDE" or uses histogramming.
+
+    Returns:
+        tuple[ndarray[Any, dtype[Any]], Any, ndarray[Any, dtype[floating[Any]]]]:
+            the flattened data, bin centers, and probability densities, respectively
+    """
+    agg_data = []
+    lines = dataax.lines
+    for line in lines:
+        agg_data.append(line.get_ydata())
+    flat = np.array(agg_data).flatten()
+    if pdf_type == "KDE":
+        kernel = sp.stats.gaussian_kde(flat)
+        pdf_x = np.linspace(-1, 1, 1000)
+        pdf_y = kernel(pdf_x)
+    else:
+        pdf_y, pdf_x = np.histogram(flat, density=True, bins=50)
+        pdf_x = pdf_x[:-1] + (pdf_x[1] - pdf_x[0]) / 2
+    return flat, pdf_x, pdf_y
 
 class AFEPArgumentParser(argparse.ArgumentParser):
     """Dedicated CLI argument parser for AFEP.
