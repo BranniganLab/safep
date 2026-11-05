@@ -10,6 +10,7 @@ from pathlib import Path
 from natsort import natsorted
 
 import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
 import numpy as np
 import pandas as pd
 import scipy as sp
@@ -17,7 +18,7 @@ import scipy as sp
 from scipy.constants import R, calorie
 
 import safep
-from safep.fepruns import process_replicas
+from safep.fepruns import process_replicas, FepRun
 from safep.plotting import plot_hysteresis
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -266,7 +267,7 @@ def add_to_general_figure(fig, axes, args, key, feprun):
     return fig, axes
 
 
-def add_summary_stats(mean, sterr, axes):
+def add_summary_stats(mean: float, sterr: float, axes: list[Axes]):
     """Add summary statistics to a general safep figure.
 
     Args:
@@ -280,12 +281,12 @@ def add_summary_stats(mean, sterr, axes):
     """
     axes[3] = do_agg_data(axes[2], axes[3])
 
-    axes[0].set_title(str(round(mean, 3)) + r"$\pm$" + str(sterr) + " kcal/mol")
+    axes[0].set_title(str(round(mean, 1)) + r"$\pm$" + str(sterr) + " kcal/mol")
     axes[0].legend()
     return axes
 
 
-def do_shared_convergence_plot(args, fepruns, dGs):
+def do_shared_convergence_plot(args: AFEPArguments, fepruns: dict[str, FepRun], dGs: list[float]):
     """Make the convergence plot (reverse and forward cumulative averages)
 
     Args:
@@ -418,7 +419,39 @@ def do_general_figures_plot(args, fepruns, mean, sterr):
     return fig, axes
 
 
-def get_summary_statistics(args, fepruns):
+def compute_summary_statistics(RT: float, fepruns: dict[str,FepRun]) -> tuple[pd.Series, pd.Series, float, float]:
+    """Get summary statistics.
+
+    Args:
+        RT (float): Gas constant * temperature
+        fepruns (dict[str:FepRun]): dictionary of fepruns
+
+    Returns:
+        tuple[list[float], list[float], float, float]:
+            List of free energies, list of errors, overall mean, overall standard error 
+    """
+    dGs = pd.Series()
+    errors = pd.Series()
+    for key, feprun in fepruns.items():
+        cumulative = feprun.cumulative
+        dG = cumulative.BAR.f.iloc[-1] * RT
+        error = cumulative.BAR.errors.iloc[-1] * RT
+        dGs[key] = dG
+        errors[key] = error
+
+    mean = np.average(dGs)
+    sterr = get_sterr(dGs, errors)
+    return dGs, errors, mean, sterr
+
+
+def get_summary_statistics(args: AFEPArguments, fepruns: dict[str, FepRun]):
+    """DEPRECATED: Compatibility layer for old function signature."""
+    warnings.warn("get_summary_statistics is deprecated and will be removed in a future release. " \
+    "Please use get_organized_summary_statistics or compute_summary_statistics directly.", DeprecationWarning, stacklevel=2)
+    return get_organized_summary_statistics(args, fepruns)
+
+
+def get_organized_summary_statistics(args: AFEPArguments, fepruns: dict[str, FepRun]):
     """Extract summary statistics from fepruns.
 
     Args:
@@ -429,49 +462,54 @@ def get_summary_statistics(args, fepruns):
         tuple[str, list[float], float, float]: a pretty print string, individual delta Gs,
         and the mean and standard error across replicas
     """
-    toprint = ""
-    dGs = []
-    errors = []
-    for key, feprun in natsorted(fepruns.items()):
-        cumulative = feprun.cumulative
-        dG = np.round(cumulative.BAR.f.iloc[-1] * args.RT_kcal_per_mol, 1)
-        error = np.round(cumulative.BAR.errors.iloc[-1] * args.RT_kcal_per_mol, 1)
-        dGs.append(dG)
-        errors.append(error)
 
-        if len(fepruns) == 1:
-            change_and_error = f"\u0394G = {dG}\u00b1{error} kcal/mol\n"
-        else:
-            change_and_error = f"{key}: \u0394G = {dG}\u00b1{error} kcal/mol\n"
-        toprint += change_and_error
-
-    toprint += "\n"
-    mean = np.average(dGs)
-
-    # If there are only a few replicas,
-    # the MBAR estimated error will be more reliable, albeit underestimated
-    sterr = np.round(get_sterr(dGs, errors), 1)
-    toprint += f"mean: {mean} kcal/mol\n" + f"sterr: {sterr} kcal/mol"
+    dGs, errors, mean, sterr = compute_summary_statistics(args.RT_kcal_per_mol, fepruns)
+    toprint = pretty_print_summary_stats(dGs, errors, mean, sterr)
     if np.isnan(mean):
         raise RuntimeError("Free energy average is NaN")
     return toprint, dGs, mean, sterr
 
 
-def get_sterr(dGs, errors):
+def pretty_print_summary_stats(dGs: pd.Series, errors: pd.Series, mean: float, sterr: float, precision: int=1) -> str:
+    """Format summary statistics.
+
+    Args:
+        dGs (list[float]): free energy differences
+        errors (list[float]): error of each free energy difference
+        mean (float): average free energy change
+        sterr (float): error in the mean
+
+    Returns:
+        str: formatted string with all summary statistics
+    """
+    toprint = ""
+    for replica_name in dGs.index:
+        dG = dGs[replica_name]
+        error = errors[replica_name]
+        if len(dGs) == 1:
+            prefix = ""
+        else:
+            prefix = f"{replica_name}: "
+        change_and_error = f"{prefix}\u0394G = {np.round(dG, precision)}\u00b1{np.round(error, precision)} kcal/mol\n"
+        toprint += change_and_error
+    toprint += "\n"
+    toprint += f"mean: {np.round(mean, precision)} kcal/mol\n" + f"sterr: {np.round(sterr, precision)} kcal/mol"
+    return toprint
+
+
+def get_sterr(dGs: pd.Series, errors: pd.Series):
     """Get the standard error of the dGs
 
     args:
-        dGs (list): list of free energies
-        errors (list): list of errors corresponding to dGs
-        mean (float): mean free energy across replicas. Default None.
-        toprint (str): log string. Default empty.
+        dGs (pd.Series): Series of free energies
+        errors (pd.Series): Series of errors corresponding to dGs
 
     returns:
         float, str: the standard error of the dGs and an updated print string
     """
     if len(dGs) < 3:
         sterr = np.sqrt(np.sum(np.square(errors)))
-        print("Warning: Not enough replicas for a standard error. Propagating BAR errors.")
+        warnings.warn("Not enough replicas for a standard error. Propagating BAR errors.", stacklevel=2)
     else:
         sterr = np.std(dGs, ddof=1)/np.sqrt(len(dGs))
     return sterr
@@ -483,7 +521,7 @@ def main():
     args = AFEPArguments.from_AFEPArgumentParser(parser)
     itcolors = iter(COLORS)
     fepruns = process_replicas(args, itcolors)
-    summary, dGs, mean, sterr = get_summary_statistics(args, fepruns)
+    summary, dGs, mean, sterr = get_organized_summary_statistics(args, fepruns)
     print(summary)
     if args.make_figures == 1:
         make_figures(args, fepruns, dGs, mean, sterr)
