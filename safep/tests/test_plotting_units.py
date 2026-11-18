@@ -69,7 +69,11 @@ def test_general_hysteresis_converts_values_to_kcal_per_mol(estimates):
 class MockArgs():
     def __init__(self, RT):
         self.RT_kcal_per_mol = RT
+class MockArgs():
+    def __init__(self, RT):
+        self.RT_kcal_per_mol = RT
 
+def test_shared_replica_hysteresis_plots_converts_units(estimates):
 def test_shared_replica_hysteresis_plots_converts_units(estimates):
     """
     Given estimates and errors in reduced units
@@ -79,6 +83,8 @@ def test_shared_replica_hysteresis_plots_converts_units(estimates):
     _, per_window = estimates
     run = SimpleNamespace(per_window=per_window, color="blue")
     RT = 0.6
+    args = MockArgs(RT)
+    _, (hyst_ax, _) = do_per_lambda_convergence_shared_axes(args, {"replica": run}, 0.0, 0.0)
     args = MockArgs(RT)
     _, (hyst_ax, _) = do_per_lambda_convergence_shared_axes(args, {"replica": run}, 0.0, 0.0)
 
