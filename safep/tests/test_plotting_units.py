@@ -69,11 +69,7 @@ def test_general_hysteresis_converts_values_to_kcal_per_mol(estimates):
 class MockArgs():
     def __init__(self, RT):
         self.RT_kcal_per_mol = RT
-class MockArgs():
-    def __init__(self, RT):
-        self.RT_kcal_per_mol = RT
 
-def test_shared_replica_hysteresis_plots_converts_units(estimates):
 def test_shared_replica_hysteresis_plots_converts_units(estimates):
     """
     Given estimates and errors in reduced units
