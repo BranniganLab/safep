@@ -81,8 +81,6 @@ def test_shared_replica_hysteresis_plots_converts_units(estimates):
     RT = 0.6
     args = MockArgs(RT)
     _, (hyst_ax, _) = do_per_lambda_convergence_shared_axes(args, {"replica": run}, 0.0, 0.0)
-    args = MockArgs(RT)
-    _, (hyst_ax, _) = do_per_lambda_convergence_shared_axes(args, {"replica": run}, 0.0, 0.0)
 
     assert "kcal/mol" in hyst_ax.get_ylabel()
     np.testing.assert_allclose(hyst_ax.lines[0].get_ydata(), np.asarray([0.2, 0.4])*RT)
