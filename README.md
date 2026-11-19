@@ -5,12 +5,12 @@ SAFEP-related scripts and tools
 
 These scripts and notebooks are broadly applicable to FEP analysis.
 
-## Sample Notebooks:
+## Sample Notebooks
 - BAR_Estimator_Basic: General use FEP analysis. Includes cumulative dG estimates, error estimates, and measures of convergence.
 - RFEP: For analyzing TI calculations with changing force constants.
 
 
-## Quickstart:
+## Quickstart
 
 ### Installation
 In a terminal (tested on Linux and Mac):
