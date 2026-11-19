@@ -36,16 +36,16 @@ def get_exponential(u_nk):
     groups = u_nk.groupby(level=1)
     dG=pd.DataFrame([])
     for name, group in groups:
-        dG[name] = np.log(np.mean(np.exp(-1*group), axis=0))
+        dG[name] = -np.log(np.mean(np.exp(-1*group), axis=0))
 
-    dG_f=np.diag(dG, k=1)
-    dG_b=np.diag(dG, k=-1)
+    dG_f=np.diag(dG, k=-1)
+    dG_b=np.diag(dG, k=1)
 
     l=dG.columns.to_list()
     l_mid = np.mean([l[1:],l[:-1]], axis=0)
 
     return l, l_mid, dG_f, dG_b
-    
+
 def get_BAR(bar):
     '''
     Extract key information from an alchemlyb.BAR object. Useful for plotting.
