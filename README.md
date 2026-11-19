@@ -32,16 +32,14 @@ In a terminal (tested on Linux and Mac):
 1. Run `pip install git+https://github.com/BranniganLab/safep.git`
 
 ### Running in a Jupyter Notebook
-1. Obtain sample notebooks:
-
-   Use one of the following: 
-   - Download one or more example notebooks from the GitHub: https://github.com/BranniganLab/safep/tree/main/Sample_Notebooks
-   - Clone the repository with `git clone https://github.com/BranniganLab/safep.git`
-
-2. Open the relevant notebook
-  - For FEP results, open BAR_Estimator_Basic.ipynb
-  - For RFEP/thermodynamic integration, open RFEP_analysis.ipynb
-3. Follow the instructions in the notebook
+1. Install Jupyter in the same environment: `pip install jupyterlab`
+2. Get the sample notebooks:
+   - If you used Option 1, they are in `safep/Sample_Notebooks/`, together with runnable sample data (`Replica1`-`Replica3`).
+   - Otherwise, download them from https://github.com/BranniganLab/safep/tree/main/Sample_Notebooks (open the notebook, then use the "Download raw file" button).
+3. Put the notebook in the directory that contains your data, or edit the paths in its first cells:
+   - For FEP results, open `BAR_Estimator_Basic.ipynb` (expects `Replica?/*.fepout` by default)
+   - For RFEP/thermodynamic integration, open `RFEP_analysis.ipynb` (expects a Colvars log file, `RFEP_decouple.log` by default)
+4. Start Jupyter with `jupyter lab` and follow the instructions in the notebook.
 
 ### CLI (only available for FEP, not yet for RFEP)
 1. Navigate to the root directory of your FEP results.
