@@ -1,8 +1,8 @@
 from approvaltests import verify
-import pytest
 from matplotlib.testing.compare import compare_images
 from safep.RFEP_analysis import main
 from pathlib import Path
+
 
 def test_RFEP_main_out(capsys):
     main(Path(__file__).parent/"RFEP_decouple.log")
@@ -20,3 +20,4 @@ def test_RFEP_figure():
     actual = Path("RFEP_decouple_figures.png")
     compare_images(ref, actual, tol=1e-5)
     actual.unlink()
+
