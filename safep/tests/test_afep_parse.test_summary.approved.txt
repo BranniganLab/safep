@@ -1,0 +1,6 @@
+Replica1: ΔG = 0.2±0.0 kcal/mol
+Replica2: ΔG = 0.2±0.0 kcal/mol
+Replica3: ΔG = 0.2±0.0 kcal/mol
+
+mean: 0.20000000000000004 kcal/mol
+sterr: 0.0 kcal/mol
