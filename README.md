@@ -23,7 +23,7 @@ In a terminal (tested on Linux and Mac):
    - venv: `python3 -m venv safep_venv; source safep_venv/bin/activate` (check `python3 --version` first)
    - conda: `conda create -n safep "python>=3.12" pip; conda activate safep`
 
-**Installation Option 1 (includes sample notebooks):**
+**Installation Option 1: from a clone (also gives you the sample notebooks and sample data locally):**
 1. Clone this repository using `git clone https://github.com/BranniganLab/safep.git`
 2. Enter the repository directory `cd safep`
 3. Run `pip install .`
