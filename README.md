@@ -28,8 +28,8 @@ In a terminal (tested on Linux and Mac):
 2. Enter the repository directory `cd safep`
 3. Run `pip install .`
 
-**Installation Option 2 (only provides CLI):**
-1. Run ``` pip install git+https://github.com/BranniganLab/safep.git ```
+**Installation Option 2: direct pip install (library and CLI; get the notebooks separately, see below):**
+1. Run `pip install git+https://github.com/BranniganLab/safep.git`
 
 ### Running in a Jupyter Notebook
 1. Obtain sample notebooks:
