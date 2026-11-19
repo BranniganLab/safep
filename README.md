@@ -19,9 +19,9 @@ In a terminal (tested on Linux and Mac):
 
 **[Optional] Create and activate a virtual environment**
 
-   Use one of the following:
-   - venv: `python3 -m venv safep_venv; source safep_venv/bin/activate`
-   - conda: `conda create -n safep python pip; conda activate safep`
+   Use one of the following (safep requires Python >= 3.10; the RFEP notebook currently needs >= 3.12):
+   - venv: `python3 -m venv safep_venv; source safep_venv/bin/activate` (check `python3 --version` first)
+   - conda: `conda create -n safep "python>=3.12" pip; conda activate safep`
 
 **Installation Option 1 (includes sample notebooks):**
 1. Clone this repository using `git clone https://github.com/BranniganLab/safep.git`
