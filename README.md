@@ -42,23 +42,27 @@ In a terminal (tested on Linux and Mac):
 4. Start Jupyter with `jupyter lab` and follow the instructions in the notebook.
 
 ### CLI (only available for FEP, not yet for RFEP)
-1. Navigate to the root directory of your FEP results.
+1. Go to the root directory of your FEP results, which should look like:
+   ```
+   |-replica_1
+   |   |-window1.fepout
+   |   |-window2.fepout
+   |   ...
+   |-replica_2
+   |   |-window1.fepout
+   |   |-window2.fepout
+   |   ...
+   ...
+   ```
+2. Run (set `--temperature` to your simulation temperature, in K):
+   ```bash
+   python -m safep.AFEP_parse --replicare "replica_*" --fepoutre "*.fepout" --temperature 303.15 --detect_equilibrium --make_figures
+   ```
+   `--replicare` is required. Despite their names, `--replicare` and `--fepoutre` take shell-style glob patterns, not regular expressions.
 
-Given a file structure like:
-```
-|-replica_1
-|   |-window1.fepout
-|   |-window2.fepout
-|   ...
-|-replica_2
-|   |-window1.fepout
-|   |-window2.fepout
-|   ...
-...
-```
-2. Run `python -m safep.AFEP_parse --path . --fepoutre "*fepout" --replicare "replica_*" --temperature 303.15 --detect_equilibrium --make_figures`
+To try it on the bundled sample data from a clone: `cd Sample_Notebooks; python -m safep.AFEP_parse --replicare "Replica?" --fepoutre "*.fepout" --make_figures`
 
-More detailed explanations can be seen by running `python -m safep.AFEP_parse --help`
+For all options, run `python -m safep.AFEP_parse --help`.
 
 
 
