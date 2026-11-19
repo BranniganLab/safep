@@ -7,7 +7,9 @@ These scripts and notebooks are broadly applicable to FEP analysis.
 
 ## Sample Notebooks
 - BAR_Estimator_Basic: General use FEP analysis. Includes cumulative dG estimates, error estimates, and measures of convergence.
-- RFEP: For analyzing TI calculations with changing force constants.
+- RFEP_analysis: For analyzing TI calculations with changing force constants.
+
+Older notebooks (AlternativeParser_noBAR, BAR_Estimator_Expanded, Batch_Basic) are still available in `Sample_Notebooks/Legacy/`.
 
 
 ## Quickstart
