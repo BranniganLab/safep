@@ -1,8 +1,8 @@
 # Import block
 import matplotlib.pyplot as plt
 import numpy as np
-import scipy as sp
 import pandas as pd
+import scipy as sp
 
 from .helpers import *
 from .processing import get_n_samples
@@ -182,12 +182,12 @@ def plot_general(cumulative,
         cumul_ax, each_ax, hyst_ax, pdf_ax = axes
 
     # Cumulative change in kcal/mol
-    cumul_ax.errorbar(cumulative.index, cumulative.BAR.f*RT, yerr=cumulative.BAR.errors, marker=None, linewidth=1, label=label, color=color)
+    cumul_ax.errorbar(cumulative.index, cumulative.BAR.f*RT, yerr=cumulative.BAR.errors*RT, marker=None, linewidth=1, label=label, color=color)
     cumul_ax.set(ylabel=r'Cumulative $\mathrm{\Delta} G_{\lambda}$'+'\n(kcal/mol)', ylim=cumulative_ylim)
 
     # Per-window change in kcal/mol
     if errorbars:
-        each_ax.errorbar(per_window.index, per_window.BAR.df*RT, yerr=per_window.BAR.ddf, marker=None, linewidth=1, alpha=0.5, color=color, label="BAR")
+        each_ax.errorbar(per_window.index, per_window.BAR.df*RT, yerr=per_window.BAR.ddf*RT, marker=None, linewidth=1, alpha=0.5, color=color, label="BAR")
     else:
         each_ax.plot(per_window.index, per_window.BAR.df*RT, marker=None, linewidth=1, color=color, label="BAR")
 
@@ -203,7 +203,7 @@ def plot_general(cumulative,
     each_ax.set(ylabel=r'$\mathrm{\Delta} G_\lambda$'+'\n'+r'$\left(\mathrm{kcal}/\mathrm{mol}\right)$', ylim=per_window_ylim)
 
     #Hysteresis Plots
-    hyst_ax, pdf_ax = plot_hysteresis((hyst_ax, pdf_ax), per_window, hysttype, color, fontsize, pdf_type, xlim)
+    hyst_ax, pdf_ax = plot_hysteresis((hyst_ax, pdf_ax), per_window*RT, hysttype, color, fontsize, pdf_type, xlim)
 
     fig.set_figwidth(width)
     fig.set_figheight(height*3)
