@@ -11,3 +11,6 @@ safep.egg-info*
 .vscode
 .qodo
 .idea
+.idea*
+build/
+*csv
