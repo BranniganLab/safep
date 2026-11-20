@@ -327,7 +327,7 @@ def do_shared_convergence_plot(args: AFEPArguments, fepruns: dict[str, FepRun], 
     return fig, conv_ax
 
 
-def do_per_lambda_convergence_shared_axes(fepruns, mean, sterr):
+def do_per_lambda_convergence_shared_axes(args, fepruns, mean, sterr):
     """Plot lambda convergence for all replicas.
 
     Args:
@@ -351,7 +351,7 @@ def do_per_lambda_convergence_shared_axes(fepruns, mean, sterr):
     for _, feprun in fepruns.items():
         plot_hysteresis(
             (hyst_ax, pdf_ax),
-            feprun.per_window,
+            feprun.per_window * args.RT_kcal_per_mol,
             xlim=[-1, 1],
             hysttype="lines",
             color=feprun.color,
@@ -390,7 +390,7 @@ def make_figures(args, fepruns, dGs, mean, sterr) -> None:
     fig, _ = do_shared_convergence_plot(args, fepruns, dGs)
     fig.savefig(args.dataroot.joinpath("FEP_convergence.pdf"))
 
-    fig, _ = do_per_lambda_convergence_shared_axes(fepruns, mean, sterr)
+    fig, _ = do_per_lambda_convergence_shared_axes(args, fepruns, mean, sterr)
     fig.savefig(args.dataroot.joinpath("FEP_perLambda_convergence.pdf"))
 
 
